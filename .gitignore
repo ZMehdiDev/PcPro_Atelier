@@ -1,0 +1,104 @@
+####################################
+# OS / System
+####################################
+.DS_Store
+Thumbs.db
+desktop.ini
+
+####################################
+# Windows
+####################################
+$RECYCLE.BIN/
+*.lnk
+
+####################################
+# IDEs & Editors
+####################################
+.idea/
+*.iml
+*.ipr
+*.iws
+
+.vscode/
+.history/
+
+####################################
+# Cursor / AI tooling
+.cursor/
+.cursor-cache/
+
+####################################
+# Java / Maven / Spring Boot
+####################################
+# Maven build
+target/
+**/target/
+
+# Maven wrapper logs
+.mvn/wrapper/maven-wrapper.log
+
+# Spring Boot
+*.log
+spring.log
+
+####################################
+# Node / Angular / Frontend
+####################################
+node_modules/
+dist/
+.angular/
+.cache/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+####################################
+# Environment files
+####################################
+.env
+.env.*
+!.env.example
+
+####################################
+# Docker
+####################################
+docker-compose.override.yml
+*.pid
+
+####################################
+# PostgreSQL / Databases
+####################################
+*.sql.bak
+*.dump
+*.backup
+
+####################################
+# Application runtime data
+####################################
+uploads/
+storage/
+files/
+data/
+
+####################################
+# Coverage / Reports
+####################################
+coverage/
+*.lcov
+
+####################################
+# Tests / temp
+####################################
+tmp/
+temp/
+
+####################################
+# Secrets (safety net)
+####################################
+*.key
+*.pem
+*.crt
+*.p12
+*.keystore

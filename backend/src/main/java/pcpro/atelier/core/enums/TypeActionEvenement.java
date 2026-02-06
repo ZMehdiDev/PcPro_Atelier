@@ -1,0 +1,12 @@
+package pcpro.atelier.core.enums;
+
+public enum TypeActionEvenement {
+  CREATION_DOSSIER,
+  CHANGEMENT_STATUT,
+  AJOUT_NOTE,
+  AJOUT_PIECE,
+  MODIF_PIECE,
+  AJOUT_PHOTO,
+  CLOTURE,
+  ACTION_SENSIBLE
+}
