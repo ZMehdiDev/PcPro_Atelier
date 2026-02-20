@@ -18,6 +18,12 @@ public class Photo {
   @Column(name = "chemin_fichier", nullable = false, length = 500)
   private String cheminFichier;
 
+  @Column(name = "mime_type", length = 100)
+  private String mimeType;
+
+  @Column(name = "taille_bytes")
+  private Long tailleBytes;
+
   @Column(length = 200)
   private String description;
 
@@ -55,5 +61,21 @@ public class Photo {
 
   public OffsetDateTime getCreatedAt() { 
     return createdAt; 
+  }
+
+  public String getMimeType() {
+    return mimeType;
+  }
+
+  public void setMimeType(String mimeType) {
+    this.mimeType = mimeType;
+  }
+
+  public Long getTailleBytes() {
+    return tailleBytes;
+  }
+
+  public void setTailleBytes(Long tailleBytes) {
+    this.tailleBytes = tailleBytes;
   }
 }

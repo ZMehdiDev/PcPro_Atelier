@@ -4,5 +4,6 @@ public enum EtatPiece {
   A_COMMANDER,
   COMMANDEE,
   RECUE,
-  MONTEE
+  MONTEE,
+  ANNULEE
 }
