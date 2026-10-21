@@ -1,5 +1,6 @@
 package pcpro.atelier.features.dossier.app;
 
+import java.io.IOException;
 import java.time.LocalDate;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -312,8 +313,7 @@ public class DossierService {
           TypeActionEvenement.CHANGEMENT_STATUT,
           ancienStatutDossier.toString(),
           StatutDossier.ATTENTE_PIECE.toString(),
-          "Statut automatiquement mis à jour suite au changement d'état de la pièce " + piece.getReference(),
-          null
+          "Statut automatiquement mis à jour suite au changement d'état de la pièce " + piece.getReference()
       );
     }
     
@@ -325,8 +325,7 @@ public class DossierService {
         ancienEtat.toString(),
         nouvelEtat.toString(),
         request.commentaire() != null ? request.commentaire() : 
-            "Changement d'état de la pièce " + piece.getReference() + " : " + ancienEtat + " -> " + nouvelEtat,
-        null
+            "Changement d'état de la pièce " + piece.getReference() + " : " + ancienEtat + " -> " + nouvelEtat
     );
     
     return new PieceDto(

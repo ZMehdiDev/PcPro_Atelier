@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: atelier-backend
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 logging:
   level:
@@ -23,9 +28,3 @@ app:
     photos-directory: ./uploads/photos
     max-file-size-bytes: 10485760  # 10MB
 
-spring:
-  servlet:
-    multipart:
-      enabled: true
-      max-file-size: 10MB
-      max-request-size: 10MB
