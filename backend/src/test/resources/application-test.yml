@@ -1,14 +1,10 @@
-spring:
-  datasource:
-    url: jdbc:h2:mem:atelier_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-  flyway:
-    enabled: false
+app:
+  security:
+    jwt-secret: test-secret-pour-les-tests-uniquement-0123456789
+    login-max-echecs: 3
+  storage:
+    photos-directory: ./target/test-uploads/photos
+
+logging:
+  level:
+    pcpro.atelier.core.api.filter: WARN

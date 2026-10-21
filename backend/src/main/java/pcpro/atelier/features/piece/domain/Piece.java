@@ -1,5 +1,7 @@
 package pcpro.atelier.features.piece.domain;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.*;
 import pcpro.atelier.core.enums.EtatPiece;
 import pcpro.atelier.features.dossier.domain.Dossier;
@@ -9,7 +11,7 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "piece")
 public class Piece {
-  @Id 
+  @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
@@ -29,55 +31,56 @@ public class Piece {
   @Column(nullable = false, length = 30)
   private EtatPiece etat;
 
-  @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+  @CreationTimestamp
+  @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
 
   // getters/setters
-  public Long getId() { 
-    return id; 
+  public Long getId() {
+    return id;
   }
 
-  public Dossier getDossier() { 
-    return dossier; 
+  public Dossier getDossier() {
+    return dossier;
   }
 
-  public void setDossier(Dossier dossier) { 
-    this.dossier = dossier; 
+  public void setDossier(Dossier dossier) {
+    this.dossier = dossier;
   }
 
-  public String getReference() { 
-    return reference; 
+  public String getReference() {
+    return reference;
   }
 
-  public void setReference(String reference) { 
-    this.reference = reference; 
+  public void setReference(String reference) {
+    this.reference = reference;
   }
 
-  public String getFournisseur() { 
-    return fournisseur; 
+  public String getFournisseur() {
+    return fournisseur;
   }
 
-  public void setFournisseur(String fournisseur) { 
-    this.fournisseur = fournisseur; 
+  public void setFournisseur(String fournisseur) {
+    this.fournisseur = fournisseur;
   }
 
-  public BigDecimal getCout() { 
-    return cout; 
+  public BigDecimal getCout() {
+    return cout;
   }
 
-  public void setCout(BigDecimal cout) { 
-    this.cout = cout; 
+  public void setCout(BigDecimal cout) {
+    this.cout = cout;
   }
 
-  public EtatPiece getEtat() { 
-    return etat; 
+  public EtatPiece getEtat() {
+    return etat;
   }
 
-  public void setEtat(EtatPiece etat) { 
-    this.etat = etat; 
+  public void setEtat(EtatPiece etat) {
+    this.etat = etat;
   }
 
-  public OffsetDateTime getCreatedAt() { 
-    return createdAt; 
+  public OffsetDateTime getCreatedAt() {
+    return createdAt;
   }
 }

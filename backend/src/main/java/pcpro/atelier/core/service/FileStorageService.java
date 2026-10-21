@@ -1,29 +1,54 @@
 package pcpro.atelier.core.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import pcpro.atelier.core.config.FileStorageProperties;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.Set;
+import java.nio.file.StandardOpenOption;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Service;
+
+import pcpro.atelier.core.config.FileStorageProperties;
+import pcpro.atelier.core.exception.BadRequestException;
+import pcpro.atelier.core.exception.ResourceNotFoundException;
+
+/**
+ * Stockage des photos sur disque, un sous-répertoire par dossier.
+ *
+ * Le type de fichier est déterminé à partir de son contenu (signature binaire), pas du Content-Type
+ * envoyé par le client : un fichier qui n'est pas réellement une image JPEG/PNG/WebP est refusé.
+ */
 @Service
 public class FileStorageService {
 
   private static final Logger logger = LoggerFactory.getLogger(FileStorageService.class);
-  
-  private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "image/webp"
-  );
+
+  /** Formats d'image acceptés. */
+  public enum TypeImage {
+    JPEG("image/jpeg", ".jpg"),
+    PNG("image/png", ".png"),
+    WEBP("image/webp", ".webp");
+
+    private final String mimeType;
+    private final String extension;
+
+    TypeImage(String mimeType, String extension) {
+      this.mimeType = mimeType;
+      this.extension = extension;
+    }
+
+    public String mimeType() {
+      return mimeType;
+    }
+  }
+
+  public record FichierStocke(String cheminRelatif, TypeImage type, long tailleBytes) {
+  }
 
   private final FileStorageProperties properties;
   private final Path photosDirectory;
@@ -31,154 +56,94 @@ public class FileStorageService {
   public FileStorageService(FileStorageProperties properties) {
     this.properties = properties;
     this.photosDirectory = Paths.get(properties.getPhotosDirectory()).toAbsolutePath().normalize();
-    initializeDirectory();
-  }
-
-  private void initializeDirectory() {
     try {
       Files.createDirectories(photosDirectory);
-      logger.info("Répertoire de stockage des photos initialisé : {}", photosDirectory);
+      logger.info("Répertoire de stockage des photos : {}", photosDirectory);
     } catch (IOException e) {
-      logger.error("Impossible de créer le répertoire de stockage : {}", photosDirectory, e);
-      throw new RuntimeException("Erreur d'initialisation du stockage", e);
+      throw new IllegalStateException("Impossible de créer le répertoire de stockage " + photosDirectory, e);
     }
   }
 
   /**
-   * Valide le type MIME du fichier.
+   * Vérifie puis écrit l'image. Le nom du fichier est généré (UUID), le nom d'origine n'est pas utilisé.
    */
-  public void validateMimeType(String mimeType) {
-    if (mimeType == null || mimeType.isBlank()) {
-      throw new IllegalArgumentException("Le type MIME est requis");
+  public FichierStocke stocker(byte[] contenu, Long dossierId) {
+    if (contenu == null || contenu.length == 0) {
+      throw new BadRequestException("Le fichier est vide");
     }
-    
-    if (!ALLOWED_MIME_TYPES.contains(mimeType.toLowerCase())) {
-      throw new IllegalArgumentException(
-          String.format(
-              "Type MIME non autorisé : %s. Types autorisés : %s",
-              mimeType,
-              ALLOWED_MIME_TYPES
-          )
-      );
+    if (contenu.length > properties.getMaxFileSizeBytes()) {
+      throw new BadRequestException(String.format("Fichier trop volumineux (maximum %.0f MB)",
+          properties.getMaxFileSizeBytes() / (1024.0 * 1024.0)));
     }
-  }
+    TypeImage type = detecterType(contenu);
 
-  /**
-   * Valide la taille du fichier.
-   */
-  public void validateFileSize(long fileSize) {
-    if (fileSize <= 0) {
-      throw new IllegalArgumentException("Le fichier est vide");
-    }
-    
-    if (fileSize > properties.getMaxFileSizeBytes()) {
-      throw new IllegalArgumentException(
-          String.format(
-              "Fichier trop volumineux : %d bytes. Taille maximale autorisée : %d bytes (%.2f MB)",
-              fileSize,
-              properties.getMaxFileSizeBytes(),
-              properties.getMaxFileSizeBytes() / (1024.0 * 1024.0)
-          )
-      );
-    }
-  }
-
-  /**
-   * Stocke un fichier et retourne le chemin relatif.
-   * 
-   * @param fileBytes Les bytes du fichier
-   * @param originalFilename Le nom original du fichier
-   * @param mimeType Le type MIME
-   * @param dossierId L'ID du dossier (pour organisation)
-   * @return Le chemin relatif du fichier stocké
-   */
-  public String storeFile(byte[] fileBytes, String originalFilename, String mimeType, Long dossierId) {
-    // Valider le type MIME
-    validateMimeType(mimeType);
-    
-    // Valider la taille
-    validateFileSize(fileBytes.length);
-    
     try {
-      // Créer un sous-répertoire par dossier pour organisation
       Path dossierDir = photosDirectory.resolve("dossier-" + dossierId);
       Files.createDirectories(dossierDir);
-      
-      // Générer un nom de fichier unique
-      String extension = getExtensionFromMimeType(mimeType);
-      String uniqueFilename = UUID.randomUUID().toString() + extension;
-      
-      // Chemin complet du fichier
-      Path filePath = dossierDir.resolve(uniqueFilename);
-      
-      // Écrire le fichier
-      Files.write(filePath, fileBytes);
-      
-      // Retourner le chemin relatif (pour stockage en DB)
-      Path relativePath = photosDirectory.relativize(filePath);
-      logger.info("Fichier stocké : {} ({} bytes, {})", relativePath, fileBytes.length, mimeType);
-      
-      return relativePath.toString().replace('\\', '/'); // Normaliser les séparateurs
-      
+      Path fichier = dossierDir.resolve(UUID.randomUUID() + type.extension);
+      Files.write(fichier, contenu, StandardOpenOption.CREATE_NEW);
+
+      String cheminRelatif = photosDirectory.relativize(fichier).toString().replace('\\', '/');
+      logger.info("Photo stockée : {} ({} octets, {})", cheminRelatif, contenu.length, type.mimeType);
+      return new FichierStocke(cheminRelatif, type, contenu.length);
     } catch (IOException e) {
-      logger.error("Erreur lors du stockage du fichier : {}", originalFilename, e);
-      throw new RuntimeException("Erreur lors du stockage du fichier", e);
+      throw new IllegalStateException("Erreur lors de l'écriture de la photo", e);
     }
+  }
+
+  public Resource charger(String cheminRelatif) {
+    Path fichier = resoudre(cheminRelatif);
+    if (!Files.isRegularFile(fichier)) {
+      logger.warn("Photo absente du disque : {}", cheminRelatif);
+      throw new ResourceNotFoundException("Le fichier de cette photo est introuvable");
+    }
+    return new FileSystemResource(fichier);
   }
 
   /**
-   * Récupère le contenu d'un fichier.
+   * Supprime le fichier. N'échoue pas si le fichier n'existe plus (l'erreur est seulement loggée).
    */
-  public byte[] loadFile(String relativePath) {
+  public void supprimer(String cheminRelatif) {
     try {
-      Path filePath = photosDirectory.resolve(relativePath).normalize();
-      
-      // Sécurité : vérifier que le chemin ne sort pas du répertoire de stockage
-      if (!filePath.startsWith(photosDirectory)) {
-        throw new IllegalArgumentException("Chemin de fichier invalide");
+      if (Files.deleteIfExists(resoudre(cheminRelatif))) {
+        logger.info("Photo supprimée du disque : {}", cheminRelatif);
       }
-      
-      if (!Files.exists(filePath)) {
-        throw new IllegalArgumentException("Fichier non trouvé : " + relativePath);
-      }
-      
-      return Files.readAllBytes(filePath);
-      
-    } catch (IOException e) {
-      logger.error("Erreur lors de la lecture du fichier : {}", relativePath, e);
-      throw new RuntimeException("Erreur lors de la lecture du fichier", e);
+    } catch (IOException | RuntimeException e) {
+      logger.error("Impossible de supprimer la photo {}", cheminRelatif, e);
     }
   }
 
-  /**
-   * Supprime un fichier.
-   */
-  public void deleteFile(String relativePath) {
-    try {
-      Path filePath = photosDirectory.resolve(relativePath).normalize();
-      
-      // Sécurité : vérifier que le chemin ne sort pas du répertoire de stockage
-      if (!filePath.startsWith(photosDirectory)) {
-        throw new IllegalArgumentException("Chemin de fichier invalide");
-      }
-      
-      if (Files.exists(filePath)) {
-        Files.delete(filePath);
-        logger.info("Fichier supprimé : {}", relativePath);
-      }
-      
-    } catch (IOException e) {
-      logger.error("Erreur lors de la suppression du fichier : {}", relativePath, e);
-      // Ne pas lever d'exception, juste logger
+  /** Empêche de sortir du répertoire de stockage (ex : "../../etc/passwd"). */
+  private Path resoudre(String cheminRelatif) {
+    Path fichier = photosDirectory.resolve(cheminRelatif).normalize();
+    if (!fichier.startsWith(photosDirectory)) {
+      throw new IllegalStateException("Chemin de photo hors du répertoire de stockage : " + cheminRelatif);
     }
+    return fichier;
   }
 
-  private String getExtensionFromMimeType(String mimeType) {
-    return switch (mimeType.toLowerCase()) {
-      case "image/jpeg", "image/jpg" -> ".jpg";
-      case "image/png" -> ".png";
-      case "image/webp" -> ".webp";
-      default -> ".bin";
-    };
+  static TypeImage detecterType(byte[] c) {
+    if (commencePar(c, 0, 0xFF, 0xD8, 0xFF)) {
+      return TypeImage.JPEG;
+    }
+    if (commencePar(c, 0, 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A)) {
+      return TypeImage.PNG;
+    }
+    if (commencePar(c, 0, 'R', 'I', 'F', 'F') && commencePar(c, 8, 'W', 'E', 'B', 'P')) {
+      return TypeImage.WEBP;
+    }
+    throw new BadRequestException("Format non supporté : seules les images JPEG, PNG et WebP sont acceptées");
+  }
+
+  private static boolean commencePar(byte[] contenu, int offset, int... signature) {
+    if (contenu.length < offset + signature.length) {
+      return false;
+    }
+    for (int i = 0; i < signature.length; i++) {
+      if ((contenu[offset + i] & 0xFF) != signature[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 }

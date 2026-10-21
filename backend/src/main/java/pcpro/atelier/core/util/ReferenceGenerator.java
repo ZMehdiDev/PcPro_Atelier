@@ -1,54 +1,38 @@
 package pcpro.atelier.core.util;
 
+import java.time.Clock;
 import java.time.Year;
 
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
-import pcpro.atelier.features.dossier.infra.DossierRepository;
-
+/**
+ * Génère les références de dossier au format PCP-YYYY-NNNNNN (ex : PCP-2026-000001).
+ *
+ * Le compteur annuel est incrémenté atomiquement en base (upsert), donc deux dossiers créés
+ * en même temps ne peuvent pas obtenir la même référence.
+ */
 @Component
 public class ReferenceGenerator {
 
-  private final DossierRepository dossierRepository;
+  private final JdbcClient jdbcClient;
+  private final Clock clock;
 
-  public ReferenceGenerator(DossierRepository dossierRepository) {
-    this.dossierRepository = dossierRepository;
+  public ReferenceGenerator(JdbcClient jdbcClient, Clock clock) {
+    this.jdbcClient = jdbcClient;
+    this.clock = clock;
   }
 
-  /**
-   * Génère une référence unique au format PCP-YYYY-NNNNNN
-   * Exemple : PCP-2026-000001
-   */
   public String generateReference() {
-    String year = String.valueOf(Year.now().getValue());
-    String prefix = "PCP-" + year + "-";
-    
-    // Trouver le dernier numéro pour cette année via requête SQL optimisée
-    String lastReference = dossierRepository.findMaxReferenceByPrefix(prefix);
-    
-    int nextNumber = 1;
-    if (lastReference != null && lastReference.startsWith(prefix)) {
-      String numberPart = lastReference.substring(prefix.length());
-      try {
-        nextNumber = Integer.parseInt(numberPart) + 1;
-      } catch (NumberFormatException e) {
-        // Si parsing échoue, on repart à 1
-      }
-    }
-    
-    // Vérifier l'unicité (sécurité contre les collisions)
-    String newReference = prefix + String.format("%06d", nextNumber);
-    int attempts = 0;
-    while (dossierRepository.findByReference(newReference).isPresent() && attempts < 10) {
-      nextNumber++;
-      newReference = prefix + String.format("%06d", nextNumber);
-      attempts++;
-    }
-    
-    if (attempts >= 10) {
-      throw new IllegalStateException("Impossible de générer une référence unique après plusieurs tentatives");
-    }
-    
-    return newReference;
+    int annee = Year.now(clock).getValue();
+    int numero = jdbcClient.sql("""
+        INSERT INTO reference_compteur (annee, dernier) VALUES (:annee, 1)
+        ON CONFLICT (annee) DO UPDATE SET dernier = reference_compteur.dernier + 1
+        RETURNING dernier
+        """)
+        .param("annee", annee)
+        .query(Integer.class)
+        .single();
+    return String.format("PCP-%d-%06d", annee, numero);
   }
 }

@@ -1,45 +1,61 @@
 package pcpro.atelier.features.client.domain;
 
-import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+
+import jakarta.persistence.*;
+
 @Entity
-@Table(name = "client", uniqueConstraints = @UniqueConstraint(name="uq_client_telephone", columnNames = "telephone"))
+@Table(name = "client", uniqueConstraints = @UniqueConstraint(name = "uq_client_telephone", columnNames = "telephone"))
 public class Client {
-  @Id 
+  @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @Column(nullable = false, length = 120)
   private String nom;
 
+  /** Toujours normalisé (chiffres uniquement, "+" éventuel en tête). */
   @Column(nullable = false, length = 32)
   private String telephone;
 
-  @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+  @Column(length = 255)
+  private String email;
+
+  @CreationTimestamp
+  @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
 
-  public Long getId() { 
-    return id; 
+  public Long getId() {
+    return id;
   }
 
-  public String getNom() { 
-    return nom; 
+  public String getNom() {
+    return nom;
   }
 
-  public void setNom(String nom) { 
-    this.nom = nom; 
+  public void setNom(String nom) {
+    this.nom = nom;
   }
 
-  public String getTelephone() { 
-    return telephone; 
+  public String getTelephone() {
+    return telephone;
   }
 
-  public void setTelephone(String telephone) { 
-    this.telephone = telephone; 
+  public void setTelephone(String telephone) {
+    this.telephone = telephone;
   }
 
-  public OffsetDateTime getCreatedAt() { 
-    return createdAt; 
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
+  }
+
+  public OffsetDateTime getCreatedAt() {
+    return createdAt;
   }
 }
