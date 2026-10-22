@@ -11,10 +11,12 @@ import pcpro.atelier.core.enums.StatutDossier;
  * @param actifs    dossiers non clôturés
  * @param bloques   dossiers actifs bloqués
  * @param enRetard  dossiers actifs dont la date estimée est dépassée (hors PRET)
+ * @param mesDossiers dossiers actifs assignés à l'employé connecté
  */
 public record DossierStatsDto(
     Map<StatutDossier, Long> parStatut,
     long actifs,
     long bloques,
-    long enRetard
+    long enRetard,
+    long mesDossiers
 ) {}

@@ -1,5 +1,8 @@
 server:
   port: 8080
+  # Derrière le reverse proxy (Caddy) : vraie IP du client et HTTPS lus dans X-Forwarded-*.
+  # Seuls les proxys d'un réseau privé (Docker) sont crus.
+  forward-headers-strategy: native
 
 spring:
   application:
@@ -39,8 +42,14 @@ app:
   security:
     # Obligatoire, au moins 32 caractères. Générer avec : openssl rand -base64 48
     jwt-secret: ${APP_JWT_SECRET:}
-    jwt-ttl: 12h
+    # Token d'accès court ; le front le renouvelle tout seul grâce au cookie de session (refresh)
+    jwt-ttl: 15m
+    # Durée du "rester connecté" sur un appareil, prolongée à chaque utilisation
+    refresh-ttl: 30d
+    # Cookie de session envoyé uniquement en HTTPS (désactivé en dev, où tout est en http)
+    cookie-secure: ${APP_COOKIE_SECURE:true}
     login-max-echecs: 5
+    login-max-echecs-par-ip: 20
     login-blocage: 15m
     # Origines du front autorisées, séparées par des virgules (ex : http://localhost:4200)
     cors-allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:}

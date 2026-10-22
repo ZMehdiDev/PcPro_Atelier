@@ -50,6 +50,12 @@ public interface DossierRepository extends JpaRepository<Dossier, Long>, JpaSpec
 
   @Query("""
     select count(d) from Dossier d
+    where d.technicienAssigne.id = :employeId and d.statut <> pcpro.atelier.core.enums.StatutDossier.CLOTURE
+    """)
+  long compterActifsAssignesA(@Param("employeId") Long employeId);
+
+  @Query("""
+    select count(d) from Dossier d
     where d.dateEstimee < :aujourdhui
       and d.statut not in (pcpro.atelier.core.enums.StatutDossier.PRET, pcpro.atelier.core.enums.StatutDossier.CLOTURE)
     """)

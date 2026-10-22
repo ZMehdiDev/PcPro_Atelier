@@ -228,6 +228,31 @@ class DossierIntegrationTest extends IntegrationTest {
   }
 
   @Test
+  void mesDossiersFiltreSurLEmployeConnecte() throws Exception {
+    long a = creerDossier("Martin Dubois", "0470123456");
+    long b = creerDossier("Sophie Laurent", "0480999888");
+    creerDossier("Pierre Moreau", "0490111222");
+    mvc.perform(json(techToken, patch("/api/dossiers/" + a + "/technicien"), Map.of("technicienId", tech.getId())))
+        .andExpect(status().isOk());
+    mvc.perform(json(techToken, patch("/api/dossiers/" + b + "/technicien"), Map.of("technicienId", admin.getId())))
+        .andExpect(status().isOk());
+
+    mvc.perform(as(techToken, get("/api/dossiers").param("mesDossiers", "true")))
+        .andExpect(jsonPath("$.content", hasSize(1)))
+        .andExpect(jsonPath("$.content[0].id").value(a));
+    mvc.perform(as(adminToken, get("/api/dossiers").param("mesDossiers", "true")))
+        .andExpect(jsonPath("$.content", hasSize(1)))
+        .andExpect(jsonPath("$.content[0].id").value(b));
+    mvc.perform(as(techToken, get("/api/dossiers/stats")))
+        .andExpect(jsonPath("$.mesDossiers").value(1));
+
+    changerStatut(techToken, a, "PRET", 200);
+    changerStatut(techToken, a, "CLOTURE", 200);
+    mvc.perform(as(techToken, get("/api/dossiers/stats")))
+        .andExpect(jsonPath("$.mesDossiers").value(0));
+  }
+
+  @Test
   void dossierInexistantEn404() throws Exception {
     mvc.perform(as(techToken, get("/api/dossiers/12345")))
         .andExpect(status().isNotFound())

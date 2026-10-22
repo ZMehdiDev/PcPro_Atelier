@@ -56,6 +56,7 @@ public class DossierService {
       Priorite priorite,
       Boolean bloque,
       Long technicienId,
+      Boolean mesDossiers,
       Boolean enRetard,
       String q
   ) {}
@@ -102,12 +103,13 @@ public class DossierService {
 
   @Transactional(readOnly = true)
   public Page<DossierSummaryDto> rechercher(Recherche recherche, Pageable pageable) {
+    Long technicienId = Boolean.TRUE.equals(recherche.mesDossiers()) ? currentEmploye.id() : recherche.technicienId();
     Specification<Dossier> spec = Stream.of(
         DossierSpecifications.statut(recherche.statut()),
         DossierSpecifications.actifs(recherche.actifs()),
         DossierSpecifications.priorite(recherche.priorite()),
         DossierSpecifications.bloque(recherche.bloque()),
-        DossierSpecifications.technicien(recherche.technicienId()),
+        DossierSpecifications.technicien(technicienId),
         DossierSpecifications.enRetard(recherche.enRetard(), LocalDate.now(clock)),
         DossierSpecifications.recherche(recherche.q())
     ).filter(Objects::nonNull).reduce(Specification.unrestricted(), Specification::and);
@@ -142,7 +144,8 @@ public class DossierService {
         parStatut,
         actifs,
         dossierRepository.compterBloques(),
-        dossierRepository.compterEnRetard(LocalDate.now(clock))
+        dossierRepository.compterEnRetard(LocalDate.now(clock)),
+        dossierRepository.compterActifsAssignesA(currentEmploye.id())
     );
   }
 

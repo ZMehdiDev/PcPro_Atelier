@@ -56,7 +56,7 @@ public class SecurityConfig {
         .logout(AbstractHttpConfigurer::disable)
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
             .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
             .requestMatchers("/error").permitAll()
@@ -109,6 +109,7 @@ public class SecurityConfig {
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Request-Id"));
     config.setExposedHeaders(List.of("X-Request-Id", "Content-Disposition"));
+    config.setAllowCredentials(true); // cookie de session (refresh)
     config.setMaxAge(3600L);
     source.registerCorsConfiguration("/api/**", config);
     return source;

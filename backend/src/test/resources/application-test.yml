@@ -2,6 +2,7 @@ app:
   security:
     jwt-secret: test-secret-pour-les-tests-uniquement-0123456789
     login-max-echecs: 3
+    login-max-echecs-par-ip: 5
   storage:
     photos-directory: ./target/test-uploads/photos
 

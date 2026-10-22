@@ -20,10 +20,18 @@ import pcpro.atelier.features.employe.infra.EmployeRepository;
 @Transactional
 public class AuthService {
 
+  /**
+   * Résultat d'une connexion : le token d'accès (renvoyé en JSON) et le refresh token
+   * (posé en cookie HttpOnly par le contrôleur, jamais exposé au JavaScript).
+   */
+  public record Connexion(LoginResponse reponse, String refreshToken) {
+  }
+
   private final EmployeRepository employeRepository;
   private final EmployeService employeService;
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
+  private final SessionService sessionService;
   private final LoginAttemptService loginAttemptService;
   private final CurrentEmploye currentEmploye;
 
@@ -35,6 +43,7 @@ public class AuthService {
       EmployeService employeService,
       PasswordEncoder passwordEncoder,
       JwtService jwtService,
+      SessionService sessionService,
       LoginAttemptService loginAttemptService,
       CurrentEmploye currentEmploye
   ) {
@@ -42,15 +51,15 @@ public class AuthService {
     this.employeService = employeService;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
+    this.sessionService = sessionService;
     this.loginAttemptService = loginAttemptService;
     this.currentEmploye = currentEmploye;
     this.hashFactice = passwordEncoder.encode("mot-de-passe-factice");
   }
 
-  @Transactional(readOnly = true)
-  public LoginResponse login(String loginSaisi, String motDePasse) {
+  public Connexion login(String loginSaisi, String motDePasse, String ip, String userAgent) {
     String login = EmployeService.normaliserLogin(loginSaisi);
-    if (loginAttemptService.estBloque(login)) {
+    if (loginAttemptService.estBloque(login, ip)) {
       throw new TooManyRequestsException("Trop de tentatives échouées, réessayez dans quelques minutes");
     }
 
@@ -63,12 +72,25 @@ public class AuthService {
     }
 
     if (!ok || !employe.isActif()) {
-      loginAttemptService.echec(login);
+      loginAttemptService.echec(login, ip);
       throw new BadCredentialsException("Login ou mot de passe incorrect");
     }
 
     loginAttemptService.succes(login);
-    return reponse(employe);
+    return connexion(employe, userAgent);
+  }
+
+  /**
+   * Nouveau token d'accès à partir du refresh token (le front l'appelle quand le token d'accès expire).
+   */
+  @Transactional(noRollbackFor = BadCredentialsException.class)
+  public Connexion renouveler(String refreshToken, String userAgent) {
+    SessionService.SessionOuverte session = sessionService.renouveler(refreshToken, userAgent);
+    return new Connexion(reponse(session.employe()), session.refreshToken());
+  }
+
+  public void deconnecter(String refreshToken) {
+    sessionService.fermer(refreshToken);
   }
 
   @Transactional(readOnly = true)
@@ -77,16 +99,17 @@ public class AuthService {
   }
 
   /**
-   * Change son propre mot de passe. Les autres sessions sont déconnectées, un nouveau token est renvoyé.
+   * Change son propre mot de passe. Tous les appareils sont déconnectés, sauf celui-ci qui reçoit
+   * une nouvelle session.
    */
-  public LoginResponse changerMotDePasse(String ancien, String nouveau) {
+  public Connexion changerMotDePasse(String ancien, String nouveau, String userAgent) {
     Employe employe = currentEmploye.get();
     if (!verifier(ancien, employe.getPasswordHash())) {
       throw new BadRequestException("L'ancien mot de passe est incorrect");
     }
     employeService.definirMotDePasse(employe, nouveau);
     employeRepository.flush();
-    return reponse(employe);
+    return connexion(employe, userAgent);
   }
 
   private boolean verifier(String motDePasse, String hash) {
@@ -95,6 +118,10 @@ public class AuthService {
     } catch (IllegalArgumentException e) {
       return false; // mot de passe trop long pour bcrypt, hash illisible...
     }
+  }
+
+  private Connexion connexion(Employe employe, String userAgent) {
+    return new Connexion(reponse(employe), sessionService.ouvrir(employe, userAgent));
   }
 
   private LoginResponse reponse(Employe employe) {

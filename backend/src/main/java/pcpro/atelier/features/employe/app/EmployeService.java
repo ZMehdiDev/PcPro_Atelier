@@ -14,6 +14,7 @@ import pcpro.atelier.core.exception.BadRequestException;
 import pcpro.atelier.core.exception.ConflictException;
 import pcpro.atelier.core.exception.ResourceNotFoundException;
 import pcpro.atelier.core.security.CurrentEmploye;
+import pcpro.atelier.features.auth.app.SessionService;
 import pcpro.atelier.features.employe.api.dto.CreateEmployeRequest;
 import pcpro.atelier.features.employe.api.dto.EmployeDto;
 import pcpro.atelier.features.employe.api.dto.UpdateEmployeRequest;
@@ -27,17 +28,20 @@ public class EmployeService {
   private final EmployeRepository employeRepository;
   private final PasswordEncoder passwordEncoder;
   private final CurrentEmploye currentEmploye;
+  private final SessionService sessionService;
   private final Clock clock;
 
   public EmployeService(
       EmployeRepository employeRepository,
       PasswordEncoder passwordEncoder,
       CurrentEmploye currentEmploye,
+      SessionService sessionService,
       Clock clock
   ) {
     this.employeRepository = employeRepository;
     this.passwordEncoder = passwordEncoder;
     this.currentEmploye = currentEmploye;
+    this.sessionService = sessionService;
     this.clock = clock;
   }
 
@@ -87,6 +91,7 @@ public class EmployeService {
     employe.setRole(request.role());
     if (employe.isActif() && !request.actif()) {
       employe.setCredentialsChangedAt(OffsetDateTime.now(clock));
+      sessionService.fermerToutes(employe);
     }
     employe.setActif(request.actif());
     return toDto(employe);
@@ -99,11 +104,12 @@ public class EmployeService {
   }
 
   /**
-   * Change le mot de passe et révoque les tokens existants de cet employé.
+   * Change le mot de passe et déconnecte l'employé de tous ses appareils.
    */
   public void definirMotDePasse(Employe employe, String motDePasse) {
     employe.setPasswordHash(encoderMotDePasse(motDePasse));
     employe.setCredentialsChangedAt(OffsetDateTime.now(clock));
+    sessionService.fermerToutes(employe);
   }
 
   /** bcrypt ignore tout au-delà de 72 octets : on refuse plutôt que de tronquer en silence. */

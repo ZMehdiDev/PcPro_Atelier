@@ -31,10 +31,20 @@ cd backend && ./mvnw test
 
 ## Déployer
 
+L'appli est faite pour être accessible depuis l'atelier, la maison ou un téléphone, en HTTPS.
+Il faut une machine allumée en permanence (serveur à l'atelier ou petit VPS), un nom de domaine
+(ex : `atelier.pcpro-services.be`) qui pointe vers elle, et les ports 80/443 ouverts.
+
 ```bash
-cp .env.example .env    # APP_JWT_SECRET et APP_BOOTSTRAP_ADMIN_PASSWORD obligatoires
-cd infra && docker compose --env-file ../.env -f docker-compose.dev.yml up -d --build
+cp .env.example .env    # APP_DOMAIN, POSTGRES_PASSWORD, APP_JWT_SECRET et APP_BOOTSTRAP_ADMIN_PASSWORD
+cd infra && docker compose --env-file ../.env -f docker-compose.prod.yml up -d --build
 ```
+
+- **Caddy** obtient le certificat HTTPS tout seul et sert le front (dossier `infra/front`) et l'API
+  (`/api`) sur le même domaine. Le backend et PostgreSQL ne sont pas exposés.
+- **Sauvegarde** de la base chaque nuit dans `infra/backups` (14 jours gardés). À copier ailleurs
+  régulièrement, comme le volume `photos_data`.
+- `docker-compose.dev.yml` lance la même chose en local, sans HTTPS.
 
 Au premier démarrage, le compte `APP_BOOTSTRAP_ADMIN_LOGIN` reçoit le mot de passe
 `APP_BOOTSTRAP_ADMIN_PASSWORD` et le rôle admin. L'admin crée ensuite les autres comptes
@@ -42,22 +52,24 @@ Au premier démarrage, le compte `APP_BOOTSTRAP_ADMIN_LOGIN` reçoit le mot de p
 
 | Variable | Rôle |
 |---|---|
+| `APP_DOMAIN` | Domaine public (compose de prod). |
 | `APP_JWT_SECRET` | Clé de signature des tokens (32 caractères minimum). **Obligatoire**, l'appli refuse de démarrer sans. |
 | `APP_BOOTSTRAP_ADMIN_LOGIN` / `_PASSWORD` | Premier compte admin (n'écrase jamais un mot de passe existant). |
-| `APP_CORS_ALLOWED_ORIGINS` | URL(s) du front, séparées par des virgules. |
+| `APP_CORS_ALLOWED_ORIGINS` | URL(s) du front si elles diffèrent de l'API (inutile en prod derrière Caddy). |
+| `APP_COOKIE_SECURE` | `false` seulement en local sans HTTPS (`true` par défaut). |
 | `APP_SWAGGER_ENABLED` | `true` pour exposer Swagger (désactivé par défaut). |
 | `APP_STORAGE_PHOTOS_DIRECTORY` | Dossier de stockage des photos. |
 
 ## API
 
-Toutes les routes sauf `POST /api/auth/login` et `GET /api/health` demandent un header
+Toutes les routes sauf `POST /api/auth/login|refresh|logout` et `GET /api/health` demandent un header
 `Authorization: Bearer <token>`. Les erreurs ont toujours le même format JSON
 (`status`, `message`, `fieldErrors`, `traceId`).
 
 | | |
 |---|---|
-| **Connexion** | `POST /api/auth/login` → token (12 h) · `GET /api/auth/moi` · `POST /api/auth/mot-de-passe` |
-| **Dossiers** | `POST /api/dossiers` · `GET /api/dossiers?q=&statut=&actifs=&priorite=&bloque=&technicienId=&enRetard=` · `GET /api/dossiers/stats` · `GET/PUT /api/dossiers/{id}` · `PATCH /api/dossiers/{id}/statut` · `…/technicien` · `…/priorite` · `…/blocage` |
+| **Connexion** | `POST /api/auth/login` → token (15 min) + cookie de session · `POST /api/auth/refresh` · `POST /api/auth/logout` · `GET /api/auth/moi` · `POST /api/auth/mot-de-passe` |
+| **Dossiers** | `POST /api/dossiers` · `GET /api/dossiers?q=&statut=&actifs=&priorite=&bloque=&technicienId=&mesDossiers=&enRetard=` · `GET /api/dossiers/stats` · `GET/PUT /api/dossiers/{id}` · `PATCH /api/dossiers/{id}/statut` · `…/technicien` · `…/priorite` · `…/blocage` |
 | **Pièces** | `POST /api/dossiers/{id}/pieces` · `PUT …/pieces/{pieceId}` · `PATCH …/pieces/{pieceId}/etat` |
 | **Notes** | `POST /api/dossiers/{id}/notes` |
 | **Photos** | `POST /api/dossiers/{id}/photos` (multipart `file`) · `GET …/photos/{photoId}/contenu` · `DELETE …/photos/{photoId}` |
@@ -74,6 +86,9 @@ Toutes les routes sauf `POST /api/auth/login` et `GET /api/health` demandent un 
   dossier en `ATTENTE_PIECE` ; quand toutes les pièces attendues sont reçues, il repasse en `REPARATION`.
 - **Clients** : retrouvés par numéro de téléphone (normalisé : `0470 12 34 56` = `0470123456`).
 - **Historique** : chaque action est enregistrée avec l'employé connecté.
-- **Sécurité** : mots de passe bcrypt, blocage 15 min après 5 échecs de connexion, tokens révoqués
-  quand le mot de passe change ou que l'employé est désactivé, photos vérifiées sur leur contenu
+- **Rester connecté** : la connexion pose un cookie `HttpOnly` valable 30 jours (prolongé à chaque
+  utilisation) ; le front appelle `/api/auth/refresh` quand le token de 15 min expire. Chaque refresh
+  change le cookie, et un ancien cookie rejoué plus tard (copié) déconnecte tous les appareils de l'employé.
+- **Sécurité** : mots de passe bcrypt, blocage 15 min après 5 échecs sur un login ou 20 depuis une même
+  adresse IP, tous les appareils déconnectés quand le mot de passe change ou que l'employé est désactivé, photos vérifiées sur leur contenu
   (JPEG/PNG/WebP, 10 Mo max).

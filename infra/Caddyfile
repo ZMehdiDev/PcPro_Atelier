@@ -1,0 +1,30 @@
+# Reverse proxy HTTPS (certificat Let's Encrypt automatique pour APP_DOMAIN).
+{$APP_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "same-origin"
+		# Caméra autorisée pour prendre les photos des appareils depuis le téléphone
+		Permissions-Policy "camera=(self), microphone=(), geolocation=()"
+		-Server
+	}
+
+	# Les photos font jusqu'à 10 Mo
+	request_body {
+		max_size 12MB
+	}
+
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+
+	# Front (application Angular) : toute autre URL renvoie index.html
+	handle {
+		root * /srv/front
+		try_files {path} /index.html
+		file_server
+	}
+}
