@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import com.jayway.jsonpath.JsonPath;
 
 import pcpro.atelier.core.enums.Role;
+import pcpro.atelier.core.security.LoginAttemptService;
 import pcpro.atelier.features.employe.domain.Employe;
 import pcpro.atelier.features.employe.infra.EmployeRepository;
 import tools.jackson.databind.ObjectMapper;
@@ -51,7 +52,10 @@ public abstract class IntegrationTest {
   protected PasswordEncoder passwordEncoder;
 
   @Autowired
-  private JdbcClient jdbcClient;
+  protected JdbcClient jdbcClient;
+
+  @Autowired
+  private LoginAttemptService loginAttemptService;
 
   protected Employe admin;
   protected Employe tech;
@@ -61,9 +65,10 @@ public abstract class IntegrationTest {
   @BeforeEach
   void resetDatabase() throws Exception {
     jdbcClient.sql("""
-        TRUNCATE evenement, note, photo, piece, dossier, client, reference_compteur, employe
+        TRUNCATE evenement, note, photo, piece, dossier, client, reference_compteur, session_employe, employe
         RESTART IDENTITY CASCADE
         """).update();
+    loginAttemptService.reinitialiser();
     admin = creerEmploye("Zak", "admin", ADMIN_PASSWORD, Role.ADMIN);
     tech = creerEmploye("Frere", "tech", TECH_PASSWORD, Role.TECHNICIEN);
     adminToken = login("admin", ADMIN_PASSWORD);

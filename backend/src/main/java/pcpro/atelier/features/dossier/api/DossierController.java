@@ -45,6 +45,7 @@ public class DossierController {
   /**
    * Recherche paginée. Tous les filtres sont optionnels et cumulables.
    * q cherche dans la référence, le nom/téléphone du client, la marque, le modèle et le n° de série.
+   * mesDossiers=true : seulement les dossiers assignés à l'employé connecté (remplace technicienId).
    * Tri possible (sort=) : createdAt, dateEntree, dateEstimee, reference, statut.
    */
   @GetMapping
@@ -54,12 +55,13 @@ public class DossierController {
       @RequestParam(required = false) Priorite priorite,
       @RequestParam(required = false) Boolean bloque,
       @RequestParam(required = false) Long technicienId,
+      @RequestParam(required = false) Boolean mesDossiers,
       @RequestParam(required = false) Boolean enRetard,
       @RequestParam(required = false) String q,
       @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
   ) {
     return dossierService.rechercher(
-        new DossierService.Recherche(statut, actifs, priorite, bloque, technicienId, enRetard, q),
+        new DossierService.Recherche(statut, actifs, priorite, bloque, technicienId, mesDossiers, enRetard, q),
         TriAutorise.verifier(pageable, TRIS)
     );
   }

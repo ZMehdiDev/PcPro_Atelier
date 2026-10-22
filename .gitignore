@@ -102,3 +102,9 @@ temp/
 *.crt
 *.p12
 *.keystore
+
+####################################
+# Production (infra/docker-compose.prod.yml)
+####################################
+infra/backups/
+infra/front/

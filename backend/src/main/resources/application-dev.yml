@@ -13,4 +13,5 @@ springdoc:
 app:
   security:
     jwt-secret: ${APP_JWT_SECRET:dev-only-secret-ne-pas-utiliser-en-production-0123456789}
+    cookie-secure: false
     cors-allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:4200}
