@@ -18,7 +18,6 @@ public record DossierSummaryDto(
     String modele,
     StatutDossier statut,
     Priorite priorite,
-    boolean bloque,
     TechnicienDto technicien,
     LocalDate dateEntree,
     LocalDate dateEstimee,

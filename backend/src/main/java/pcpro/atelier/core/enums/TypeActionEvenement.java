@@ -6,6 +6,7 @@ public enum TypeActionEvenement {
   CHANGEMENT_STATUT,
   CHANGEMENT_TECHNICIEN,
   CHANGEMENT_PRIORITE,
+  /** Conservé pour l'historique existant (le blocage a été retiré en V8). */
   CHANGEMENT_BLOCAGE,
   AJOUT_NOTE,
   AJOUT_PIECE,

@@ -45,9 +45,6 @@ public interface DossierRepository extends JpaRepository<Dossier, Long>, JpaSpec
   @Query("select d.statut as statut, count(d) as total from Dossier d group by d.statut")
   List<StatutCount> compterParStatut();
 
-  @Query("select count(d) from Dossier d where d.bloque = true and d.statut <> pcpro.atelier.core.enums.StatutDossier.CLOTURE")
-  long compterBloques();
-
   @Query("""
     select count(d) from Dossier d
     where d.technicienAssigne.id = :employeId and d.statut <> pcpro.atelier.core.enums.StatutDossier.CLOTURE

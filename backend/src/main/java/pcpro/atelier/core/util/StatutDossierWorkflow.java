@@ -10,10 +10,10 @@ import pcpro.atelier.core.exception.ConflictException;
 /**
  * Cycle de vie d'un dossier de réparation.
  *
- * RECU -> DIAGNOSTIC -> (ATTENTE_CLIENT | ATTENTE_PIECE) -> REPARATION -> TESTS -> PRET -> CLOTURE
+ * RECU -> DIAGNOSTIC -> (ATTENTE_CLIENT | ATTENTE_PIECE) -> REPARATION -> PRET -> CLOTURE
  *
- * Les retours en arrière utiles à l'atelier sont permis (ex : TESTS -> REPARATION si le test échoue,
- * PRET -> REPARATION si le client revient avant de récupérer). Un appareil peut aussi être rendu
+ * Les retours en arrière utiles à l'atelier sont permis (ex : PRET -> REPARATION si le client revient
+ * avant de récupérer ou si un dernier test échoue). Un appareil peut aussi être rendu
  * sans réparation (RECU/DIAGNOSTIC/ATTENTE_CLIENT -> PRET). CLOTURE -> DIAGNOSTIC est la réouverture,
  * réservée aux administrateurs (contrôlée par le service).
  */
@@ -29,11 +29,9 @@ public final class StatutDossierWorkflow {
       StatutDossier.ATTENTE_PIECE, EnumSet.of(
           StatutDossier.DIAGNOSTIC, StatutDossier.ATTENTE_CLIENT, StatutDossier.REPARATION),
       StatutDossier.REPARATION, EnumSet.of(
-          StatutDossier.ATTENTE_CLIENT, StatutDossier.ATTENTE_PIECE, StatutDossier.TESTS, StatutDossier.PRET),
-      StatutDossier.TESTS, EnumSet.of(
-          StatutDossier.REPARATION, StatutDossier.ATTENTE_PIECE, StatutDossier.PRET),
+          StatutDossier.ATTENTE_CLIENT, StatutDossier.ATTENTE_PIECE, StatutDossier.PRET),
       StatutDossier.PRET, EnumSet.of(
-          StatutDossier.REPARATION, StatutDossier.TESTS, StatutDossier.CLOTURE),
+          StatutDossier.REPARATION, StatutDossier.CLOTURE),
       StatutDossier.CLOTURE, EnumSet.of(
           StatutDossier.DIAGNOSTIC)
   );

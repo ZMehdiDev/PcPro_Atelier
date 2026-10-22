@@ -13,7 +13,6 @@ import jakarta.validation.Valid;
 import pcpro.atelier.core.api.TriAutorise;
 import pcpro.atelier.core.enums.Priorite;
 import pcpro.atelier.core.enums.StatutDossier;
-import pcpro.atelier.features.dossier.api.dto.ChangeBlocageRequest;
 import pcpro.atelier.features.dossier.api.dto.ChangePrioriteRequest;
 import pcpro.atelier.features.dossier.api.dto.ChangeStatutRequest;
 import pcpro.atelier.features.dossier.api.dto.ChangeTechnicienRequest;
@@ -53,7 +52,6 @@ public class DossierController {
       @RequestParam(required = false) StatutDossier statut,
       @RequestParam(required = false) Boolean actifs,
       @RequestParam(required = false) Priorite priorite,
-      @RequestParam(required = false) Boolean bloque,
       @RequestParam(required = false) Long technicienId,
       @RequestParam(required = false) Boolean mesDossiers,
       @RequestParam(required = false) Boolean enRetard,
@@ -61,7 +59,7 @@ public class DossierController {
       @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
   ) {
     return dossierService.rechercher(
-        new DossierService.Recherche(statut, actifs, priorite, bloque, technicienId, mesDossiers, enRetard, q),
+        new DossierService.Recherche(statut, actifs, priorite, technicienId, mesDossiers, enRetard, q),
         TriAutorise.verifier(pageable, TRIS)
     );
   }
@@ -94,10 +92,5 @@ public class DossierController {
   @PatchMapping("/{id}/priorite")
   public DossierSummaryDto changerPriorite(@PathVariable Long id, @Valid @RequestBody ChangePrioriteRequest request) {
     return dossierService.changerPriorite(id, request.priorite());
-  }
-
-  @PatchMapping("/{id}/blocage")
-  public DossierSummaryDto changerBlocage(@PathVariable Long id, @Valid @RequestBody ChangeBlocageRequest request) {
-    return dossierService.changerBlocage(id, request);
   }
 }

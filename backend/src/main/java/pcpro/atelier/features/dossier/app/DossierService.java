@@ -29,7 +29,6 @@ import pcpro.atelier.core.util.ReferenceGenerator;
 import pcpro.atelier.core.util.StatutDossierWorkflow;
 import pcpro.atelier.features.client.app.ClientService;
 import pcpro.atelier.features.client.domain.Client;
-import pcpro.atelier.features.dossier.api.dto.ChangeBlocageRequest;
 import pcpro.atelier.features.dossier.api.dto.CreateDossierRequest;
 import pcpro.atelier.features.dossier.api.dto.DossierDetailDto;
 import pcpro.atelier.features.dossier.api.dto.DossierStatsDto;
@@ -54,7 +53,6 @@ public class DossierService {
       StatutDossier statut,
       Boolean actifs,
       Priorite priorite,
-      Boolean bloque,
       Long technicienId,
       Boolean mesDossiers,
       Boolean enRetard,
@@ -108,7 +106,6 @@ public class DossierService {
         DossierSpecifications.statut(recherche.statut()),
         DossierSpecifications.actifs(recherche.actifs()),
         DossierSpecifications.priorite(recherche.priorite()),
-        DossierSpecifications.bloque(recherche.bloque()),
         DossierSpecifications.technicien(technicienId),
         DossierSpecifications.enRetard(recherche.enRetard(), LocalDate.now(clock)),
         DossierSpecifications.recherche(recherche.q())
@@ -143,7 +140,6 @@ public class DossierService {
     return new DossierStatsDto(
         parStatut,
         actifs,
-        dossierRepository.compterBloques(),
         dossierRepository.compterEnRetard(LocalDate.now(clock)),
         dossierRepository.compterActifsAssignesA(currentEmploye.id())
     );
@@ -214,9 +210,6 @@ public class DossierService {
     if (ancienStatut == StatutDossier.CLOTURE && !currentEmploye.estAdmin()) {
       throw new AccessDeniedException("Seul un administrateur peut rouvrir un dossier clôturé");
     }
-    if (nouveauStatut == StatutDossier.CLOTURE && dossier.isBloque()) {
-      throw new ConflictException("Impossible de clôturer un dossier bloqué (" + dossier.getRaisonBlocage() + ")");
-    }
 
     appliquerStatut(dossier, nouveauStatut, commentaire);
     return mapper.toSummaryDto(dossier);
@@ -276,25 +269,6 @@ public class DossierService {
     return mapper.toSummaryDto(dossier);
   }
 
-  public DossierSummaryDto changerBlocage(Long id, ChangeBlocageRequest request) {
-    Dossier dossier = getModifiableOrThrow(id);
-    boolean bloque = request.bloque();
-    String raison = texteOuNull(request.raisonBlocage());
-
-    if (bloque && raison == null) {
-      throw new BadRequestException("La raison de blocage est obligatoire lors du blocage d'un dossier");
-    }
-    if (dossier.isBloque() == bloque && Objects.equals(dossier.getRaisonBlocage(), bloque ? raison : null)) {
-      return mapper.toSummaryDto(dossier);
-    }
-
-    boolean ancienBlocage = dossier.isBloque();
-    dossier.setBloque(bloque);
-    dossier.setRaisonBlocage(bloque ? raison : null);
-    evenementService.journaliser(dossier, TypeActionEvenement.CHANGEMENT_BLOCAGE,
-        "Bloqué: " + ancienBlocage, "Bloqué: " + bloque, raison);
-    return mapper.toSummaryDto(dossier);
-  }
 
   // ---------- Utilitaires partagés avec pièces / photos / notes ----------
 

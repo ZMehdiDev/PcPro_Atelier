@@ -23,8 +23,6 @@ public record DossierDetailDto(
     StatutDossier statut,
     /** Statuts vers lesquels le dossier peut passer (pour le front). */
     Set<StatutDossier> statutsPossibles,
-    boolean bloque,
-    String raisonBlocage,
     TechnicienDto technicien,
     Priorite priorite,
     LocalDate dateEntree,

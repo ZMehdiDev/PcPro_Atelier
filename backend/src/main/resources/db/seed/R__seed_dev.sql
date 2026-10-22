@@ -40,7 +40,7 @@ BEGIN
     -- DOSSIERS (50 dossiers avec statuts variés)
     -- ============================================
     -- Références au format PCP-YYYY-NNNNNN
-    -- Statuts répartis : RECU (10), DIAGNOSTIC (8), ATTENTE_CLIENT (5), ATTENTE_PIECE (8), REPARATION (6), TESTS (5), PRET (4), CLOTURE (4)
+    -- Statuts répartis : RECU (10), DIAGNOSTIC (8), ATTENTE_CLIENT (5), ATTENTE_PIECE (8), REPARATION (11), PRET (4), CLOTURE (4)
 
     -- Dossiers RECU (10)
     INSERT INTO dossier (reference, client_id, type_appareil, marque, modele, numero_serie, statut, priorite, technicien_assigne_id, date_entree, date_estimee, created_at) VALUES
@@ -94,13 +94,13 @@ BEGIN
       ('PCP-2026-000036', 6, 'PORTABLE', 'Lenovo', 'ThinkPad P1', 'SN-LNV-036', 'REPARATION', 'BASSE', 1, CURRENT_DATE - 14, CURRENT_DATE + 3, NOW() - INTERVAL '14 days'),
       ('PCP-2026-000037', 7, 'PORTABLE', 'ASUS', 'ROG Zephyrus', 'SN-ASU-037', 'REPARATION', 'NORMALE', 2, CURRENT_DATE - 13, CURRENT_DATE + 2, NOW() - INTERVAL '13 days');
 
-    -- Dossiers TESTS (5)
+    -- Dossiers REPARATION, en fin de réparation (5)
     INSERT INTO dossier (reference, client_id, type_appareil, marque, modele, numero_serie, statut, priorite, technicien_assigne_id, date_entree, date_estimee, created_at) VALUES
-      ('PCP-2026-000038', 8, 'PORTABLE', 'HP', 'Envy', 'SN-HP-038', 'TESTS', 'NORMALE', 1, CURRENT_DATE - 18, CURRENT_DATE, NOW() - INTERVAL '18 days'),
-      ('PCP-2026-000039', 9, 'TOUR', 'Corsair', 'One Pro', 'SN-COR-039', 'TESTS', 'HAUTE', 2, CURRENT_DATE - 17, CURRENT_DATE + 1, NOW() - INTERVAL '17 days'),
-      ('PCP-2026-000040', 10, 'PORTABLE', 'Dell', 'Alienware', 'SN-DEL-040', 'TESTS', 'NORMALE', 1, CURRENT_DATE - 19, CURRENT_DATE, NOW() - INTERVAL '19 days'),
-      ('PCP-2026-000041', 11, 'AUTRE', 'Apple', 'Mac Pro', 'SN-APP-041', 'TESTS', 'BASSE', 2, CURRENT_DATE - 18, CURRENT_DATE + 1, NOW() - INTERVAL '18 days'),
-      ('PCP-2026-000042', 12, 'PORTABLE', 'Lenovo', 'IdeaPad Gaming', 'SN-LNV-042', 'TESTS', 'NORMALE', 1, CURRENT_DATE - 17, CURRENT_DATE, NOW() - INTERVAL '17 days');
+      ('PCP-2026-000038', 8, 'PORTABLE', 'HP', 'Envy', 'SN-HP-038', 'REPARATION', 'NORMALE', 1, CURRENT_DATE - 18, CURRENT_DATE, NOW() - INTERVAL '18 days'),
+      ('PCP-2026-000039', 9, 'TOUR', 'Corsair', 'One Pro', 'SN-COR-039', 'REPARATION', 'HAUTE', 2, CURRENT_DATE - 17, CURRENT_DATE + 1, NOW() - INTERVAL '17 days'),
+      ('PCP-2026-000040', 10, 'PORTABLE', 'Dell', 'Alienware', 'SN-DEL-040', 'REPARATION', 'NORMALE', 1, CURRENT_DATE - 19, CURRENT_DATE, NOW() - INTERVAL '19 days'),
+      ('PCP-2026-000041', 11, 'AUTRE', 'Apple', 'Mac Pro', 'SN-APP-041', 'REPARATION', 'BASSE', 2, CURRENT_DATE - 18, CURRENT_DATE + 1, NOW() - INTERVAL '18 days'),
+      ('PCP-2026-000042', 12, 'PORTABLE', 'Lenovo', 'IdeaPad Gaming', 'SN-LNV-042', 'REPARATION', 'NORMALE', 1, CURRENT_DATE - 17, CURRENT_DATE, NOW() - INTERVAL '17 days');
 
     -- Dossiers PRET (4)
     INSERT INTO dossier (reference, client_id, type_appareil, marque, modele, numero_serie, statut, priorite, technicien_assigne_id, date_entree, date_estimee, created_at) VALUES
@@ -117,7 +117,6 @@ BEGIN
       ('PCP-2026-000050', 5, 'AUTRE', 'Apple', 'Mac Studio', 'SN-APP-050', 'CLOTURE', 'BASSE', 1, CURRENT_DATE - 22, CURRENT_DATE - 2, NOW() - INTERVAL '22 days', NOW() - INTERVAL '2 days');
 
     -- Dossier bloqué (pour tester le workflow)
-    UPDATE dossier SET bloque = TRUE, raison_blocage = 'En attente de validation client pour réparation coûteuse' WHERE reference = 'PCP-2026-000020';
 
     -- ============================================
     -- NOTES (0-5 notes par dossier, ~80 notes au total)
@@ -145,7 +144,7 @@ BEGIN
       (32, 'Remplacement carte mère effectué. Tests de stabilité en cours.', FALSE, NOW() - INTERVAL '15 days' + INTERVAL '2 hours'),
       (32, 'Système stable après 24h de tests. Prêt pour tests finaux.', FALSE, NOW() - INTERVAL '14 days' + INTERVAL '6 hours'),
 
-      -- Dossier 38 (TESTS)
+      -- Dossier 38 (REPARATION)
       (38, 'Tests de performance : OK. Températures normales.', FALSE, NOW() - INTERVAL '18 days' + INTERVAL '3 hours'),
       (38, 'Tests de connectivité : tous les ports fonctionnels.', FALSE, NOW() - INTERVAL '18 days' + INTERVAL '5 hours'),
       (38, 'Validation finale effectuée. Prêt pour remise au client.', FALSE, NOW() - INTERVAL '17 days' + INTERVAL '2 hours'),
@@ -188,7 +187,7 @@ BEGIN
     -- ============================================
     -- PIECES (0-3 pièces par dossier, ~60 pièces au total)
     -- ============================================
-    -- Pièces pour dossiers en ATTENTE_PIECE, REPARATION, TESTS
+    -- Pièces pour dossiers en ATTENTE_PIECE, REPARATION
     INSERT INTO piece (dossier_id, reference, fournisseur, cout, etat, created_at) VALUES
       -- Dossier 24 (ATTENTE_PIECE)
       (24, 'LCD-15.6-FHD-001', 'TechParts', 89.50, 'COMMANDEE', NOW() - INTERVAL '12 days' + INTERVAL '2 hours'),
@@ -245,7 +244,7 @@ BEGIN
       NOW() - (random() * 20)::int * INTERVAL '1 day' + (random() * 8)::int * INTERVAL '1 hour'
     FROM (
       SELECT id as dossier_id FROM dossier 
-      WHERE statut IN ('ATTENTE_PIECE', 'REPARATION', 'TESTS', 'PRET')
+      WHERE statut IN ('ATTENTE_PIECE', 'REPARATION', 'PRET')
       ORDER BY random() LIMIT 25
     ) d;
 
@@ -280,11 +279,8 @@ BEGIN
       -- Dossier 32 (REPARATION) : ATTENTE_PIECE -> REPARATION
       (32, 1, 'CHANGEMENT_STATUT', 'ATTENTE_PIECE', 'REPARATION', 'Pièces reçues, début réparation', NOW() - INTERVAL '15 days' + INTERVAL '1 hour'),
 
-      -- Dossier 38 (TESTS) : REPARATION -> TESTS
-      (38, 1, 'CHANGEMENT_STATUT', 'REPARATION', 'TESTS', 'Réparation terminée, tests en cours', NOW() - INTERVAL '18 days' + INTERVAL '2 hours'),
-
-      -- Dossier 43 (PRET) : TESTS -> PRET
-      (43, 2, 'CHANGEMENT_STATUT', 'TESTS', 'PRET', 'Tests validés, prêt pour remise', NOW() - INTERVAL '20 days' + INTERVAL '4 hours'),
+      -- Dossier 43 (PRET) : REPARATION -> PRET
+      (43, 2, 'CHANGEMENT_STATUT', 'REPARATION', 'PRET', 'Tests validés, prêt pour remise', NOW() - INTERVAL '20 days' + INTERVAL '4 hours'),
 
       -- Dossier 47 (CLOTURE) : PRET -> CLOTURE
       (47, 2, 'CHANGEMENT_STATUT', 'PRET', 'CLOTURE', 'Remis au client', NOW() - INTERVAL '25 days' + INTERVAL '2 hours'),

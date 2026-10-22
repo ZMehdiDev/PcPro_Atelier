@@ -39,10 +39,6 @@ public final class DossierSpecifications {
     return priorite == null ? null : (root, query, cb) -> cb.equal(root.get("priorite"), priorite);
   }
 
-  public static Specification<Dossier> bloque(Boolean bloque) {
-    return bloque == null ? null : (root, query, cb) -> cb.equal(root.get("bloque"), bloque);
-  }
-
   public static Specification<Dossier> technicien(Long technicienId) {
     return technicienId == null
         ? null

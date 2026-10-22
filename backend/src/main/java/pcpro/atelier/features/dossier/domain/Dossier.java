@@ -48,11 +48,6 @@ public class Dossier {
   @Column(nullable = false, length = 30)
   private StatutDossier statut;
 
-  @Column(nullable = false)
-  private boolean bloque = false;
-
-  @Column(name = "raison_blocage", length = 200)
-  private String raisonBlocage;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "technicien_assigne_id")
@@ -164,21 +159,9 @@ public class Dossier {
     this.statut = statut;
   }
 
-  public boolean isBloque() {
-    return bloque;
-  }
 
-  public void setBloque(boolean bloque) {
-    this.bloque = bloque;
-  }
 
-  public String getRaisonBlocage() {
-    return raisonBlocage;
-  }
 
-  public void setRaisonBlocage(String raisonBlocage) {
-    this.raisonBlocage = raisonBlocage;
-  }
 
   public Employe getTechnicienAssigne() {
     return technicienAssigne;
