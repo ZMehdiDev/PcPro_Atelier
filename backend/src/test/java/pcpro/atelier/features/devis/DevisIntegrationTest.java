@@ -97,7 +97,7 @@ class DevisIntegrationTest extends IntegrationTest {
 
   @Test
   void devisEnvoyeParEmailAvecLeLienDeSuivi() throws Exception {
-    long id = creerDossier(Fixtures.nouveauDossierAvecEmail("Martin Dubois", "0470123456", "martin@example.be"));
+    long id = creerDossierClientAvecEmail();
     mvc.perform(json(techToken, put("/api/dossiers/" + id + "/devis"), DEVIS)).andExpect(status().isOk());
 
     mvc.perform(as(techToken, post("/api/dossiers/" + id + "/devis/envoi"))).andExpect(status().isNoContent());

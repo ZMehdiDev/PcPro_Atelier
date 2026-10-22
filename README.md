@@ -73,7 +73,7 @@ Toutes les routes sauf `POST /api/auth/login|refresh|logout`, `GET /api/health` 
 | | |
 |---|---|
 | **Connexion** | `POST /api/auth/login` → token (15 min) + cookie de session · `POST /api/auth/refresh` · `POST /api/auth/logout` · `GET /api/auth/moi` · `POST /api/auth/mot-de-passe` |
-| **Dossiers** | `POST /api/dossiers` · `GET /api/dossiers?q=&statut=&actifs=&priorite=&technicienId=&mesDossiers=&enRetard=&nonRecuperes=` · `GET /api/dossiers/stats` · `GET /api/dossiers/garanties?clientId=&numeroSerie=` · `GET/PUT /api/dossiers/{id}` · `PATCH /api/dossiers/{id}/statut` · `…/technicien` · `…/priorite` · `POST …/relance` · `GET …/bon-depot` (PDF) |
+| **Dossiers** | `POST /api/dossiers` · `GET /api/dossiers?q=&statut=&actifs=&priorite=&technicienId=&mesDossiers=&enRetard=&nonRecuperes=` · `GET /api/dossiers/stats` · `GET /api/dossiers/garanties?clientId=&numeroSerie=` · `GET/PUT /api/dossiers/{id}` · `PATCH /api/dossiers/{id}/statut` · `…/technicien` · `…/priorite` · `POST …/relance` · `GET …/bon-depot` (PDF, exemplaires client et atelier) |
 | **Devis** | `PUT /api/dossiers/{id}/devis` · `POST …/devis/decision` · `POST …/devis/envoi` (email) · `DELETE …/devis` |
 | **Paiements** | `POST /api/dossiers/{id}/paiements` · admin : `DELETE …/paiements/{paiementId}`, `GET /api/caisse?du=&au=` |
 | **Suivi client** (public) | `GET /api/public/suivi/{reference}?code=` (ou `?telephone=`) · `POST /api/public/suivi/{reference}/devis` |
@@ -88,6 +88,7 @@ Toutes les routes sauf `POST /api/auth/login|refresh|logout`, `GET /api/health` 
 - **Statuts du dossier** : `RECU → DIAGNOSTIC → ATTENTE_CLIENT / ATTENTE_PIECE → REPARATION → PRET → CLOTURE`,
   avec les retours en arrière utiles (test raté, client qui revient…). Le détail d'un dossier renvoie
   `statutsPossibles`. Un dossier clôturé n'accepte plus que des notes et seul un admin peut le rouvrir.
+- **Dépôt** : le client qui a un email reçoit son bon de dépôt en PDF dès la création du dossier.
 - **Prêt** : le client reçoit un email (s'il a une adresse, sauf `notifierClient: false`). Prêt depuis plus
   de 7 jours sans être récupéré : il apparaît dans `nonRecuperes`, et `POST …/relance` renvoie un rappel.
 - **Devis** (prix TTC) : le faire met le dossier en `ATTENTE_CLIENT` ; accepté (par l'atelier ou par le

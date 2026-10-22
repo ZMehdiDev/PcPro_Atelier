@@ -30,19 +30,30 @@ import pcpro.atelier.support.IntegrationTest;
 class NotificationIntegrationTest extends IntegrationTest {
 
   private long dossierAvecEmail() throws Exception {
-    return creerDossier(Fixtures.nouveauDossierAvecEmail("Martin Dubois", "0470123456", "martin@example.be"));
+    return creerDossierClientAvecEmail();
   }
 
-  /** L'email part en arrière-plan : on attend que l'historique le note. */
-  private String attendreEvenementEmail(long id) throws Exception {
-    for (int i = 0; i < 50; i++) {
-      String detail = mvc.perform(as(techToken, get("/api/dossiers/" + id))).andReturn().getResponse().getContentAsString();
-      if (detail.contains("EMAIL_CLIENT")) {
-        return detail;
-      }
-      Thread.sleep(100);
-    }
-    throw new AssertionError("Aucun événement EMAIL_CLIENT");
+  @Test
+  void bonDeDepotEnvoyeParEmailALaCreation() throws Exception {
+    long id = creerDossier(Fixtures.nouveauDossierAvecEmail("Martin Dubois", "0470123456", "martin@example.be"));
+
+    ArgumentCaptor<MimeMessage> envoi = ArgumentCaptor.forClass(MimeMessage.class);
+    verify(mailSender, timeout(5000)).send(envoi.capture());
+    MimeMessage message = envoi.getValue();
+    assertThat(message.getSubject()).startsWith("Dépôt de votre ordinateur portable Lenovo ThinkPad T14 (PCP-");
+    message.saveChanges();
+    java.io.ByteArrayOutputStream contenu = new java.io.ByteArrayOutputStream();
+    message.writeTo(contenu);
+    assertThat(contenu.toString(java.nio.charset.StandardCharsets.UTF_8))
+        .contains("application/pdf")
+        .contains("bon-depot-PCP-");
+    attendreHistorique(id, "Email : bon de dépôt");
+  }
+
+  @Test
+  void pasDeBonParEmailSansAdresse() throws Exception {
+    creerDossier(Fixtures.nouveauDossier("Sophie Laurent", "0480999888"));
+    verify(mailSender, after(500).never()).send(any(MimeMessage.class));
   }
 
   @Test
@@ -55,7 +66,7 @@ class NotificationIntegrationTest extends IntegrationTest {
     assertThat(envoi.getValue().getSubject()).isEqualTo("Votre ordinateur portable Lenovo ThinkPad T14 est prêt - Pc Pro Test");
     assertThat(envoi.getValue().getAllRecipients()[0].toString()).isEqualTo("martin@example.be");
 
-    String detail = attendreEvenementEmail(id);
+    String detail = attendreHistorique(id, "Email : appareil prêt");
     assertThat((String) read(detail, "$.evenements[0].nouvelleValeur")).isEqualTo("Email : appareil prêt");
     assertThat((String) read(detail, "$.evenements[0].employePrenom")).isEqualTo("Frere");
   }
@@ -73,11 +84,11 @@ class NotificationIntegrationTest extends IntegrationTest {
 
   @Test
   void echecDEnvoiNoteDansLHistorique() throws Exception {
-    doThrow(new MailSendException("SMTP indisponible")).when(mailSender).send(any(MimeMessage.class));
     long id = dossierAvecEmail();
+    doThrow(new MailSendException("SMTP indisponible")).when(mailSender).send(any(MimeMessage.class));
     changerStatut(techToken, id, "PRET", 200);
 
-    String detail = attendreEvenementEmail(id);
+    String detail = attendreHistorique(id, "Échec de l'email : appareil prêt");
     assertThat((String) read(detail, "$.evenements[0].nouvelleValeur")).isEqualTo("Échec de l'email : appareil prêt");
     assertThat((String) read(detail, "$.statut")).isEqualTo("PRET");
   }

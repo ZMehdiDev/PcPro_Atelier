@@ -4,7 +4,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 import java.util.Map;
 
@@ -112,6 +114,29 @@ public abstract class IntegrationTest {
         .andExpect(status().isCreated())
         .andReturn().getResponse().getContentAsString();
     return ((Number) read(reponse, "$.id")).longValue();
+  }
+
+  /**
+   * Crée un dossier pour un client qui a un email, attend l'envoi automatique du bon de dépôt
+   * puis oublie cet envoi (les tests vérifient les emails suivants).
+   */
+  protected long creerDossierClientAvecEmail() throws Exception {
+    long id = creerDossier(Fixtures.nouveauDossierAvecEmail("Martin Dubois", "0470123456", "martin@example.be"));
+    attendreHistorique(id, "Email : bon de dépôt");
+    clearInvocations(mailSender);
+    return id;
+  }
+
+  /** Les emails partent en arrière-plan : attend que l'historique du dossier contienne ce texte. */
+  protected String attendreHistorique(long id, String texte) throws Exception {
+    for (int i = 0; i < 50; i++) {
+      String detail = mvc.perform(as(techToken, get("/api/dossiers/" + id))).andReturn().getResponse().getContentAsString();
+      if (detail.contains(texte)) {
+        return detail;
+      }
+      Thread.sleep(100);
+    }
+    throw new AssertionError("L'historique du dossier " + id + " ne contient pas : " + texte);
   }
 
   protected void changerStatut(String token, long id, String statut, int attendu) throws Exception {

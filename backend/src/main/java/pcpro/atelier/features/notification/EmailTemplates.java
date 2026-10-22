@@ -25,6 +25,17 @@ public class EmailTemplates {
     this.atelier = atelier;
   }
 
+  /** Confirmation du dépôt, avec le bon de dépôt en pièce jointe. */
+  public Email depot(Dossier dossier) {
+    List<String> paragraphes = new ArrayList<>();
+    paragraphes.add("Nous avons bien reçu votre " + appareil(dossier) + " le "
+        + Libelles.DATE.format(dossier.getDateEntree()) + " (dossier " + dossier.getReference() + ").");
+    paragraphes.add("Vous trouverez votre bon de dépôt en pièce jointe. Nous vous préviendrons par email dès que "
+        + "votre appareil sera prêt.");
+    return email(dossier, "Dépôt de votre " + appareil(dossier) + " (" + dossier.getReference() + ")",
+        paragraphes, List.of());
+  }
+
   /** L'appareil est réparé (ou rendu) : le client peut venir le chercher. */
   public Email pret(Dossier dossier, BigDecimal resteAPayer) {
     List<String> paragraphes = new ArrayList<>();

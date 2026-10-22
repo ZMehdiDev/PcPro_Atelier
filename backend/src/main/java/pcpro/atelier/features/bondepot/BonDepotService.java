@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -32,7 +33,8 @@ import com.lowagie.text.pdf.PdfWriter;
 import pcpro.atelier.core.config.AtelierProperties;
 import pcpro.atelier.core.util.Libelles;
 import pcpro.atelier.features.client.domain.Client;
-import pcpro.atelier.features.dossier.app.DossierService;
+import pcpro.atelier.core.exception.ResourceNotFoundException;
+import pcpro.atelier.features.dossier.infra.DossierRepository;
 import pcpro.atelier.features.dossier.domain.Dossier;
 
 /**
@@ -50,19 +52,37 @@ public class BonDepotService {
   private static final Font LIBELLE = new Font(Font.HELVETICA, 9, Font.NORMAL, new Color(90, 90, 90));
   private static final Font REFERENCE = new Font(Font.HELVETICA, 16, Font.BOLD);
 
-  private final DossierService dossierService;
+  private final DossierRepository dossierRepository;
   private final AtelierProperties atelier;
 
-  public BonDepotService(DossierService dossierService, AtelierProperties atelier) {
-    this.dossierService = dossierService;
+  public BonDepotService(DossierRepository dossierRepository, AtelierProperties atelier) {
+    this.dossierRepository = dossierRepository;
     this.atelier = atelier;
   }
 
   public record BonDepot(String nomFichier, byte[] pdf) {
   }
 
+  /** Une page par exemplaire : le client garde le sien, l'atelier garde celui signé par le client. */
+  public enum Exemplaire {
+    CLIENT("Exemplaire client"),
+    ATELIER("Exemplaire atelier");
+
+    private final String libelle;
+
+    Exemplaire(String libelle) {
+      this.libelle = libelle;
+    }
+  }
+
+  /** Les deux exemplaires, à imprimer. */
   public BonDepot generer(Long dossierId) {
-    Dossier dossier = dossierService.getOrThrow(dossierId);
+    Dossier dossier = dossierRepository.findByIdWithRelations(dossierId)
+        .orElseThrow(() -> new ResourceNotFoundException("Dossier", dossierId));
+    return generer(dossier, List.of(Exemplaire.CLIENT, Exemplaire.ATELIER));
+  }
+
+  public BonDepot generer(Dossier dossier, List<Exemplaire> exemplaires) {
     ByteArrayOutputStream sortie = new ByteArrayOutputStream();
     Document document = new Document(PageSize.A4, 40, 40, 40, 40);
     try {
@@ -70,15 +90,20 @@ public class BonDepotService {
       document.addTitle("Bon de dépôt " + dossier.getReference());
       document.addCreator(atelier.nom());
       document.open();
-      entete(document, dossier);
-      sections(document, dossier);
-      suivi(document, dossier);
-      if (!atelier.conditionsDepot().isBlank()) {
-        Paragraph conditions = new Paragraph(atelier.conditionsDepot(), PETIT);
-        conditions.setSpacingBefore(14);
-        document.add(conditions);
+      for (Exemplaire exemplaire : exemplaires) {
+        if (exemplaire != exemplaires.get(0)) {
+          document.newPage();
+        }
+        entete(document, dossier, exemplaire);
+        sections(document, dossier);
+        suivi(document, dossier);
+        if (!atelier.conditionsDepot().isBlank()) {
+          Paragraph conditions = new Paragraph(atelier.conditionsDepot(), PETIT);
+          conditions.setSpacingBefore(14);
+          document.add(conditions);
+        }
+        signatures(document);
       }
-      signatures(document);
       document.close();
     } catch (DocumentException | IOException e) {
       throw new IllegalStateException("Impossible de générer le bon de dépôt", e);
@@ -86,7 +111,7 @@ public class BonDepotService {
     return new BonDepot("bon-depot-" + dossier.getReference() + ".pdf", sortie.toByteArray());
   }
 
-  private void entete(Document document, Dossier dossier) throws DocumentException {
+  private void entete(Document document, Dossier dossier, Exemplaire exemplaire) throws DocumentException {
     PdfPTable table = new PdfPTable(new float[] {3, 2});
     table.setWidthPercentage(100);
 
@@ -104,6 +129,7 @@ public class BonDepotService {
     droite.addElement(aDroite(new Paragraph("BON DE DÉPÔT", SOUS_TITRE)));
     droite.addElement(aDroite(new Paragraph(dossier.getReference(), REFERENCE)));
     droite.addElement(aDroite(new Paragraph("Déposé le " + Libelles.DATE.format(dossier.getDateEntree()), NORMAL)));
+    droite.addElement(aDroite(new Paragraph(exemplaire.libelle, LIBELLE)));
     table.addCell(droite);
 
     table.setSpacingAfter(16);

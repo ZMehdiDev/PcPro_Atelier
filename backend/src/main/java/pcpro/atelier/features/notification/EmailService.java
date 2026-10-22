@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -62,6 +63,10 @@ public class EmailService {
       helper.setTo(email.destinataire());
       helper.setSubject(email.sujet());
       helper.setText(email.texte(), email.html());
+      if (email.pieceJointe() != null) {
+        helper.addAttachment(email.pieceJointe().nomFichier(),
+            new ByteArrayResource(email.pieceJointe().pdf()), "application/pdf");
+      }
       sender.send(message);
     } catch (MessagingException | MailException e) {
       log.warn("Échec de l'envoi de l'email \"{}\" : {}", email.sujet(), e.getMessage());

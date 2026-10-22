@@ -47,6 +47,7 @@ import pcpro.atelier.features.employe.app.EmployeService;
 import pcpro.atelier.features.employe.domain.Employe;
 import pcpro.atelier.features.evenement.app.EvenementService;
 import pcpro.atelier.features.note.infra.NoteRepository;
+import pcpro.atelier.features.notification.DossierCreeEvent;
 import pcpro.atelier.features.notification.DossierPretEvent;
 import pcpro.atelier.features.notification.NotificationClientService;
 import pcpro.atelier.features.paiement.app.PaiementService;
@@ -231,6 +232,7 @@ public class DossierService {
         "Statut: " + dossier.getStatut(),
         dossier.getDescriptionProbleme()
     );
+    eventPublisher.publishEvent(new DossierCreeEvent(dossier.getId(), currentEmploye.id()));
     return mapper.toSummaryDto(dossier);
   }
 

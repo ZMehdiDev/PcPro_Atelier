@@ -27,6 +27,8 @@ class BonDepotIntegrationTest extends IntegrationTest {
 
     assertThat(new String(pdf, 0, 5, StandardCharsets.ISO_8859_1)).isEqualTo("%PDF-");
     assertThat(pdf.length).isGreaterThan(2000);
+    // Exemplaire client + exemplaire atelier
+    assertThat(new String(pdf, StandardCharsets.ISO_8859_1)).contains("/Count 2");
   }
 
   @Test

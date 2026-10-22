@@ -1,5 +1,7 @@
 package pcpro.atelier.features.notification;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -13,6 +15,7 @@ import pcpro.atelier.core.enums.TypeActionEvenement;
 import pcpro.atelier.core.exception.BadRequestException;
 import pcpro.atelier.core.exception.ConflictException;
 import pcpro.atelier.core.exception.ServiceIndisponibleException;
+import pcpro.atelier.features.bondepot.BonDepotService;
 import pcpro.atelier.features.devis.domain.Devis;
 import pcpro.atelier.features.dossier.domain.Dossier;
 import pcpro.atelier.features.dossier.infra.DossierRepository;
@@ -30,6 +33,7 @@ public class NotificationClientService {
   private static final Logger log = LoggerFactory.getLogger(NotificationClientService.class);
 
   private final EmailService emailService;
+  private final BonDepotService bonDepotService;
   private final EmailTemplates templates;
   private final SoldeService soldeService;
   private final DossierRepository dossierRepository;
@@ -38,6 +42,7 @@ public class NotificationClientService {
 
   public NotificationClientService(
       EmailService emailService,
+      BonDepotService bonDepotService,
       EmailTemplates templates,
       SoldeService soldeService,
       DossierRepository dossierRepository,
@@ -45,11 +50,26 @@ public class NotificationClientService {
       EvenementService evenementService
   ) {
     this.emailService = emailService;
+    this.bonDepotService = bonDepotService;
     this.templates = templates;
     this.soldeService = soldeService;
     this.dossierRepository = dossierRepository;
     this.employeRepository = employeRepository;
     this.evenementService = evenementService;
+  }
+
+  /** Envoie au client son bon de dépôt (exemplaire client) dès la création du dossier, s'il a un email. */
+  @Async
+  @TransactionalEventListener
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void surDossierCree(DossierCreeEvent event) {
+    Dossier dossier = dossierRepository.findByIdWithRelations(event.dossierId()).orElse(null);
+    if (dossier == null || dossier.getClient().getEmail() == null || !emailService.estConfigure()) {
+      return;
+    }
+    BonDepotService.BonDepot bon = bonDepotService.generer(dossier, List.of(BonDepotService.Exemplaire.CLIENT));
+    envoyerEnArrierePlan(event.employeId(), dossier,
+        templates.depot(dossier).avecPieceJointe(bon.nomFichier(), bon.pdf()), "bon de dépôt");
   }
 
   /**
@@ -65,15 +85,21 @@ public class NotificationClientService {
         || dossier.getClient().getEmail() == null || !emailService.estConfigure()) {
       return;
     }
-    var employe = employeRepository.getReferenceById(event.employeId());
+    envoyerEnArrierePlan(event.employeId(), dossier,
+        templates.pret(dossier, soldeService.resteAPayer(dossier)), "appareil prêt");
+  }
+
+  /** Envoi sans employé qui attend la réponse : un échec est noté dans l'historique (l'employé peut appeler le client). */
+  private void envoyerEnArrierePlan(Long employeId, Dossier dossier, Email email, String objet) {
+    var employe = employeRepository.getReferenceById(employeId);
     try {
-      emailService.envoyer(templates.pret(dossier, soldeService.resteAPayer(dossier)));
+      emailService.envoyer(email);
       evenementService.journaliserPar(employe, dossier, TypeActionEvenement.EMAIL_CLIENT, null,
-          "Email : appareil prêt", null);
+          "Email : " + objet, null);
     } catch (ServiceIndisponibleException e) {
-      log.warn("Client du dossier {} non prévenu : {}", dossier.getReference(), e.getMessage());
+      log.warn("Email \"{}\" du dossier {} non envoyé : {}", objet, dossier.getReference(), e.getMessage());
       evenementService.journaliserPar(employe, dossier, TypeActionEvenement.EMAIL_CLIENT, null,
-          "Échec de l'email : appareil prêt", "Le client n'a pas pu être prévenu par email, appelez-le");
+          "Échec de l'email : " + objet, "Le client n'a pas reçu l'email, appelez-le si besoin");
     }
   }
 
