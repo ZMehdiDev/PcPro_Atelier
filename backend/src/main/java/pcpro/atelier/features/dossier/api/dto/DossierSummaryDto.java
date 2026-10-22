@@ -1,15 +1,16 @@
 package pcpro.atelier.features.dossier.api.dto;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+
 import pcpro.atelier.core.enums.Priorite;
 import pcpro.atelier.core.enums.StatutDossier;
 import pcpro.atelier.core.enums.TypeAppareil;
 
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-
 public record DossierSummaryDto(
     Long id,
     String reference,
+    Long clientId,
     String clientNom,
     String clientTelephone,
     TypeAppareil typeAppareil,
@@ -17,6 +18,11 @@ public record DossierSummaryDto(
     String modele,
     StatutDossier statut,
     Priorite priorite,
+    boolean bloque,
+    TechnicienDto technicien,
     LocalDate dateEntree,
-    OffsetDateTime createdAt
+    LocalDate dateEstimee,
+    boolean enRetard,
+    OffsetDateTime createdAt,
+    OffsetDateTime closedAt
 ) {}

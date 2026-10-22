@@ -1,5 +1,7 @@
 package pcpro.atelier.features.dossier.domain;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.*;
 import pcpro.atelier.core.enums.*;
 import pcpro.atelier.features.client.domain.Client;
@@ -11,7 +13,7 @@ import java.time.OffsetDateTime;
 @Entity
 @Table(name = "dossier")
 public class Dossier {
-  @Id 
+  @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
@@ -28,12 +30,19 @@ public class Dossier {
 
   @Column(length = 80)
   private String marque;
-  
+
   @Column(length = 120)
   private String modele;
 
   @Column(name = "numero_serie", length = 120)
   private String numeroSerie;
+
+  @Column(name = "description_probleme", columnDefinition = "TEXT")
+  private String descriptionProbleme;
+
+  /** Ce que le client a laissé avec l'appareil (chargeur, sacoche...). */
+  @Column(length = 255)
+  private String accessoires;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 30)
@@ -59,130 +68,159 @@ public class Dossier {
   @Column(name = "date_estimee")
   private LocalDate dateEstimee;
 
-  @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+  @CreationTimestamp
+  @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
 
   @Column(name = "closed_at")
   private OffsetDateTime closedAt;
 
-  // getters/setters
-  public Long getId() { 
-    return id; 
+  /** Clôturé = en lecture seule (hors notes) tant qu'un admin ne le rouvre pas. */
+  public boolean estCloture() {
+    return statut == StatutDossier.CLOTURE;
   }
 
-  public String getReference() { 
-    return reference; 
+  /** Date estimée dépassée alors que l'appareil n'est pas encore prêt. */
+  public boolean estEnRetard(LocalDate aujourdhui) {
+    return dateEstimee != null
+        && dateEstimee.isBefore(aujourdhui)
+        && statut != StatutDossier.PRET
+        && statut != StatutDossier.CLOTURE;
   }
 
-  public void setReference(String reference) { 
-    this.reference = reference; 
+  public Long getId() {
+    return id;
   }
 
-  public Client getClient() { 
-    return client; 
+  public String getReference() {
+    return reference;
   }
 
-  public void setClient(Client client) { 
-    this.client = client; 
+  public void setReference(String reference) {
+    this.reference = reference;
   }
 
-  public TypeAppareil getTypeAppareil() { 
-    return typeAppareil; 
+  public Client getClient() {
+    return client;
   }
 
-  public void setTypeAppareil(TypeAppareil typeAppareil) { 
-    this.typeAppareil = typeAppareil; 
+  public void setClient(Client client) {
+    this.client = client;
   }
 
-  public String getMarque() { 
-    return marque; 
+  public TypeAppareil getTypeAppareil() {
+    return typeAppareil;
   }
 
-  public void setMarque(String marque) { 
-    this.marque = marque; 
+  public void setTypeAppareil(TypeAppareil typeAppareil) {
+    this.typeAppareil = typeAppareil;
   }
 
-  public String getModele() { 
-    return modele; 
+  public String getMarque() {
+    return marque;
   }
 
-  public void setModele(String modele) { 
-    this.modele = modele; 
+  public void setMarque(String marque) {
+    this.marque = marque;
   }
 
-  public String getNumeroSerie() { 
-    return numeroSerie; 
+  public String getModele() {
+    return modele;
   }
 
-  public void setNumeroSerie(String numeroSerie) { 
-    this.numeroSerie = numeroSerie; 
+  public void setModele(String modele) {
+    this.modele = modele;
   }
 
-  public StatutDossier getStatut() { 
-    return statut; 
+  public String getNumeroSerie() {
+    return numeroSerie;
   }
 
-  public void setStatut(StatutDossier statut) { 
-    this.statut = statut; 
+  public void setNumeroSerie(String numeroSerie) {
+    this.numeroSerie = numeroSerie;
   }
 
-  public boolean isBloque() { 
-    return bloque; 
+  public String getDescriptionProbleme() {
+    return descriptionProbleme;
   }
 
-  public void setBloque(boolean bloque) { 
-    this.bloque = bloque; 
+  public void setDescriptionProbleme(String descriptionProbleme) {
+    this.descriptionProbleme = descriptionProbleme;
   }
 
-  public String getRaisonBlocage() { 
-    return raisonBlocage; 
+  public String getAccessoires() {
+    return accessoires;
   }
 
-  public void setRaisonBlocage(String raisonBlocage) { 
-    this.raisonBlocage = raisonBlocage; 
+  public void setAccessoires(String accessoires) {
+    this.accessoires = accessoires;
   }
 
-  public Employe getTechnicienAssigne() { 
-    return technicienAssigne; 
+  public StatutDossier getStatut() {
+    return statut;
   }
 
-  public void setTechnicienAssigne(Employe technicienAssigne) { 
-    this.technicienAssigne = technicienAssigne; 
+  public void setStatut(StatutDossier statut) {
+    this.statut = statut;
   }
 
-  public Priorite getPriorite() { 
-    return priorite; 
+  public boolean isBloque() {
+    return bloque;
   }
 
-  public void setPriorite(Priorite priorite) { 
-    this.priorite = priorite; 
+  public void setBloque(boolean bloque) {
+    this.bloque = bloque;
   }
 
-  public LocalDate getDateEntree() { 
-    return dateEntree; 
+  public String getRaisonBlocage() {
+    return raisonBlocage;
   }
 
-  public void setDateEntree(LocalDate dateEntree) { 
-    this.dateEntree = dateEntree; 
+  public void setRaisonBlocage(String raisonBlocage) {
+    this.raisonBlocage = raisonBlocage;
   }
 
-  public LocalDate getDateEstimee() { 
-    return dateEstimee; 
+  public Employe getTechnicienAssigne() {
+    return technicienAssigne;
   }
 
-  public void setDateEstimee(LocalDate dateEstimee) { 
-    this.dateEstimee = dateEstimee; 
+  public void setTechnicienAssigne(Employe technicienAssigne) {
+    this.technicienAssigne = technicienAssigne;
   }
 
-  public OffsetDateTime getCreatedAt() { 
-    return createdAt; 
+  public Priorite getPriorite() {
+    return priorite;
   }
 
-  public OffsetDateTime getClosedAt() { 
-    return closedAt; 
+  public void setPriorite(Priorite priorite) {
+    this.priorite = priorite;
   }
 
-  public void setClosedAt(OffsetDateTime closedAt) { 
-    this.closedAt = closedAt; 
+  public LocalDate getDateEntree() {
+    return dateEntree;
+  }
+
+  public void setDateEntree(LocalDate dateEntree) {
+    this.dateEntree = dateEntree;
+  }
+
+  public LocalDate getDateEstimee() {
+    return dateEstimee;
+  }
+
+  public void setDateEstimee(LocalDate dateEstimee) {
+    this.dateEstimee = dateEstimee;
+  }
+
+  public OffsetDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public OffsetDateTime getClosedAt() {
+    return closedAt;
+  }
+
+  public void setClosedAt(OffsetDateTime closedAt) {
+    this.closedAt = closedAt;
   }
 }

@@ -1,27 +1,33 @@
 package pcpro.atelier.core.api.filter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.UUID;
+import java.util.regex.Pattern;
+
 import org.slf4j.MDC;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.UUID;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * Filtre pour générer/capturer le correlation-id (X-Request-Id).
- * Si absent dans les headers, génère un UUID et l'ajoute au MDC pour les logs.
+ * Génère/capture le correlation-id (X-Request-Id) et le place dans le MDC pour les logs.
+ * Passe avant la sécurité pour que les erreurs 401/403 aient aussi un traceId.
  */
 @Component
-@Order(1)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class RequestIdFilter extends OncePerRequestFilter {
 
-  private static final String REQUEST_ID_HEADER = "X-Request-Id";
-  private static final String MDC_REQUEST_ID = "requestId";
+  public static final String REQUEST_ID_HEADER = "X-Request-Id";
+  public static final String MDC_REQUEST_ID = "requestId";
+
+  // Un id fourni par le client n'est repris que s'il est court et sans caractères exotiques (log injection)
+  private static final Pattern REQUEST_ID_VALIDE = Pattern.compile("[A-Za-z0-9._-]{1,64}");
 
   @Override
   protected void doFilterInternal(
@@ -30,24 +36,17 @@ public class RequestIdFilter extends OncePerRequestFilter {
       FilterChain filterChain
   ) throws ServletException, IOException {
     String requestId = request.getHeader(REQUEST_ID_HEADER);
-    
-    if (requestId == null || requestId.isBlank()) {
+    if (requestId == null || !REQUEST_ID_VALIDE.matcher(requestId).matches()) {
       requestId = UUID.randomUUID().toString();
     }
-    
-    // Ajouter au MDC pour les logs
+
     MDC.put(MDC_REQUEST_ID, requestId);
-    
-    // Ajouter dans la réponse pour que le client puisse le récupérer
     response.setHeader(REQUEST_ID_HEADER, requestId);
-    
-    // Stocker dans l'attribut de la requête pour accès dans les handlers
     request.setAttribute(MDC_REQUEST_ID, requestId);
-    
+
     try {
       filterChain.doFilter(request, response);
     } finally {
-      // Nettoyer le MDC après la requête
       MDC.remove(MDC_REQUEST_ID);
     }
   }

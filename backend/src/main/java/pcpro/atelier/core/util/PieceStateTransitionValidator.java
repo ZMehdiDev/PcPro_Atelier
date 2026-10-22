@@ -1,14 +1,15 @@
 package pcpro.atelier.core.util;
 
-import pcpro.atelier.core.enums.EtatPiece;
-
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
+import pcpro.atelier.core.enums.EtatPiece;
+import pcpro.atelier.core.exception.ConflictException;
+
 /**
  * Valide les transitions d'état autorisées pour les pièces.
- * 
+ *
  * Transitions autorisées :
  * - A_COMMANDER -> COMMANDEE, ANNULEE
  * - COMMANDEE -> RECUE, ANNULEE
@@ -16,56 +17,44 @@ import java.util.Set;
  * - MONTEE -> (état final, pas de transition)
  * - ANNULEE -> (état final, pas de transition)
  */
-public class PieceStateTransitionValidator {
+public final class PieceStateTransitionValidator {
 
   private static final Map<EtatPiece, Set<EtatPiece>> TRANSITIONS_AUTORISEES = Map.of(
       EtatPiece.A_COMMANDER, EnumSet.of(EtatPiece.COMMANDEE, EtatPiece.ANNULEE),
       EtatPiece.COMMANDEE, EnumSet.of(EtatPiece.RECUE, EtatPiece.ANNULEE),
       EtatPiece.RECUE, EnumSet.of(EtatPiece.MONTEE, EtatPiece.ANNULEE),
-      EtatPiece.MONTEE, EnumSet.noneOf(EtatPiece.class), // État final
-      EtatPiece.ANNULEE, EnumSet.noneOf(EtatPiece.class) // État final
+      EtatPiece.MONTEE, EnumSet.noneOf(EtatPiece.class),
+      EtatPiece.ANNULEE, EnumSet.noneOf(EtatPiece.class)
   );
 
-  /**
-   * Valide qu'une transition d'état est autorisée.
-   * 
-   * @param ancienEtat L'état actuel de la pièce
-   * @param nouvelEtat Le nouvel état souhaité
-   * @throws IllegalArgumentException si la transition n'est pas autorisée
-   */
-  public static void validerTransition(EtatPiece ancienEtat, EtatPiece nouvelEtat) {
-    if (ancienEtat == nouvelEtat) {
-      throw new IllegalArgumentException(
-          "La pièce est déjà dans l'état " + nouvelEtat + ". Aucun changement nécessaire."
-      );
-    }
-
-    Set<EtatPiece> transitionsAutorisees = TRANSITIONS_AUTORISEES.get(ancienEtat);
-    
-    if (transitionsAutorisees == null) {
-      throw new IllegalArgumentException(
-          "État de pièce inconnu : " + ancienEtat
-      );
-    }
-
-    if (!transitionsAutorisees.contains(nouvelEtat)) {
-      throw new IllegalArgumentException(
-          String.format(
-              "Transition non autorisée : %s -> %s. Transitions autorisées depuis %s : %s",
-              ancienEtat,
-              nouvelEtat,
-              ancienEtat,
-              transitionsAutorisees.isEmpty() ? "aucune (état final)" : transitionsAutorisees
-          )
-      );
-    }
+  private PieceStateTransitionValidator() {
   }
 
   /**
-   * Vérifie si un état est un état final (pas de transition possible).
+   * @throws ConflictException si la transition n'est pas autorisée
    */
+  public static void validerTransition(EtatPiece ancienEtat, EtatPiece nouvelEtat) {
+    if (ancienEtat == nouvelEtat) {
+      throw new ConflictException("La pièce est déjà dans l'état " + nouvelEtat);
+    }
+
+    Set<EtatPiece> transitionsAutorisees = TRANSITIONS_AUTORISEES.get(ancienEtat);
+    if (!transitionsAutorisees.contains(nouvelEtat)) {
+      throw new ConflictException(String.format(
+          "Transition non autorisée : %s -> %s. Transitions autorisées depuis %s : %s",
+          ancienEtat,
+          nouvelEtat,
+          ancienEtat,
+          transitionsAutorisees.isEmpty() ? "aucune (état final)" : transitionsAutorisees
+      ));
+    }
+  }
+
+  public static Set<EtatPiece> transitionsPossibles(EtatPiece etat) {
+    return EnumSet.copyOf(TRANSITIONS_AUTORISEES.get(etat));
+  }
+
   public static boolean estEtatFinal(EtatPiece etat) {
-    Set<EtatPiece> transitions = TRANSITIONS_AUTORISEES.get(etat);
-    return transitions != null && transitions.isEmpty();
+    return TRANSITIONS_AUTORISEES.get(etat).isEmpty();
   }
 }

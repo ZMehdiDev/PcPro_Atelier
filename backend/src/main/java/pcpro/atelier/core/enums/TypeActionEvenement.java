@@ -2,12 +2,19 @@ package pcpro.atelier.core.enums;
 
 public enum TypeActionEvenement {
   CREATION_DOSSIER,
+  MODIF_DOSSIER,
   CHANGEMENT_STATUT,
+  CHANGEMENT_TECHNICIEN,
+  CHANGEMENT_PRIORITE,
+  CHANGEMENT_BLOCAGE,
   AJOUT_NOTE,
   AJOUT_PIECE,
   MODIF_PIECE,
   CHANGEMENT_STATUT_PIECE,
   AJOUT_PHOTO,
+  SUPPRESSION_PHOTO,
   CLOTURE,
+  REOUVERTURE,
+  /** Conservé pour l'historique existant (remplacé par les types CHANGEMENT_*). */
   ACTION_SENSIBLE
 }
