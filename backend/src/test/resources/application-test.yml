@@ -1,4 +1,15 @@
+spring:
+  mail:
+    # Faux serveur : JavaMailSender est remplacé par un mock dans les tests
+    host: smtp.test
+
 app:
+  atelier:
+    nom: Pc Pro Test
+    telephone: 02 123 45 67
+    url-publique: https://atelier.test/
+  mail:
+    expediteur: Pc Pro <atelier@atelier.test>
   security:
     jwt-secret: test-secret-pour-les-tests-uniquement-0123456789
     login-max-echecs: 3

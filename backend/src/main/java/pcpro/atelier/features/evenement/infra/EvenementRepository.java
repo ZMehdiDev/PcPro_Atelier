@@ -15,7 +15,7 @@ public interface EvenementRepository extends JpaRepository<Evenement, Long> {
 
   @Query("""
     select e from Evenement e
-    join fetch e.employe
+    left join fetch e.employe
     where e.dossier = :dossier
     order by e.createdAt desc, e.id desc
     """)

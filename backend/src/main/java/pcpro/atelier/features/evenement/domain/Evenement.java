@@ -19,8 +19,9 @@ public class Evenement {
   @JoinColumn(name = "dossier_id", nullable = false)
   private Dossier dossier;
 
-  @ManyToOne(optional = false, fetch = FetchType.LAZY)
-  @JoinColumn(name = "employe_id", nullable = false)
+  /** Null quand l'action vient du client (suivi en ligne). */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "employe_id")
   private Employe employe;
 
   @Enumerated(EnumType.STRING)

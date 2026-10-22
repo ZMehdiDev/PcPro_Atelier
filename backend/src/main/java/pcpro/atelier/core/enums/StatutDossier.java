@@ -6,7 +6,6 @@ public enum StatutDossier {
   ATTENTE_CLIENT,
   ATTENTE_PIECE,
   REPARATION,
-  TESTS,
   PRET,
   CLOTURE
 }

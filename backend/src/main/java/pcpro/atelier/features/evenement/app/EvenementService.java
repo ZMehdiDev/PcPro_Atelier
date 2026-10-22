@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pcpro.atelier.core.enums.TypeActionEvenement;
 import pcpro.atelier.core.security.CurrentEmploye;
 import pcpro.atelier.features.dossier.domain.Dossier;
+import pcpro.atelier.features.employe.domain.Employe;
 import pcpro.atelier.features.evenement.domain.Evenement;
 import pcpro.atelier.features.evenement.infra.EvenementRepository;
 
@@ -33,9 +34,24 @@ public class EvenementService {
       String nouvelleValeur,
       String commentaire
   ) {
+    return journaliserPar(currentEmploye.get(), dossier, typeAction, ancienneValeur, nouvelleValeur, commentaire);
+  }
+
+  /**
+   * Comme {@link #journaliser}, avec un auteur explicite : null quand l'action vient du client
+   * (suivi en ligne), ou l'employé à l'origine d'un traitement en arrière-plan (email).
+   */
+  public Evenement journaliserPar(
+      Employe auteur,
+      Dossier dossier,
+      TypeActionEvenement typeAction,
+      String ancienneValeur,
+      String nouvelleValeur,
+      String commentaire
+  ) {
     Evenement evenement = new Evenement();
     evenement.setDossier(dossier);
-    evenement.setEmploye(currentEmploye.get());
+    evenement.setEmploye(auteur);
     evenement.setTypeAction(typeAction);
     evenement.setAncienneValeur(ancienneValeur);
     evenement.setNouvelleValeur(nouvelleValeur);

@@ -19,4 +19,14 @@ public final class Fixtures {
     body.put("accessoires", "Chargeur");
     return body;
   }
+
+  public static Map<String, Object> nouveauDossierAvecEmail(String nomClient, String telephone, String email) {
+    Map<String, Object> body = nouveauDossier(nomClient, telephone);
+    body.put("client", Map.of("nom", nomClient, "telephone", telephone, "email", email));
+    return body;
+  }
+
+  public static Map<String, Object> ligneDevis(String type, String libelle, String prix) {
+    return Map.of("type", type, "libelle", libelle, "prixUnitaire", prix);
+  }
 }

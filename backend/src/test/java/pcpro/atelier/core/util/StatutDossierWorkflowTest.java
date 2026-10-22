@@ -33,8 +33,8 @@ class StatutDossierWorkflowTest {
 
   @Test
   void transitionNonPrevueRefusee() {
-    assertThatThrownBy(() -> StatutDossierWorkflow.validerTransition(StatutDossier.RECU, StatutDossier.TESTS))
+    assertThatThrownBy(() -> StatutDossierWorkflow.validerTransition(StatutDossier.RECU, StatutDossier.REPARATION))
         .isInstanceOf(ConflictException.class)
-        .hasMessageContaining("RECU -> TESTS");
+        .hasMessageContaining("RECU -> REPARATION");
   }
 }

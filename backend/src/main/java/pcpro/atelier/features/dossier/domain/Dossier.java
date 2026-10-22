@@ -48,11 +48,6 @@ public class Dossier {
   @Column(nullable = false, length = 30)
   private StatutDossier statut;
 
-  @Column(nullable = false)
-  private boolean bloque = false;
-
-  @Column(name = "raison_blocage", length = 200)
-  private String raisonBlocage;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "technicien_assigne_id")
@@ -75,9 +70,53 @@ public class Dossier {
   @Column(name = "closed_at")
   private OffsetDateTime closedAt;
 
+  /** Code secret du suivi en ligne (imprimé en QR code sur le bon de dépôt). */
+  @Column(name = "code_suivi", nullable = false, length = 12)
+  private String codeSuivi;
+
+  /** Passage au statut PRET (pour repérer les appareils que personne ne vient chercher). */
+  @Column(name = "pret_at")
+  private OffsetDateTime pretAt;
+
+  @Column(name = "fin_garantie")
+  private LocalDate finGarantie;
+
   /** Clôturé = en lecture seule (hors notes) tant qu'un admin ne le rouvre pas. */
   public boolean estCloture() {
     return statut == StatutDossier.CLOTURE;
+  }
+
+  /** Appareil prêt depuis avant la date limite, et toujours pas récupéré. */
+  public boolean estNonRecupere(OffsetDateTime limite) {
+    return statut == StatutDossier.PRET && pretAt != null && pretAt.isBefore(limite);
+  }
+
+  public boolean estSousGarantie(LocalDate date) {
+    return finGarantie != null && !finGarantie.isBefore(date);
+  }
+
+  public String getCodeSuivi() {
+    return codeSuivi;
+  }
+
+  public void setCodeSuivi(String codeSuivi) {
+    this.codeSuivi = codeSuivi;
+  }
+
+  public OffsetDateTime getPretAt() {
+    return pretAt;
+  }
+
+  public void setPretAt(OffsetDateTime pretAt) {
+    this.pretAt = pretAt;
+  }
+
+  public LocalDate getFinGarantie() {
+    return finGarantie;
+  }
+
+  public void setFinGarantie(LocalDate finGarantie) {
+    this.finGarantie = finGarantie;
   }
 
   /** Date estimée dépassée alors que l'appareil n'est pas encore prêt. */
@@ -164,21 +203,9 @@ public class Dossier {
     this.statut = statut;
   }
 
-  public boolean isBloque() {
-    return bloque;
-  }
 
-  public void setBloque(boolean bloque) {
-    this.bloque = bloque;
-  }
 
-  public String getRaisonBlocage() {
-    return raisonBlocage;
-  }
 
-  public void setRaisonBlocage(String raisonBlocage) {
-    this.raisonBlocage = raisonBlocage;
-  }
 
   public Employe getTechnicienAssigne() {
     return technicienAssigne;

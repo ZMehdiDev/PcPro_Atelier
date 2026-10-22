@@ -23,16 +23,9 @@ import pcpro.atelier.support.IntegrationTest;
 class DossierIntegrationTest extends IntegrationTest {
 
   private long creerDossier(String nom, String telephone) throws Exception {
-    String body = mvc.perform(json(techToken, post("/api/dossiers"), Fixtures.nouveauDossier(nom, telephone)))
-        .andExpect(status().isCreated())
-        .andReturn().getResponse().getContentAsString();
-    return ((Number) read(body, "$.id")).longValue();
+    return creerDossier(Fixtures.nouveauDossier(nom, telephone));
   }
 
-  private void changerStatut(String token, long id, String statut, int attendu) throws Exception {
-    mvc.perform(json(token, patch("/api/dossiers/" + id + "/statut"), Map.of("statut", statut)))
-        .andExpect(status().is(attendu));
-  }
 
   @Test
   void creationDossierAvecReferenceDatesEtHistorique() throws Exception {
@@ -101,7 +94,7 @@ class DossierIntegrationTest extends IntegrationTest {
   @Test
   void workflowCompletJusquALaCloture() throws Exception {
     long id = creerDossier("Martin Dubois", "0470123456");
-    for (String statut : new String[] {"DIAGNOSTIC", "REPARATION", "TESTS", "PRET", "CLOTURE"}) {
+    for (String statut : new String[] {"DIAGNOSTIC", "REPARATION", "PRET", "CLOTURE"}) {
       changerStatut(techToken, id, statut, 200);
     }
     mvc.perform(as(techToken, get("/api/dossiers/" + id)))
@@ -113,7 +106,7 @@ class DossierIntegrationTest extends IntegrationTest {
   @Test
   void transitionInterditeRefusee() throws Exception {
     long id = creerDossier("Martin Dubois", "0470123456");
-    changerStatut(techToken, id, "TESTS", 409);
+    changerStatut(techToken, id, "REPARATION", 409);
     changerStatut(techToken, id, "CLOTURE", 409);
     changerStatut(techToken, id, "RECU", 409);
   }
@@ -138,24 +131,6 @@ class DossierIntegrationTest extends IntegrationTest {
     mvc.perform(as(techToken, get("/api/dossiers/" + id)))
         .andExpect(jsonPath("$.closedAt").doesNotExist())
         .andExpect(jsonPath("$.evenements[0].typeAction").value("REOUVERTURE"));
-  }
-
-  @Test
-  void blocageEmpecheLaClotureEtExigeUneRaison() throws Exception {
-    long id = creerDossier("Martin Dubois", "0470123456");
-    mvc.perform(json(techToken, patch("/api/dossiers/" + id + "/blocage"), Map.of("bloque", true)))
-        .andExpect(status().isBadRequest());
-    mvc.perform(json(techToken, patch("/api/dossiers/" + id + "/blocage"),
-            Map.of("bloque", true, "raisonBlocage", "Paiement en attente")))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.bloque").value(true));
-
-    changerStatut(techToken, id, "PRET", 200);
-    changerStatut(techToken, id, "CLOTURE", 409);
-
-    mvc.perform(json(techToken, patch("/api/dossiers/" + id + "/blocage"), Map.of("bloque", false)))
-        .andExpect(status().isOk());
-    changerStatut(techToken, id, "CLOTURE", 200);
   }
 
   @Test
@@ -197,13 +172,11 @@ class DossierIntegrationTest extends IntegrationTest {
 
   @Test
   void rechercheEtStatistiques() throws Exception {
-    long a = creerDossier("Martin Dubois", "0470123456");
+    creerDossier("Martin Dubois", "0470123456");
     creerDossier("Sophie Laurent", "0480999888");
     long c = creerDossier("Pierre Moreau", "0490111222");
     changerStatut(techToken, c, "PRET", 200);
     changerStatut(techToken, c, "CLOTURE", 200);
-    mvc.perform(json(techToken, patch("/api/dossiers/" + a + "/blocage"),
-        Map.of("bloque", true, "raisonBlocage", "Attente accord"))).andExpect(status().isOk());
 
     mvc.perform(as(techToken, get("/api/dossiers").param("q", "sophie")))
         .andExpect(jsonPath("$.content", hasSize(1)))
@@ -213,8 +186,6 @@ class DossierIntegrationTest extends IntegrationTest {
         .andExpect(jsonPath("$.content", hasSize(1)));
     mvc.perform(as(techToken, get("/api/dossiers").param("actifs", "true")))
         .andExpect(jsonPath("$.content", hasSize(2)));
-    mvc.perform(as(techToken, get("/api/dossiers").param("bloque", "true")))
-        .andExpect(jsonPath("$.content[0].id").value(a));
     mvc.perform(as(techToken, get("/api/dossiers").param("sort", "client.nom")))
         .andExpect(status().isBadRequest());
 
@@ -222,7 +193,6 @@ class DossierIntegrationTest extends IntegrationTest {
         .andExpect(status().isOk())
         .andReturn().getResponse().getContentAsString();
     assertThat(((Number) read(stats, "$.actifs")).intValue()).isEqualTo(2);
-    assertThat(((Number) read(stats, "$.bloques")).intValue()).isEqualTo(1);
     assertThat(((Number) read(stats, "$.parStatut.RECU")).intValue()).isEqualTo(2);
     assertThat(((Number) read(stats, "$.parStatut.CLOTURE")).intValue()).isEqualTo(1);
   }
