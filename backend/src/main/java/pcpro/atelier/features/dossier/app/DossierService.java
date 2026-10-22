@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -17,6 +18,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import pcpro.atelier.core.config.AtelierProperties;
 import pcpro.atelier.core.enums.Priorite;
 import pcpro.atelier.core.enums.StatutDossier;
 import pcpro.atelier.core.enums.TypeActionEvenement;
@@ -25,14 +27,18 @@ import pcpro.atelier.core.exception.BadRequestException;
 import pcpro.atelier.core.exception.ConflictException;
 import pcpro.atelier.core.exception.ResourceNotFoundException;
 import pcpro.atelier.core.security.CurrentEmploye;
+import pcpro.atelier.core.util.CodeSuiviGenerator;
 import pcpro.atelier.core.util.ReferenceGenerator;
 import pcpro.atelier.core.util.StatutDossierWorkflow;
 import pcpro.atelier.features.client.app.ClientService;
 import pcpro.atelier.features.client.domain.Client;
+import pcpro.atelier.features.devis.infra.DevisRepository;
+import pcpro.atelier.features.dossier.api.dto.ChangeStatutRequest;
 import pcpro.atelier.features.dossier.api.dto.CreateDossierRequest;
 import pcpro.atelier.features.dossier.api.dto.DossierDetailDto;
 import pcpro.atelier.features.dossier.api.dto.DossierStatsDto;
 import pcpro.atelier.features.dossier.api.dto.DossierSummaryDto;
+import pcpro.atelier.features.dossier.api.dto.GarantieDto;
 import pcpro.atelier.features.dossier.api.dto.UpdateDossierRequest;
 import pcpro.atelier.features.dossier.domain.Dossier;
 import pcpro.atelier.features.dossier.infra.DossierRepository;
@@ -41,6 +47,11 @@ import pcpro.atelier.features.employe.app.EmployeService;
 import pcpro.atelier.features.employe.domain.Employe;
 import pcpro.atelier.features.evenement.app.EvenementService;
 import pcpro.atelier.features.note.infra.NoteRepository;
+import pcpro.atelier.features.notification.DossierPretEvent;
+import pcpro.atelier.features.notification.NotificationClientService;
+import pcpro.atelier.features.paiement.app.PaiementService;
+import pcpro.atelier.features.paiement.app.SoldeService;
+import pcpro.atelier.features.paiement.domain.Paiement;
 import pcpro.atelier.features.photo.infra.PhotoRepository;
 import pcpro.atelier.features.piece.infra.PieceRepository;
 
@@ -56,6 +67,7 @@ public class DossierService {
       Long technicienId,
       Boolean mesDossiers,
       Boolean enRetard,
+      Boolean nonRecuperes,
       String q
   ) {}
 
@@ -67,6 +79,12 @@ public class DossierService {
   private final PieceRepository pieceRepository;
   private final NoteRepository noteRepository;
   private final PhotoRepository photoRepository;
+  private final DevisRepository devisRepository;
+  private final PaiementService paiementService;
+  private final SoldeService soldeService;
+  private final NotificationClientService notificationService;
+  private final ApplicationEventPublisher eventPublisher;
+  private final AtelierProperties atelier;
   private final DossierMapper mapper;
   private final CurrentEmploye currentEmploye;
   private final Clock clock;
@@ -80,6 +98,12 @@ public class DossierService {
       PieceRepository pieceRepository,
       NoteRepository noteRepository,
       PhotoRepository photoRepository,
+      DevisRepository devisRepository,
+      PaiementService paiementService,
+      SoldeService soldeService,
+      NotificationClientService notificationService,
+      ApplicationEventPublisher eventPublisher,
+      AtelierProperties atelier,
       DossierMapper mapper,
       CurrentEmploye currentEmploye,
       Clock clock
@@ -92,6 +116,12 @@ public class DossierService {
     this.pieceRepository = pieceRepository;
     this.noteRepository = noteRepository;
     this.photoRepository = photoRepository;
+    this.devisRepository = devisRepository;
+    this.paiementService = paiementService;
+    this.soldeService = soldeService;
+    this.notificationService = notificationService;
+    this.eventPublisher = eventPublisher;
+    this.atelier = atelier;
     this.mapper = mapper;
     this.currentEmploye = currentEmploye;
     this.clock = clock;
@@ -108,6 +138,7 @@ public class DossierService {
         DossierSpecifications.priorite(recherche.priorite()),
         DossierSpecifications.technicien(technicienId),
         DossierSpecifications.enRetard(recherche.enRetard(), LocalDate.now(clock)),
+        DossierSpecifications.nonRecuperes(recherche.nonRecuperes(), limiteRecuperation()),
         DossierSpecifications.recherche(recherche.q())
     ).filter(Objects::nonNull).reduce(Specification.unrestricted(), Specification::and);
     return dossierRepository.findAll(spec, pageable).map(mapper::toSummaryDto);
@@ -116,13 +147,38 @@ public class DossierService {
   @Transactional(readOnly = true)
   public DossierDetailDto detail(Long id) {
     Dossier dossier = getOrThrow(id);
+    List<Paiement> paiements = paiementService.duDossier(dossier);
     return mapper.toDetailDto(
         dossier,
         pieceRepository.findByDossierOrderByCreatedAtAscIdAsc(dossier),
         noteRepository.findByDossierWithAuteur(dossier),
         photoRepository.findByDossierOrderByCreatedAtAscIdAsc(dossier),
-        evenementService.findByDossier(dossier)
+        evenementService.findByDossier(dossier),
+        new DossierMapper.Complements(
+            devisRepository.findByDossier(dossier).orElse(null),
+            paiements,
+            PaiementService.total(paiements),
+            soldeService.resteAPayer(dossier),
+            garantiesCouvrant(dossier)
+        )
     );
+  }
+
+  /**
+   * Réparations encore sous garantie pour ce client ou cet appareil (n° de série), pour prévenir
+   * l'employé dès la création d'un nouveau dossier.
+   */
+  @Transactional(readOnly = true)
+  public List<GarantieDto> garantiesActives(Long clientId, String numeroSerie) {
+    LocalDate aujourdhui = LocalDate.now(clock);
+    Stream<Dossier> parClient = clientId == null
+        ? Stream.empty()
+        : dossierRepository.findSousGarantieParClient(clientId, aujourdhui).stream();
+    String serie = texteOuNull(numeroSerie);
+    Stream<Dossier> parSerie = serie == null
+        ? Stream.empty()
+        : dossierRepository.findSousGarantieParNumeroSerie(serie.toLowerCase(java.util.Locale.ROOT), aujourdhui).stream();
+    return Stream.concat(parSerie, parClient).distinct().map(DossierService::toGarantieDto).toList();
   }
 
   @Transactional(readOnly = true)
@@ -141,6 +197,7 @@ public class DossierService {
         parStatut,
         actifs,
         dossierRepository.compterEnRetard(LocalDate.now(clock)),
+        dossierRepository.compterNonRecuperes(limiteRecuperation()),
         dossierRepository.compterActifsAssignesA(currentEmploye.id())
     );
   }
@@ -152,6 +209,7 @@ public class DossierService {
 
     Dossier dossier = new Dossier();
     dossier.setReference(referenceGenerator.generateReference());
+    dossier.setCodeSuivi(CodeSuiviGenerator.generer());
     dossier.setClient(client);
     appliquerAppareil(dossier, request.appareil().type(), request.appareil().marque(),
         request.appareil().modele(), request.appareil().numeroSerie());
@@ -202,16 +260,33 @@ public class DossierService {
     return mapper.toSummaryDto(dossier);
   }
 
-  public DossierSummaryDto changerStatut(Long id, StatutDossier nouveauStatut, String commentaire) {
+  /**
+   * Changement de statut demandé par un employé. Au passage à PRET, le client est prévenu par email
+   * (sauf notifierClient=false) ; à la clôture, on peut encaisser et choisir la durée de garantie.
+   */
+  public DossierSummaryDto changerStatut(Long id, ChangeStatutRequest request) {
     Dossier dossier = getOrThrow(id);
     StatutDossier ancienStatut = dossier.getStatut();
+    StatutDossier nouveauStatut = request.statut();
 
     StatutDossierWorkflow.validerTransition(ancienStatut, nouveauStatut);
     if (ancienStatut == StatutDossier.CLOTURE && !currentEmploye.estAdmin()) {
       throw new AccessDeniedException("Seul un administrateur peut rouvrir un dossier clôturé");
     }
+    if (nouveauStatut != StatutDossier.CLOTURE && (request.paiement() != null || request.garantieMois() != null)) {
+      throw new BadRequestException("Le paiement et la garantie se renseignent à la clôture du dossier");
+    }
 
-    appliquerStatut(dossier, nouveauStatut, commentaire);
+    if (request.paiement() != null) {
+      paiementService.enregistrer(dossier, request.paiement());
+    }
+    appliquerStatut(dossier, nouveauStatut, request.commentaire());
+    if (nouveauStatut == StatutDossier.CLOTURE && request.garantieMois() != null) {
+      dossier.setFinGarantie(finGarantie(request.garantieMois()));
+    }
+    if (nouveauStatut == StatutDossier.PRET && !Boolean.FALSE.equals(request.notifierClient())) {
+      eventPublisher.publishEvent(new DossierPretEvent(dossier.getId(), currentEmploye.id()));
+    }
     return mapper.toSummaryDto(dossier);
   }
 
@@ -220,20 +295,41 @@ public class DossierService {
    * La transition doit avoir été vérifiée par l'appelant.
    */
   public void appliquerStatut(Dossier dossier, StatutDossier nouveauStatut, String commentaire) {
+    appliquerStatut(dossier, nouveauStatut, commentaire, currentEmploye.get());
+  }
+
+  /** Idem, avec l'auteur à mettre dans l'historique (null : le client, depuis le suivi en ligne). */
+  public void appliquerStatut(Dossier dossier, StatutDossier nouveauStatut, String commentaire, Employe auteur) {
     StatutDossier ancienStatut = dossier.getStatut();
     dossier.setStatut(nouveauStatut);
 
     TypeActionEvenement type = TypeActionEvenement.CHANGEMENT_STATUT;
+    if (nouveauStatut == StatutDossier.PRET) {
+      dossier.setPretAt(OffsetDateTime.now(clock));
+    } else if (nouveauStatut != StatutDossier.CLOTURE) {
+      dossier.setPretAt(null);
+    }
     if (nouveauStatut == StatutDossier.CLOTURE) {
       dossier.setClosedAt(OffsetDateTime.now(clock));
+      dossier.setFinGarantie(finGarantie(atelier.garantieMois()));
       type = TypeActionEvenement.CLOTURE;
     } else if (ancienStatut == StatutDossier.CLOTURE) {
       dossier.setClosedAt(null);
+      dossier.setFinGarantie(null);
       type = TypeActionEvenement.REOUVERTURE;
     }
 
-    evenementService.journaliser(dossier, type, "Statut: " + ancienStatut, "Statut: " + nouveauStatut,
+    evenementService.journaliserPar(auteur, dossier, type, "Statut: " + ancienStatut, "Statut: " + nouveauStatut,
         texteOuNull(commentaire));
+  }
+
+  /** Rappel par email au client dont l'appareil prêt n'a pas été récupéré. */
+  public void relancer(Long id) {
+    notificationService.relancer(getOrThrow(id));
+  }
+
+  public Employe employeConnecte() {
+    return currentEmploye.get();
   }
 
   public DossierSummaryDto changerTechnicien(Long id, Long technicienId) {
@@ -290,6 +386,35 @@ public class DossierService {
   }
 
   // ---------- Privé ----------
+
+  private LocalDate finGarantie(int mois) {
+    return mois > 0 ? LocalDate.now(clock).plusMonths(mois) : null;
+  }
+
+  private OffsetDateTime limiteRecuperation() {
+    return OffsetDateTime.now(clock).minus(atelier.delaiRecuperation());
+  }
+
+  /** Réparations précédentes encore sous garantie à la date d'entrée de ce dossier. */
+  private List<GarantieDto> garantiesCouvrant(Dossier dossier) {
+    List<Dossier> candidats = dossier.getNumeroSerie() != null
+        ? dossierRepository.findSousGarantieParNumeroSerie(
+            dossier.getNumeroSerie().toLowerCase(java.util.Locale.ROOT), dossier.getDateEntree())
+        : dossierRepository.findSousGarantieParClient(dossier.getClient().getId(), dossier.getDateEntree()).stream()
+            .filter(d -> d.getTypeAppareil() == dossier.getTypeAppareil()
+                && Objects.equals(d.getMarque(), dossier.getMarque())
+                && Objects.equals(d.getModele(), dossier.getModele()))
+            .toList();
+    return candidats.stream()
+        .filter(d -> !d.getId().equals(dossier.getId()))
+        .map(DossierService::toGarantieDto)
+        .toList();
+  }
+
+  private static GarantieDto toGarantieDto(Dossier dossier) {
+    return new GarantieDto(dossier.getId(), dossier.getReference(), dossier.getMarque(), dossier.getModele(),
+        dossier.getNumeroSerie(), dossier.getFinGarantie());
+  }
 
   private Client resoudreClient(CreateDossierRequest request) {
     if ((request.clientId() == null) == (request.client() == null)) {

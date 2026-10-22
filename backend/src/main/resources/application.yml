@@ -19,6 +19,17 @@ spring:
     locations: classpath:db/migration
     # Une base de dev (seed R__ appliqué) reste utilisable sans le profil dev
     ignore-migration-patterns: "repeatable:missing"
+  # Emails aux clients. Le serveur se règle par variables d'environnement : SPRING_MAIL_HOST
+  # (ex : smtp-relay.brevo.com), SPRING_MAIL_USERNAME, SPRING_MAIL_PASSWORD. Sans hôte, aucun email n'est envoyé.
+  mail:
+    port: 587
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
   servlet:
     multipart:
       max-file-size: 10MB
@@ -39,6 +50,24 @@ springdoc:
 
 app:
   timezone: Europe/Brussels
+  # Informations imprimées sur le bon de dépôt et dans les emails, et règles de l'atelier
+  atelier:
+    nom: ${APP_ATELIER_NOM:Pc Pro}
+    adresse: ${APP_ATELIER_ADRESSE:}
+    telephone: ${APP_ATELIER_TELEPHONE:}
+    email: ${APP_ATELIER_EMAIL:}
+    horaires: ${APP_ATELIER_HORAIRES:}
+    # Adresse de l'appli vue par les clients (liens de suivi, QR code), ex : https://atelier.pcpro-services.be
+    url-publique: ${APP_URL_PUBLIQUE:}
+    # Garantie par défaut d'une réparation (modifiable à la clôture, 0 = aucune)
+    garantie-mois: ${APP_GARANTIE_MOIS:3}
+    # Au-delà, un appareil prêt et pas récupéré apparaît dans les "non récupérés"
+    delai-recuperation: ${APP_DELAI_RECUPERATION:7d}
+    # Texte libre imprimé en bas du bon de dépôt (conditions de l'atelier)
+    conditions-depot: ${APP_CONDITIONS_DEPOT:}
+  mail:
+    # Adresse d'envoi, sur un domaine validé chez le fournisseur : "Pc Pro <atelier@pcpro-services.be>"
+    expediteur: ${APP_MAIL_EXPEDITEUR:}
   security:
     # Obligatoire, au moins 32 caractères. Générer avec : openssl rand -base64 48
     jwt-secret: ${APP_JWT_SECRET:}

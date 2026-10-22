@@ -1,6 +1,7 @@
 package pcpro.atelier.features.dossier.infra;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +51,29 @@ public interface DossierRepository extends JpaRepository<Dossier, Long>, JpaSpec
     where d.technicienAssigne.id = :employeId and d.statut <> pcpro.atelier.core.enums.StatutDossier.CLOTURE
     """)
   long compterActifsAssignesA(@Param("employeId") Long employeId);
+
+  @Query("""
+    select count(d) from Dossier d
+    where d.statut = pcpro.atelier.core.enums.StatutDossier.PRET and d.pretAt < :limite
+    """)
+  long compterNonRecuperes(@Param("limite") OffsetDateTime limite);
+
+  @Query("""
+    select d from Dossier d
+    where d.client.id = :clientId and d.finGarantie >= :date
+    order by d.finGarantie desc
+    """)
+  List<Dossier> findSousGarantieParClient(@Param("clientId") Long clientId, @Param("date") LocalDate date);
+
+  /** numeroSerie en minuscules. */
+  @Query("""
+    select d from Dossier d
+    where lower(d.numeroSerie) = :numeroSerie and d.finGarantie >= :date
+    order by d.finGarantie desc
+    """)
+  List<Dossier> findSousGarantieParNumeroSerie(@Param("numeroSerie") String numeroSerie, @Param("date") LocalDate date);
+
+  Optional<Dossier> findByReference(String reference);
 
   @Query("""
     select count(d) from Dossier d

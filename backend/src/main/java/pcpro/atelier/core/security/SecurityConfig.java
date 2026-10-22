@@ -58,6 +58,8 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+            // Suivi en ligne par le client (protégé par le code de suivi et une limite de tentatives)
+            .requestMatchers("/api/public/**").permitAll()
             .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
             .requestMatchers("/error").permitAll()
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

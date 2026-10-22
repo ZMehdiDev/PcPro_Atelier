@@ -16,6 +16,11 @@ public enum TypeActionEvenement {
   SUPPRESSION_PHOTO,
   CLOTURE,
   REOUVERTURE,
+  DEVIS,
+  DECISION_DEVIS,
+  PAIEMENT,
+  ANNULATION_PAIEMENT,
+  EMAIL_CLIENT,
   /** Conservé pour l'historique existant (remplacé par les types CHANGEMENT_*). */
   ACTION_SENSIBLE
 }

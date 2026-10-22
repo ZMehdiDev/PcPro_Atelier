@@ -22,6 +22,11 @@ public record DossierSummaryDto(
     LocalDate dateEntree,
     LocalDate dateEstimee,
     boolean enRetard,
+    /** Passage au statut PRET (null si pas prêt). */
+    OffsetDateTime pretDepuis,
+    /** Prêt depuis plus longtemps que le délai de récupération de l'atelier. */
+    boolean nonRecupere,
+    LocalDate finGarantie,
     OffsetDateTime createdAt,
     OffsetDateTime closedAt
 ) {}

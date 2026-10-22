@@ -1,7 +1,10 @@
 package pcpro.atelier.support;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import static org.mockito.Mockito.when;
 
 import java.util.Map;
 
@@ -12,13 +15,18 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.AbstractMockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import com.jayway.jsonpath.JsonPath;
+
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeMessage;
 
 import pcpro.atelier.core.enums.Role;
 import pcpro.atelier.core.security.LoginAttemptService;
@@ -57,6 +65,10 @@ public abstract class IntegrationTest {
   @Autowired
   private LoginAttemptService loginAttemptService;
 
+  /** Aucun email ne part pendant les tests : on vérifie les envois sur ce mock. */
+  @MockitoBean
+  protected JavaMailSender mailSender;
+
   protected Employe admin;
   protected Employe tech;
   protected String adminToken;
@@ -65,10 +77,11 @@ public abstract class IntegrationTest {
   @BeforeEach
   void resetDatabase() throws Exception {
     jdbcClient.sql("""
-        TRUNCATE evenement, note, photo, piece, dossier, client, reference_compteur, session_employe, employe
+        TRUNCATE evenement, note, photo, piece, devis_ligne, devis, paiement, dossier, client, reference_compteur, session_employe, employe
         RESTART IDENTITY CASCADE
         """).update();
     loginAttemptService.reinitialiser();
+    when(mailSender.createMimeMessage()).thenAnswer(i -> new MimeMessage((Session) null));
     admin = creerEmploye("Zak", "admin", ADMIN_PASSWORD, Role.ADMIN);
     tech = creerEmploye("Frere", "tech", TECH_PASSWORD, Role.TECHNICIEN);
     adminToken = login("admin", ADMIN_PASSWORD);
@@ -91,6 +104,19 @@ public abstract class IntegrationTest {
         .andExpect(status().isOk())
         .andReturn().getResponse().getContentAsString();
     return JsonPath.read(body, "$.token");
+  }
+
+  /** Crée un dossier (en tant que technicien) et renvoie son id. */
+  protected long creerDossier(Map<String, Object> body) throws Exception {
+    String reponse = mvc.perform(json(techToken, post("/api/dossiers"), body))
+        .andExpect(status().isCreated())
+        .andReturn().getResponse().getContentAsString();
+    return ((Number) read(reponse, "$.id")).longValue();
+  }
+
+  protected void changerStatut(String token, long id, String statut, int attendu) throws Exception {
+    mvc.perform(json(token, patch("/api/dossiers/" + id + "/statut"), Map.of("statut", statut)))
+        .andExpect(status().is(attendu));
   }
 
   /** Ajoute le token Bearer à une requête. */

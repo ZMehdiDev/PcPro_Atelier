@@ -30,6 +30,7 @@ import jakarta.validation.ConstraintViolationException;
 import pcpro.atelier.core.exception.BadRequestException;
 import pcpro.atelier.core.exception.ConflictException;
 import pcpro.atelier.core.exception.ResourceNotFoundException;
+import pcpro.atelier.core.exception.ServiceIndisponibleException;
 import pcpro.atelier.core.exception.TooManyRequestsException;
 
 /**
@@ -60,6 +61,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
   @ExceptionHandler(TooManyRequestsException.class)
   public ResponseEntity<ErrorResponse> handleTooManyRequests(TooManyRequestsException ex, HttpServletRequest request) {
     return build(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request);
+  }
+
+  @ExceptionHandler(ServiceIndisponibleException.class)
+  public ResponseEntity<ErrorResponse> handleServiceIndisponible(ServiceIndisponibleException ex, HttpServletRequest request) {
+    return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request);
   }
 
   @ExceptionHandler(AuthenticationException.class)

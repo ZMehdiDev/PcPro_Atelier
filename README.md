@@ -59,17 +59,24 @@ Au premier démarrage, le compte `APP_BOOTSTRAP_ADMIN_LOGIN` reçoit le mot de p
 | `APP_COOKIE_SECURE` | `false` seulement en local sans HTTPS (`true` par défaut). |
 | `APP_SWAGGER_ENABLED` | `true` pour exposer Swagger (désactivé par défaut). |
 | `APP_STORAGE_PHOTOS_DIRECTORY` | Dossier de stockage des photos. |
+| `APP_ATELIER_*` | Nom, adresse, téléphone, email et horaires de l'atelier (bon de dépôt, emails, suivi en ligne). |
+| `APP_URL_PUBLIQUE` | Adresse de l'appli pour les liens de suivi et le QR code (mise automatiquement en prod). |
+| `APP_GARANTIE_MOIS` | Garantie par défaut d'une réparation (3 mois). `APP_CONDITIONS_DEPOT` : texte en bas du bon de dépôt. |
+| `SPRING_MAIL_HOST` / `_USERNAME` / `_PASSWORD`, `APP_MAIL_EXPEDITEUR` | Envoi des emails (SMTP, ex : Brevo `smtp-relay.brevo.com`). Vide = aucun email. |
 
 ## API
 
-Toutes les routes sauf `POST /api/auth/login|refresh|logout` et `GET /api/health` demandent un header
+Toutes les routes sauf `POST /api/auth/login|refresh|logout`, `GET /api/health` et `/api/public/**` demandent un header
 `Authorization: Bearer <token>`. Les erreurs ont toujours le même format JSON
 (`status`, `message`, `fieldErrors`, `traceId`).
 
 | | |
 |---|---|
 | **Connexion** | `POST /api/auth/login` → token (15 min) + cookie de session · `POST /api/auth/refresh` · `POST /api/auth/logout` · `GET /api/auth/moi` · `POST /api/auth/mot-de-passe` |
-| **Dossiers** | `POST /api/dossiers` · `GET /api/dossiers?q=&statut=&actifs=&priorite=&bloque=&technicienId=&mesDossiers=&enRetard=` · `GET /api/dossiers/stats` · `GET/PUT /api/dossiers/{id}` · `PATCH /api/dossiers/{id}/statut` · `…/technicien` · `…/priorite` · `…/blocage` |
+| **Dossiers** | `POST /api/dossiers` · `GET /api/dossiers?q=&statut=&actifs=&priorite=&technicienId=&mesDossiers=&enRetard=&nonRecuperes=` · `GET /api/dossiers/stats` · `GET /api/dossiers/garanties?clientId=&numeroSerie=` · `GET/PUT /api/dossiers/{id}` · `PATCH /api/dossiers/{id}/statut` · `…/technicien` · `…/priorite` · `POST …/relance` · `GET …/bon-depot` (PDF) |
+| **Devis** | `PUT /api/dossiers/{id}/devis` · `POST …/devis/decision` · `POST …/devis/envoi` (email) · `DELETE …/devis` |
+| **Paiements** | `POST /api/dossiers/{id}/paiements` · admin : `DELETE …/paiements/{paiementId}`, `GET /api/caisse?du=&au=` |
+| **Suivi client** (public) | `GET /api/public/suivi/{reference}?code=` (ou `?telephone=`) · `POST /api/public/suivi/{reference}/devis` |
 | **Pièces** | `POST /api/dossiers/{id}/pieces` · `PUT …/pieces/{pieceId}` · `PATCH …/pieces/{pieceId}/etat` |
 | **Notes** | `POST /api/dossiers/{id}/notes` |
 | **Photos** | `POST /api/dossiers/{id}/photos` (multipart `file`) · `GET …/photos/{photoId}/contenu` · `DELETE …/photos/{photoId}` |
@@ -78,10 +85,17 @@ Toutes les routes sauf `POST /api/auth/login|refresh|logout` et `GET /api/health
 
 ### Règles métier
 
-- **Statuts du dossier** : `RECU → DIAGNOSTIC → ATTENTE_CLIENT / ATTENTE_PIECE → REPARATION → TESTS → PRET → CLOTURE`,
+- **Statuts du dossier** : `RECU → DIAGNOSTIC → ATTENTE_CLIENT / ATTENTE_PIECE → REPARATION → PRET → CLOTURE`,
   avec les retours en arrière utiles (test raté, client qui revient…). Le détail d'un dossier renvoie
-  `statutsPossibles`. Un dossier bloqué ne peut pas être clôturé ; un dossier clôturé n'accepte plus
-  que des notes et seul un admin peut le rouvrir.
+  `statutsPossibles`. Un dossier clôturé n'accepte plus que des notes et seul un admin peut le rouvrir.
+- **Prêt** : le client reçoit un email (s'il a une adresse, sauf `notifierClient: false`). Prêt depuis plus
+  de 7 jours sans être récupéré : il apparaît dans `nonRecuperes`, et `POST …/relance` renvoie un rappel.
+- **Devis** (prix TTC) : le faire met le dossier en `ATTENTE_CLIENT` ; accepté (par l'atelier ou par le
+  client en ligne), le dossier repasse en `REPARATION`. Il peut être refait tant qu'il n'est pas accepté.
+- **Clôture** : `PATCH …/statut` avec `paiement: {montant, moyen}` et `garantieMois` (3 par défaut, 0 = aucune).
+  Un appareil qui revient (même n° de série, ou même client et même modèle) affiche ses garanties en cours.
+- **Suivi client** : sans compte, avec la référence et le code de suivi (QR code du bon de dépôt, liens des
+  emails) ou le numéro de téléphone. Seul le code permet de répondre au devis. Essais ratés limités.
 - **Pièces** : `A_COMMANDER → COMMANDEE → RECUE → MONTEE` (ou `ANNULEE`). Une pièce commandée met le
   dossier en `ATTENTE_PIECE` ; quand toutes les pièces attendues sont reçues, il repasse en `REPARATION`.
 - **Clients** : retrouvés par numéro de téléphone (normalisé : `0470 12 34 56` = `0470123456`).

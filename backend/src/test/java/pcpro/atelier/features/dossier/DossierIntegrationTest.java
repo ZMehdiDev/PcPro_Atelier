@@ -23,16 +23,9 @@ import pcpro.atelier.support.IntegrationTest;
 class DossierIntegrationTest extends IntegrationTest {
 
   private long creerDossier(String nom, String telephone) throws Exception {
-    String body = mvc.perform(json(techToken, post("/api/dossiers"), Fixtures.nouveauDossier(nom, telephone)))
-        .andExpect(status().isCreated())
-        .andReturn().getResponse().getContentAsString();
-    return ((Number) read(body, "$.id")).longValue();
+    return creerDossier(Fixtures.nouveauDossier(nom, telephone));
   }
 
-  private void changerStatut(String token, long id, String statut, int attendu) throws Exception {
-    mvc.perform(json(token, patch("/api/dossiers/" + id + "/statut"), Map.of("statut", statut)))
-        .andExpect(status().is(attendu));
-  }
 
   @Test
   void creationDossierAvecReferenceDatesEtHistorique() throws Exception {

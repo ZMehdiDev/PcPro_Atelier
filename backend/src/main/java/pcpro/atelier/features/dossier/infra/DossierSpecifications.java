@@ -1,6 +1,7 @@
 package pcpro.atelier.features.dossier.infra;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Locale;
 
 import org.springframework.data.jpa.domain.Specification;
@@ -52,6 +53,17 @@ public final class DossierSpecifications {
     return (root, query, cb) -> cb.and(
         cb.lessThan(root.get("dateEstimee"), aujourdhui),
         root.get("statut").in(StatutDossier.PRET, StatutDossier.CLOTURE).not()
+    );
+  }
+
+  /** Appareils prêts depuis avant la limite et toujours pas récupérés. */
+  public static Specification<Dossier> nonRecuperes(Boolean nonRecuperes, OffsetDateTime limite) {
+    if (nonRecuperes == null || !nonRecuperes) {
+      return null;
+    }
+    return (root, query, cb) -> cb.and(
+        cb.equal(root.get("statut"), StatutDossier.PRET),
+        cb.lessThan(root.get("pretAt"), limite)
     );
   }
 
