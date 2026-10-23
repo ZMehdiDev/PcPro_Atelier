@@ -6,11 +6,11 @@ avec ses pièces, notes, photos et l'historique de qui a fait quoi.
 
 - `backend/` : API REST Spring Boot 4 (Java 21) + PostgreSQL 16 (migrations Flyway)
 - `infra/` : Docker Compose pour PostgreSQL et le backend
-- Front Angular : à venir
+- `front/` : application web Angular (ordinateur et téléphone) et page de suivi publique des clients
 
 ## Démarrer en local (développement)
 
-Prérequis : Java 21, Docker.
+Prérequis : Java 21, Docker, Node 22.
 
 ```bash
 cp .env.example .env               # puis renseigner APP_JWT_SECRET (openssl rand -base64 48)
@@ -22,6 +22,12 @@ Le profil `dev` charge des données de démo (15 clients, 50 dossiers) et active
 http://localhost:8080/swagger-ui
 
 Comptes de démo (mot de passe `atelier123`) : `zak` (admin), `pere`, `frere` (techniciens).
+
+Front (dans un autre terminal), sur http://localhost:4200 ; les appels `/api` sont relayés vers le backend :
+
+```bash
+cd front && npm ci && npm start
+```
 
 Tests (Docker requis, ils tournent sur un vrai PostgreSQL via Testcontainers) :
 
@@ -40,7 +46,7 @@ cp .env.example .env    # APP_DOMAIN, POSTGRES_PASSWORD, APP_JWT_SECRET et APP_B
 cd infra && docker compose --env-file ../.env -f docker-compose.prod.yml up -d --build
 ```
 
-- **Caddy** obtient le certificat HTTPS tout seul et sert le front (dossier `infra/front`) et l'API
+- **Caddy** obtient le certificat HTTPS tout seul et sert le front (construit dans son image depuis `front/`) et l'API
   (`/api`) sur le même domaine. Le backend et PostgreSQL ne sont pas exposés.
 - **Sauvegarde** de la base chaque nuit dans `infra/backups` (14 jours gardés). À copier ailleurs
   régulièrement, comme le volume `photos_data`.
@@ -63,6 +69,20 @@ Au premier démarrage, le compte `APP_BOOTSTRAP_ADMIN_LOGIN` reçoit le mot de p
 | `APP_URL_PUBLIQUE` | Adresse de l'appli pour les liens de suivi et le QR code (mise automatiquement en prod). |
 | `APP_GARANTIE_MOIS` | Garantie par défaut d'une réparation (3 mois). `APP_CONDITIONS_DEPOT` : texte en bas du bon de dépôt. |
 | `SPRING_MAIL_HOST` / `_USERNAME` / `_PASSWORD`, `APP_MAIL_EXPEDITEUR` | Envoi des emails (SMTP, ex : Brevo `smtp-relay.brevo.com`). Vide = aucun email. |
+
+## Front
+
+| Écran | Rôle |
+|---|---|
+| **Accueil** | Recherche, « Nouveau dépôt », compteurs (mes dossiers, en cours, prêts, pas récupérés, en retard), remises en retard, mes dossiers, chiffres par statut. |
+| **Nouveau dépôt** | Client retrouvé par téléphone ou nom, appareil, problème, accessoires, date promise. Alerte si une garantie est en cours. Puis le bon de dépôt à imprimer. |
+| **Fiche dossier** | Étape suivante en un clic (« Commencer le diagnostic », « C'est prêt », « Rendre au client » avec encaissement et garantie), devis, paiements, pièces, notes (sensibles masquées), photos (réduites avant l'envoi), suivi en ligne, historique. |
+| **Dossiers**, **Clients** | Listes avec filtres et recherche. |
+| **Caisse**, **Employés** | Réservés aux admins. |
+| **/suivi** | Page publique du client (QR code du bon de dépôt) : avancement, devis à accepter ou refuser, coordonnées de l'atelier. |
+
+Le token d'accès reste en mémoire ; le cookie de session (30 jours) le renouvelle au chargement et quand l'API répond 401.
+Pour que les liens de suivi pointent vers le front en local : `APP_URL_PUBLIQUE=http://localhost:4200`.
 
 ## API
 

@@ -1,0 +1,117 @@
+<section class="carte" id="devis">
+  <h2>
+    Devis
+    @if (devis(); as d) {
+      <span
+        class="badge"
+        [class.badge-ok]="d.statut === 'ACCEPTE'"
+        [class.badge-danger]="d.statut === 'REFUSE'"
+        [class.badge-alerte]="d.statut === 'EN_ATTENTE'"
+        >{{ libellesStatut[d.statut] }}</span
+      >
+    }
+  </h2>
+
+  @if (edition()) {
+    <div class="lignes-devis">
+      @for (l of lignes(); track $index) {
+        <div class="ligne-devis">
+          <select [(ngModel)]="l.type" aria-label="Type">
+            @for (t of types; track t) {
+              <option [ngValue]="t">{{ libellesType[t] }}</option>
+            }
+          </select>
+          <input [(ngModel)]="l.libelle" placeholder="Libellé" aria-label="Libellé" class="libelle" />
+          <input type="number" inputmode="decimal" min="0" step="0.5" [(ngModel)]="l.quantite" aria-label="Quantité" title="Quantité" class="qte" />
+          <input type="number" inputmode="decimal" min="0" step="0.01" [(ngModel)]="l.prixUnitaire" placeholder="Prix TTC" aria-label="Prix unitaire TTC" class="prix" />
+          <button type="button" class="btn btn-lien btn-petit" (click)="retirerLigne($index)" aria-label="Retirer la ligne">✕</button>
+        </div>
+      }
+    </div>
+    <div class="ligne" style="margin: 0.5rem 0">
+      <button type="button" class="btn btn-petit" (click)="ajouterLigne('PIECE')">+ Pièce</button>
+      <button type="button" class="btn btn-petit" (click)="ajouterLigne('MAIN_OEUVRE')">+ Main-d’œuvre</button>
+      <button type="button" class="btn btn-petit" (click)="ajouterLigne('AUTRE')">+ Autre</button>
+    </div>
+    <p class="gras droite">Total TTC : {{ total() | euros }}</p>
+    <label class="champ">
+      <span>Commentaire pour le client (facultatif)</span>
+      <textarea [(ngModel)]="commentaire" rows="2"></textarea>
+    </label>
+    <div class="dialogue-actions">
+      <button class="btn" (click)="edition.set(false)">Annuler</button>
+      <button class="btn btn-principal" [disabled]="envoi()" (click)="enregistrer()">Enregistrer le devis</button>
+    </div>
+  } @else if (devis(); as d) {
+    <table class="tableau">
+      <tbody>
+        @for (l of d.lignes; track $index) {
+          <tr>
+            <td>
+              {{ l.libelle }}
+              @if (l.quantite !== 1) {
+                <span class="doux"> × {{ l.quantite }}</span>
+              }
+            </td>
+            <td class="droite">{{ l.total | euros }}</td>
+          </tr>
+        }
+        <tr>
+          <td class="gras">Total TTC</td>
+          <td class="droite gras">{{ d.total | euros }}</td>
+        </tr>
+      </tbody>
+    </table>
+    @if (d.commentaire) {
+      <p class="doux pre" style="margin-top: 0.5rem">{{ d.commentaire }}</p>
+    }
+    <p class="doux petit" style="margin-top: 0.5rem">
+      Fait le {{ d.updatedAt | date: true }}
+      @if (d.decideAt) {
+        · réponse le {{ d.decideAt | date: true }}
+      }
+    </p>
+
+    @if (d.statut === 'EN_ATTENTE' && dossier().statut !== 'CLOTURE') {
+      <div class="ligne" style="margin-top: 0.75rem">
+        <button class="btn btn-ok" [disabled]="envoi()" (click)="accepter()">Le client accepte</button>
+        <button class="btn btn-danger" [disabled]="envoi()" (click)="refus.set(true)">Le client refuse</button>
+      </div>
+      <div class="ligne" style="margin-top: 0.5rem">
+        @if (dossier().client.email) {
+          <button class="btn btn-petit" [disabled]="envoi()" (click)="envoyer()">Envoyer par email</button>
+        }
+        <button class="btn btn-petit" (click)="ouvrirEdition()">Modifier</button>
+        <button class="btn btn-petit btn-lien" (click)="supprimer()">Supprimer</button>
+      </div>
+      @if (!dossier().client.email) {
+        <p class="doux petit" style="margin-top: 0.5rem">
+          Pas d'email : appelez le client au
+          <a [href]="'tel:' + dossier().client.telephone">{{ dossier().client.telephone }}</a>, ou il répond lui-même
+          depuis le suivi en ligne.
+        </p>
+      }
+    } @else if (d.statut === 'REFUSE' && modifiable()) {
+      <div class="ligne" style="margin-top: 0.75rem">
+        <button class="btn btn-petit" (click)="ouvrirEdition()">Refaire un devis</button>
+        <button class="btn btn-petit btn-lien" (click)="supprimer()">Supprimer</button>
+      </div>
+    }
+  } @else {
+    <p class="doux">Pas de devis.</p>
+    @if (modifiable()) {
+      <button class="btn" (click)="ouvrirEdition()">Faire un devis</button>
+    }
+  }
+</section>
+
+<app-dialogue titre="Le client refuse le devis" [ouvert]="refus()" (fermer)="refus.set(false)">
+  <label class="champ">
+    <span>Raison (facultatif)</span>
+    <input [(ngModel)]="commentaireRefus" placeholder="Ex : trop cher, rachète un neuf" />
+  </label>
+  <div class="dialogue-actions">
+    <button class="btn" (click)="refus.set(false)">Annuler</button>
+    <button class="btn btn-danger" [disabled]="envoi()" (click)="refuser()">Enregistrer le refus</button>
+  </div>
+</app-dialogue>

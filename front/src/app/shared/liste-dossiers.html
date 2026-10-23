@@ -1,0 +1,92 @@
+@if (dossiers().length === 0) {
+  <p class="vide">{{ vide() }}</p>
+} @else {
+  @if (!compact()) {
+  <table class="tableau masquer-mobile">
+    <thead>
+      <tr>
+        <th>Dossier</th>
+        @if (!masquerClient()) {
+          <th>Client</th>
+        }
+        <th>Appareil</th>
+        <th>Statut</th>
+        <th>Technicien</th>
+        <th>Entrée</th>
+        <th>Prévu</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (d of dossiers(); track d.id) {
+        <tr class="cliquable" (click)="router.navigate(['/dossiers', d.id])">
+          <td>
+            <a [routerLink]="['/dossiers', d.id]" class="gras" (click)="$event.stopPropagation()">{{ d.reference }}</a>
+            @if (d.priorite === 'HAUTE') {
+              <span class="badge badge-danger">Urgent</span>
+            }
+          </td>
+          @if (!masquerClient()) {
+            <td>
+              {{ d.clientNom }}
+              <div class="doux petit">{{ d.clientTelephone }}</div>
+            </td>
+          }
+          <td>{{ appareil(d) }}</td>
+          <td>
+            <app-statut [statut]="d.statut" />
+            @if (d.nonRecupere) {
+              <div class="petit alerte">Pas récupéré, prêt {{ d.pretDepuis | depuis }}</div>
+            } @else if (d.enRetard) {
+              <div class="petit danger">En retard</div>
+            }
+          </td>
+          <td>{{ d.technicien?.prenom ?? '—' }}</td>
+          <td>{{ d.dateEntree | date }}</td>
+          <td [class.danger]="d.enRetard">{{ d.dateEstimee | date }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  }
+
+  <ul class="cartes" [class.masquer-ordi]="!compact()">
+    @for (d of dossiers(); track d.id) {
+      <li>
+        <a [routerLink]="['/dossiers', d.id]">
+          <div class="ligne ligne-espace">
+            <span class="gras">
+              @if (!masquerClient()) {
+                {{ d.clientNom }}
+              } @else {
+                {{ d.reference }}
+              }
+            </span>
+            <app-statut [statut]="d.statut" />
+          </div>
+          <div>{{ appareil(d) }}</div>
+          <div class="doux petit ligne">
+            @if (!masquerClient()) {
+              <span>{{ d.reference }}</span>
+            }
+            <span>Entré le {{ d.dateEntree | date }}</span>
+            @if (d.technicien) {
+              <span>· {{ d.technicien.prenom }}</span>
+            }
+          </div>
+          @if (d.priorite === 'HAUTE' || d.nonRecupere || d.enRetard) {
+            <div class="ligne">
+              @if (d.priorite === 'HAUTE') {
+                <span class="badge badge-danger">Urgent</span>
+              }
+              @if (d.nonRecupere) {
+                <span class="badge badge-alerte">Pas récupéré ({{ d.pretDepuis | depuis }})</span>
+              } @else if (d.enRetard) {
+                <span class="badge badge-danger">En retard (prévu le {{ d.dateEstimee | date }})</span>
+              }
+            </div>
+          }
+        </a>
+      </li>
+    }
+  </ul>
+}

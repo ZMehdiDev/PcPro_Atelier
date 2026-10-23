@@ -1,0 +1,139 @@
+.barre {
+  background: var(--surface);
+  border-bottom: 1px solid var(--bordure);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.barre-contenu {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 60px;
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--texte);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.logo span {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.nav-haut {
+  display: flex;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.nav-haut a {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--rayon);
+  color: var(--texte-doux);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.nav-haut a:hover {
+  background: #eef1f4;
+  color: var(--texte);
+}
+
+.nav-haut a.actif {
+  color: var(--accent);
+  background: var(--accent-clair);
+}
+
+.barre-contenu > .ligne {
+  margin-left: auto;
+}
+
+.compte {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--rayon);
+  color: var(--texte);
+  text-decoration: none;
+}
+
+.compte:hover,
+.compte.actif {
+  background: #eef1f4;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent-clair);
+  color: var(--accent);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.nav-bas {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: var(--surface);
+  border-top: 1px solid var(--bordure);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-bas a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 62px;
+  font-size: 0.75rem;
+  color: var(--texte-doux);
+  text-decoration: none;
+}
+
+.nav-bas a.actif {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.nav-bas svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.nav-bas .plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.4rem;
+  line-height: 1;
+}

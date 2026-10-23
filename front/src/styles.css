@@ -1,0 +1,595 @@
+/* Style de l'atelier : sobre, lisible, gros boutons faciles à toucher. */
+
+:root {
+  --fond: #f4f5f7;
+  --surface: #ffffff;
+  --texte: #1d2733;
+  --texte-doux: #5c6773;
+  --bordure: #d9dee4;
+  --bordure-forte: #b8c0c9;
+  --accent: #1f5c99;
+  --accent-fonce: #174a7c;
+  --accent-clair: #e8f0f8;
+  --danger: #b42318;
+  --danger-clair: #fdecea;
+  --ok: #1b7340;
+  --ok-clair: #e7f4ec;
+  --alerte: #9a5b00;
+  --alerte-clair: #fdf3e1;
+  --rayon: 8px;
+  --ombre: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  margin: 0 0 0.5rem;
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+}
+
+h3 {
+  font-size: 1rem;
+}
+
+p {
+  margin: 0 0 0.5rem;
+}
+
+a {
+  color: var(--accent);
+}
+
+/* Mise en page */
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 6rem;
+}
+
+.page-etroite {
+  max-width: 720px;
+}
+
+.entete-page {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.entete-page h1 {
+  margin: 0;
+}
+
+.carte {
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.carte > h2:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ligne-espace {
+  justify-content: space-between;
+}
+
+.pile > * + * {
+  margin-top: 0.75rem;
+}
+
+.grille-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.doux {
+  color: var(--texte-doux);
+}
+
+.petit {
+  font-size: 0.875rem;
+}
+
+.gras {
+  font-weight: 600;
+}
+
+.droite {
+  text-align: right;
+}
+
+.vide {
+  color: var(--texte-doux);
+  text-align: center;
+  padding: 1.5rem 0.5rem;
+}
+
+.pre {
+  white-space: pre-wrap;
+}
+
+/* Boutons */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--bordure-forte);
+  border-radius: var(--rayon);
+  background: var(--surface);
+  color: var(--texte);
+  font: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: #eef1f4;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.btn-principal {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-principal:hover {
+  background: var(--accent-fonce);
+}
+
+.btn-danger {
+  color: var(--danger);
+  border-color: #e4b4ae;
+}
+
+.btn-danger:hover {
+  background: var(--danger-clair);
+}
+
+.btn-ok {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: #fff;
+}
+
+.btn-ok:hover {
+  background: #155c33;
+}
+
+.btn-lien {
+  border-color: transparent;
+  background: transparent;
+  color: var(--accent);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.btn-lien:hover {
+  background: var(--accent-clair);
+}
+
+.btn-grand {
+  min-height: 52px;
+  font-size: 1.05rem;
+  padding: 0.6rem 1.25rem;
+}
+
+.btn-petit {
+  min-height: 36px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.9rem;
+}
+
+.btn-bloc {
+  width: 100%;
+}
+
+/* Formulaires */
+
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.champ > span {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.champ small {
+  color: var(--texte-doux);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--bordure-forte);
+  border-radius: var(--rayon);
+  background: #fff;
+  color: var(--texte);
+  font: inherit;
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.btn:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  width: 1.25rem;
+  height: 1.25rem;
+  min-height: 0;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.case {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.choix {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.choix label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--bordure-forte);
+  border-radius: var(--rayon);
+  background: #fff;
+  cursor: pointer;
+}
+
+.choix label:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-clair);
+  font-weight: 600;
+}
+
+.choix input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.erreur-champ {
+  color: var(--danger);
+  font-size: 0.875rem;
+}
+
+/* Bandeaux */
+
+.bandeau {
+  border-radius: var(--rayon);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid;
+}
+
+.bandeau-alerte {
+  background: var(--alerte-clair);
+  border-color: #efd29b;
+  color: #5e3a00;
+}
+
+.bandeau-danger {
+  background: var(--danger-clair);
+  border-color: #f0b8b1;
+  color: #7a1a12;
+}
+
+.bandeau-ok {
+  background: var(--ok-clair);
+  border-color: #a9d8bc;
+  color: #124d2b;
+}
+
+.bandeau-info {
+  background: var(--accent-clair);
+  border-color: #b9cfe6;
+  color: #163d63;
+}
+
+/* Étiquettes */
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #eceff2;
+  color: #39434d;
+}
+
+.badge-RECU {
+  background: #eceff2;
+  color: #39434d;
+}
+
+.badge-DIAGNOSTIC {
+  background: #e6effa;
+  color: #1d4f85;
+}
+
+.badge-ATTENTE_CLIENT,
+.badge-ATTENTE_PIECE {
+  background: #fdf0d9;
+  color: #7a4a00;
+}
+
+.badge-REPARATION {
+  background: #e9e7f8;
+  color: #3e3591;
+}
+
+.badge-PRET {
+  background: #e2f3e8;
+  color: #17643a;
+}
+
+.badge-CLOTURE {
+  background: #f1f2f4;
+  color: #6b7580;
+}
+
+.badge-danger {
+  background: var(--danger-clair);
+  color: var(--danger);
+}
+
+.badge-alerte {
+  background: var(--alerte-clair);
+  color: var(--alerte);
+}
+
+.badge-ok {
+  background: var(--ok-clair);
+  color: var(--ok);
+}
+
+/* Tableaux (ordinateur) et cartes (téléphone) */
+
+.tableau {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.tableau th,
+.tableau td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--bordure);
+  text-align: left;
+  vertical-align: top;
+}
+
+.tableau th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--texte-doux);
+  font-weight: 600;
+}
+
+.tableau tbody tr.cliquable {
+  cursor: pointer;
+}
+
+.tableau tbody tr.cliquable:hover {
+  background: #f7f9fb;
+}
+
+.liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.liste > li {
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--bordure);
+}
+
+.liste > li:last-child {
+  border-bottom: 0;
+}
+
+/* Fenêtres de dialogue */
+
+dialog {
+  width: min(560px, calc(100vw - 1.5rem));
+  max-height: calc(100dvh - 2rem);
+  border: 0;
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 20px 50px rgba(16, 24, 40, 0.25);
+  color: var(--texte);
+}
+
+dialog::backdrop {
+  background: rgba(20, 28, 38, 0.45);
+}
+
+.dialogue-corps {
+  padding: 1.25rem;
+}
+
+.dialogue-corps h2 {
+  margin-bottom: 1rem;
+}
+
+.dialogue-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 0.9rem 0.75rem 6rem;
+  }
+
+  h1 {
+    font-size: 1.3rem;
+  }
+
+  .masquer-mobile {
+    display: none !important;
+  }
+
+  .dialogue-actions .btn {
+    flex: 1 1 auto;
+  }
+}
+
+@media (min-width: 721px) {
+  .masquer-ordi {
+    display: none !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Onglets et filtres des listes */
+
+.onglets {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.75rem;
+  scrollbar-width: none;
+}
+
+.filtres {
+  display: grid;
+  grid-template-columns: 1fr 200px 200px;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 720px) {
+  .filtres {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filtres input {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Lignes du devis */
+
+.lignes-devis {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ligne-devis {
+  display: grid;
+  grid-template-columns: 9rem 1fr 4.5rem 6.5rem auto;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+@media (max-width: 720px) {
+  .ligne-devis {
+    grid-template-columns: 1fr 4.5rem 6.5rem auto;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--bordure);
+  }
+
+  .ligne-devis .libelle {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+}

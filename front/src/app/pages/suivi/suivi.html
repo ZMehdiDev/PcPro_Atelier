@@ -1,0 +1,147 @@
+<div class="suivi">
+  <header>
+    <strong>{{ suivi()?.atelier?.nom ?? 'Pc Pro' }}</strong>
+    <span>Suivi de réparation</span>
+  </header>
+
+  @if (suivi(); as s) {
+    <section class="carte">
+      <p class="doux petit">Dossier {{ s.reference }}</p>
+      <h1>{{ s.statutLibelle }}</h1>
+      <p class="appareil">{{ s.appareil }}</p>
+
+      <ol class="etapes" aria-label="Avancement">
+        @for (e of etapes; track e; let i = $index) {
+          <li [class.fait]="i <= etape()" [class.actuel]="i === etape()">
+            <span class="point"></span>
+            <span class="libelle">{{ e }}</span>
+          </li>
+        }
+      </ol>
+
+      <dl>
+        <dt>Déposé le</dt>
+        <dd>{{ s.dateEntree | date }}</dd>
+        @if (s.dateEstimee && s.statut !== 'PRET' && s.statut !== 'CLOTURE') {
+          <dt>Prévu pour le</dt>
+          <dd>{{ s.dateEstimee | date }}</dd>
+        }
+        @if (s.pretDepuis && s.statut === 'PRET') {
+          <dt>Prêt depuis le</dt>
+          <dd>{{ s.pretDepuis | date }}</dd>
+        }
+        @if (s.resteAPayer && s.resteAPayer > 0 && s.statut !== 'CLOTURE') {
+          <dt>À payer au retrait</dt>
+          <dd><strong>{{ s.resteAPayer | euros }}</strong></dd>
+        }
+        @if (s.finGarantie) {
+          <dt>Garantie jusqu'au</dt>
+          <dd>{{ s.finGarantie | date }}</dd>
+        }
+      </dl>
+    </section>
+
+    @if (s.devis; as d) {
+      <section class="carte">
+        <h2>Devis</h2>
+        <table class="tableau">
+          <tbody>
+            @for (l of d.lignes; track $index) {
+              <tr>
+                <td>
+                  {{ l.libelle }}
+                  @if (l.quantite !== 1) {
+                    <span class="doux"> × {{ l.quantite }}</span>
+                  }
+                </td>
+                <td class="droite">{{ l.total | euros }}</td>
+              </tr>
+            }
+            <tr>
+              <td class="gras">Total TVA comprise</td>
+              <td class="droite gras">{{ d.total | euros }}</td>
+            </tr>
+          </tbody>
+        </table>
+        @if (d.commentaire) {
+          <p class="pre" style="margin-top: 0.75rem">{{ d.commentaire }}</p>
+        }
+
+        @if (s.peutRepondreDevis) {
+          @if (confirmation() === null) {
+            <p style="margin-top: 1rem">Acceptez-vous ce devis ?</p>
+            <div class="reponse">
+              <button class="btn btn-ok btn-grand" (click)="confirmation.set('accepter')">J'accepte</button>
+              <button class="btn btn-grand" (click)="confirmation.set('refuser')">Je refuse</button>
+            </div>
+          } @else {
+            <div class="bandeau bandeau-info" style="margin: 1rem 0 0">
+              @if (confirmation() === 'accepter') {
+                <p>Vous acceptez le devis de <strong>{{ d.total | euros }}</strong>. L'atelier lance la réparation.</p>
+              } @else {
+                <p>Vous refusez le devis. L'atelier vous recontactera pour récupérer votre appareil.</p>
+              }
+              <div class="reponse">
+                <button class="btn btn-principal" [disabled]="chargement()" (click)="repondre(confirmation() === 'accepter')">
+                  Confirmer
+                </button>
+                <button class="btn" (click)="confirmation.set(null)">Retour</button>
+              </div>
+            </div>
+          }
+        } @else if (d.statut === 'ACCEPTE') {
+          <p class="bandeau bandeau-ok" style="margin: 1rem 0 0">Devis accepté le {{ d.decideAt | date }}. Merci !</p>
+        } @else if (d.statut === 'REFUSE') {
+          <p class="bandeau bandeau-info" style="margin: 1rem 0 0">Devis refusé le {{ d.decideAt | date }}.</p>
+        } @else if (d.statut === 'EN_ATTENTE') {
+          <p class="doux petit" style="margin-top: 0.75rem">
+            Pour répondre en ligne, scannez le QR code de votre bon de dépôt, ou appelez-nous.
+          </p>
+        }
+      </section>
+    }
+
+    @if (erreur()) {
+      <div class="bandeau bandeau-danger">{{ erreur() }}</div>
+    }
+
+    @if (s.atelier.adresse || s.atelier.telephone || s.atelier.horaires) {
+    <section class="carte contact">
+      <h2>{{ s.atelier.nom }}</h2>
+      @if (s.atelier.adresse) {
+        <p>{{ s.atelier.adresse }}</p>
+      }
+      @if (s.atelier.telephone) {
+        <p><a [href]="'tel:' + s.atelier.telephone">{{ s.atelier.telephone }}</a></p>
+      }
+      @if (s.atelier.horaires) {
+        <p class="doux">{{ s.atelier.horaires }}</p>
+      }
+    </section>
+    }
+
+    <p class="centre"><button class="btn btn-lien" (click)="autre()">Suivre un autre appareil</button></p>
+  } @else {
+    <form class="carte pile" (ngSubmit)="consulter()">
+      <h1>Où en est ma réparation ?</h1>
+      <p class="doux">
+        Scannez le QR code de votre bon de dépôt, ou saisissez la référence du dossier (ex : PCP-2026-000123) et
+        votre code de suivi ou votre numéro de téléphone.
+      </p>
+      @if (erreur()) {
+        <div class="bandeau bandeau-danger">{{ erreur() }}</div>
+      }
+      <label class="champ">
+        <span>Référence du dossier</span>
+        <input name="ref" [(ngModel)]="ref" autocapitalize="characters" placeholder="PCP-2026-000123" />
+      </label>
+      <label class="champ">
+        <span>Code de suivi ou téléphone</span>
+        <input name="cle" [(ngModel)]="cle" autocapitalize="characters" />
+      </label>
+      <button class="btn btn-principal btn-grand btn-bloc" [disabled]="chargement()">
+        {{ chargement() ? 'Recherche…' : 'Voir mon dossier' }}
+      </button>
+    </form>
+  }
+</div>

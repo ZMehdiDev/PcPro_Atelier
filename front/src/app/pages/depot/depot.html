@@ -1,0 +1,164 @@
+<div class="page page-etroite">
+  <div class="entete-page">
+    <h1>Nouveau dépôt</h1>
+  </div>
+
+  @if (erreurs().length) {
+    <div class="bandeau bandeau-danger">
+      @for (e of erreurs(); track e) {
+        <div>{{ e }}</div>
+      }
+    </div>
+  }
+
+  <form (ngSubmit)="valider()" autocomplete="off">
+    <section class="carte">
+      <h2>Client</h2>
+      @if (clientConnu(); as c) {
+        <div class="bandeau bandeau-info ligne ligne-espace">
+          <span>Client déjà connu : <strong>{{ c.nom }}</strong></span>
+          <button type="button" class="btn btn-lien btn-petit" (click)="autreClient()">Autre client</button>
+        </div>
+      }
+      <div class="grille-2">
+        <label class="champ">
+          <span>Téléphone *</span>
+          <input
+            name="telephone"
+            type="tel"
+            inputmode="tel"
+            [(ngModel)]="telephone"
+            (ngModelChange)="tapeClient($event)"
+            placeholder="0470 12 34 56"
+            autofocus
+          />
+        </label>
+        <label class="champ">
+          <span>Nom *</span>
+          <input name="nom" [(ngModel)]="nom" (ngModelChange)="tapeClient($event)" autocapitalize="words" />
+        </label>
+      </div>
+
+      @if (suggestions().length) {
+        <div class="suggestions">
+          <p class="doux petit">Client déjà venu ? Touchez son nom :</p>
+          @for (c of suggestions(); track c.id) {
+            <button type="button" class="btn suggestion" (click)="choisirClient(c)">
+              <strong>{{ c.nom }}</strong>
+              <span class="doux">{{ c.telephone }}</span>
+            </button>
+          }
+        </div>
+      }
+
+      <label class="champ" style="margin-top: 0.75rem">
+        <span>Email</span>
+        <input name="email" type="email" inputmode="email" [(ngModel)]="email" placeholder="facultatif" />
+        <small>Pour lui envoyer le bon de dépôt et le prévenir quand c'est prêt.</small>
+      </label>
+    </section>
+
+    <section class="carte">
+      <h2>Appareil</h2>
+      <div class="pile">
+        <div class="choix" role="radiogroup" aria-label="Type d'appareil">
+          @for (t of typesAppareil; track t) {
+            <label>
+              <input type="radio" name="type" [value]="t" [(ngModel)]="type" />
+              {{ libellesType[t] }}
+            </label>
+          }
+        </div>
+        <div class="grille-2">
+          <label class="champ">
+            <span>Marque</span>
+            <input name="marque" [(ngModel)]="marque" placeholder="Lenovo, HP, Asus…" />
+          </label>
+          <label class="champ">
+            <span>Modèle</span>
+            <input name="modele" [(ngModel)]="modele" />
+          </label>
+        </div>
+        <label class="champ">
+          <span>Numéro de série</span>
+          <input name="numeroSerie" [(ngModel)]="numeroSerie" (blur)="verifierGarantie()" autocapitalize="characters" />
+        </label>
+      </div>
+
+      @if (garanties().length) {
+        <div class="bandeau bandeau-alerte" style="margin: 1rem 0 0">
+          <strong>Garantie en cours</strong>
+          @for (g of garanties(); track g.dossierId) {
+            <div>
+              Réparation {{ g.reference }} ({{ g.marque }} {{ g.modele }}) garantie jusqu'au {{ g.finGarantie | date }}
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="carte">
+      <h2>Dépôt</h2>
+      <div class="pile">
+        <label class="champ">
+          <span>Problème décrit par le client *</span>
+          <textarea name="probleme" [(ngModel)]="probleme" rows="4" placeholder="Ne démarre plus, écran cassé…"></textarea>
+        </label>
+
+        <div class="champ">
+          <label class="champ">
+            <span>Accessoires laissés</span>
+            <input name="accessoires" [(ngModel)]="accessoires" placeholder="Aucun" />
+          </label>
+          <div class="ligne">
+            @for (a of accessoiresCourants; track a) {
+              <button type="button" class="btn btn-petit" (click)="ajouterAccessoire(a)">+ {{ a }}</button>
+            }
+          </div>
+        </div>
+
+        <div class="champ">
+          <label class="champ">
+            <span>Prêt prévu le</span>
+            <input name="dateEstimee" type="date" [min]="minDate" [(ngModel)]="dateEstimee" />
+          </label>
+          <div class="ligne">
+            <button type="button" class="btn btn-petit" (click)="dansJours(1)">Demain</button>
+            <button type="button" class="btn btn-petit" (click)="dansJours(3)">Dans 3 jours</button>
+            <button type="button" class="btn btn-petit" (click)="dansJours(7)">Dans 1 semaine</button>
+          </div>
+        </div>
+
+        <div class="grille-2">
+          <div class="champ">
+            <span>Priorité</span>
+            <div class="choix" role="radiogroup" aria-label="Priorité">
+              @for (p of priorites; track p) {
+                <label>
+                  <input type="radio" name="priorite" [value]="p" [(ngModel)]="priorite" />
+                  {{ libellesPriorite[p] }}
+                </label>
+              }
+            </div>
+          </div>
+          <label class="champ">
+            <span>Technicien</span>
+            <select name="technicien" [(ngModel)]="technicienId">
+              <option [ngValue]="null">Personne pour l'instant</option>
+              @for (t of techniciens(); track t.id) {
+                <option [ngValue]="t.id">{{ t.prenom }}</option>
+              }
+            </select>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <div class="valider">
+      <button class="btn btn-principal btn-grand btn-bloc" [disabled]="envoi()">
+        {{ envoi() ? 'Enregistrement…' : 'Enregistrer le dépôt' }}
+      </button>
+      <p class="doux petit">Le bon de dépôt sera prêt à imprimer juste après{{ email ? ', et envoyé au client par email' : '' }}.</p>
+    </div>
+  </form>
+</div>

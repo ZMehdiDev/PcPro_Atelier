@@ -1,0 +1,50 @@
+<header class="barre no-print">
+  <div class="barre-contenu">
+    <a routerLink="/" class="logo">Pc Pro <span>Atelier</span></a>
+
+    <nav class="nav-haut masquer-mobile">
+      <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
+      <a routerLink="/dossiers" routerLinkActive="actif">Dossiers</a>
+      <a routerLink="/clients" routerLinkActive="actif">Clients</a>
+      @if (auth.estAdmin()) {
+        <a routerLink="/caisse" routerLinkActive="actif">Caisse</a>
+        <a routerLink="/employes" routerLinkActive="actif">Employés</a>
+      }
+    </nav>
+
+    <div class="ligne">
+      <a routerLink="/depot" class="btn btn-principal masquer-mobile">+ Nouveau dépôt</a>
+      <a routerLink="/compte" class="compte" routerLinkActive="actif" title="Mon compte">
+        <span class="avatar">{{ auth.employe()?.prenom?.charAt(0) }}</span>
+        <span class="masquer-mobile">{{ auth.employe()?.prenom }}</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <router-outlet />
+</main>
+
+<nav class="nav-bas masquer-ordi no-print">
+  <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>
+    Accueil
+  </a>
+  <a routerLink="/dossiers" routerLinkActive="actif">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6l2 2h8v12H4z" /></svg>
+    Dossiers
+  </a>
+  <a routerLink="/depot" class="depot" routerLinkActive="actif">
+    <span class="plus">+</span>
+    Dépôt
+  </a>
+  <a routerLink="/clients" routerLinkActive="actif">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></svg>
+    Clients
+  </a>
+  <a routerLink="/compte" routerLinkActive="actif">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+    Plus
+  </a>
+</nav>

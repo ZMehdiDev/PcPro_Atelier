@@ -8,7 +8,9 @@
 # Seul Caddy est exposé sur Internet. Le backend et PostgreSQL restent sur le réseau Docker interne.
 services:
   caddy:
-    image: caddy:2-alpine
+    # Caddy avec le front (application Angular) construit dedans
+    build:
+      context: ../front
     container_name: atelier-caddy
     restart: unless-stopped
     depends_on:
@@ -21,8 +23,6 @@ services:
       APP_DOMAIN: ${APP_DOMAIN:?APP_DOMAIN doit être défini dans .env}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      # Le front (build Angular) sera servi depuis ce dossier
-      - ./front:/srv/front:ro
       - caddy_data:/data
       - caddy_config:/config
 

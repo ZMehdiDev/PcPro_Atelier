@@ -1,0 +1,78 @@
+<div class="page">
+  <div class="entete-page">
+    <h1>Bonjour {{ auth.employe()?.prenom }}</h1>
+  </div>
+
+  <div class="actions-principales">
+    <form class="recherche" (ngSubmit)="chercher()" role="search">
+      <input
+        name="q"
+        type="search"
+        [(ngModel)]="recherche"
+        placeholder="Chercher : nom, téléphone, référence, n° de série…"
+        enterkeyhint="search"
+      />
+      <button class="btn">Chercher</button>
+    </form>
+    <a routerLink="/depot" class="btn btn-principal btn-grand">+ Nouveau dépôt</a>
+  </div>
+
+  @if (stats(); as s) {
+    <div class="tuiles">
+      <a class="tuile" routerLink="/dossiers" [queryParams]="{ vue: 'mes' }">
+        <span class="nombre">{{ s.mesDossiers }}</span>
+        <span>Mes dossiers</span>
+      </a>
+      <a class="tuile" routerLink="/dossiers" [queryParams]="{ vue: 'actifs' }">
+        <span class="nombre">{{ s.actifs }}</span>
+        <span>En cours à l'atelier</span>
+      </a>
+      <a class="tuile tuile-ok" routerLink="/dossiers" [queryParams]="{ vue: 'prets' }">
+        <span class="nombre">{{ s.parStatut.PRET }}</span>
+        <span>Prêts à rendre</span>
+      </a>
+      <a class="tuile" [class.tuile-alerte]="s.nonRecuperes > 0" routerLink="/dossiers" [queryParams]="{ vue: 'nonrecuperes' }">
+        <span class="nombre">{{ s.nonRecuperes }}</span>
+        <span>Pas récupérés</span>
+      </a>
+      <a class="tuile" [class.tuile-danger]="s.enRetard > 0" routerLink="/dossiers" [queryParams]="{ vue: 'retard' }">
+        <span class="nombre">{{ s.enRetard }}</span>
+        <span>En retard</span>
+      </a>
+    </div>
+  }
+
+  <div class="colonnes">
+    <section class="carte">
+      <h2>Remises en retard</h2>
+      <p class="doux petit">Prêts depuis plus de 7 jours sans être récupérés, ou date promise dépassée.</p>
+      <app-liste-dossiers [dossiers]="aSurveiller()" [compact]="true" vide="Rien en retard, bravo." />
+    </section>
+
+    <section class="carte">
+      <h2>
+        Mes dossiers en cours
+        <a routerLink="/dossiers" [queryParams]="{ vue: 'mes' }" class="btn btn-lien btn-petit">Tout voir</a>
+      </h2>
+      <app-liste-dossiers [dossiers]="mesDossiers()" [compact]="true" vide="Aucun dossier ne vous est assigné." />
+    </section>
+  </div>
+
+  @if (stats(); as s) {
+    <section class="carte">
+      <h2>L'atelier en chiffres</h2>
+      <ul class="barres">
+        @for (st of statuts; track st) {
+          <li>
+            <a routerLink="/dossiers" [queryParams]="{ vue: 'tous', statut: st }">
+              <span class="libelle">{{ libelles[st] }}</span>
+              <span class="jauge"><span [style.width.%]="largeur(s.parStatut[st])"></span></span>
+              <span class="valeur">{{ s.parStatut[st] }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+      <p class="doux petit">{{ s.parStatut.CLOTURE }} dossiers rendus au total.</p>
+    </section>
+  }
+</div>

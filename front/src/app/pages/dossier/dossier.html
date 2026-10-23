@@ -1,0 +1,312 @@
+@if (dossier(); as d) {
+  <div class="page">
+    <a routerLink="/dossiers" class="retour no-print">← Dossiers</a>
+
+    @if (nouveau()) {
+      <div class="bandeau bandeau-ok nouveau">
+        <div>
+          <strong>Dossier {{ d.reference }} enregistré.</strong>
+          @if (d.client.email) {
+            Le bon de dépôt a été envoyé à {{ d.client.email }}.
+          }
+          Imprimez-le : un exemplaire pour le client, un pour l'atelier.
+        </div>
+        <div class="ligne">
+          <button class="btn btn-principal btn-grand" (click)="bonDepot()">Imprimer le bon de dépôt</button>
+          <button class="btn btn-lien" (click)="fermerBandeauNouveau()">Fermer</button>
+        </div>
+      </div>
+    }
+
+    <div class="entete-dossier">
+      <div>
+        <div class="ligne">
+          <h1>{{ d.client.nom }}</h1>
+          <app-statut [statut]="d.statut" />
+          @if (d.priorite === 'HAUTE') {
+            <span class="badge badge-danger">Urgent</span>
+          }
+        </div>
+        <div class="doux">
+          {{ d.reference }} · {{ d.appareil.marque }} {{ d.appareil.modele }}
+          @if (!d.appareil.marque && !d.appareil.modele) {
+            {{ libellesType[d.appareil.type] }}
+          }
+        </div>
+      </div>
+      <button class="btn no-print" (click)="bonDepot()">Bon de dépôt</button>
+    </div>
+
+    @if (d.nonRecupere) {
+      <div class="bandeau bandeau-alerte ligne ligne-espace">
+        <span>Prêt {{ d.pretDepuis | depuis }} et toujours pas récupéré.</span>
+        @if (d.client.email) {
+          <button class="btn btn-petit" (click)="relancer()">Envoyer un rappel par email</button>
+        } @else {
+          <a class="btn btn-petit" [href]="'tel:' + d.client.telephone">Appeler {{ d.client.telephone }}</a>
+        }
+      </div>
+    } @else if (d.enRetard) {
+      <div class="bandeau bandeau-danger">
+        En retard : promis pour le {{ d.dateEstimee | date }}.
+        <button class="btn btn-lien btn-petit" (click)="modifierInfos()">Changer la date</button>
+      </div>
+    }
+
+    @for (g of d.garanties; track g.dossierId) {
+      <div class="bandeau bandeau-alerte">
+        <strong>Sous garantie :</strong> réparé dans le dossier
+        <a [routerLink]="['/dossiers', g.dossierId]">{{ g.reference }}</a>, garanti jusqu'au {{ g.finGarantie | date }}.
+      </div>
+    }
+
+    <!-- Étapes -->
+    <section class="carte etapes no-print">
+      @if (etapes().principale; as p) {
+        <button
+          class="btn btn-grand"
+          [class.btn-ok]="p === 'PRET' || p === 'CLOTURE'"
+          [class.btn-principal]="p !== 'PRET' && p !== 'CLOTURE'"
+          [disabled]="envoi()"
+          (click)="changerStatut(p)"
+        >
+          {{ actionStatut(p, d.statut) }}
+        </button>
+      }
+      @for (s of etapes().autres; track s) {
+        <button class="btn" [disabled]="envoi()" (click)="changerStatut(s)">{{ actionStatut(s, d.statut) }}</button>
+      }
+      @if (d.statut === 'CLOTURE') {
+        <p class="doux">
+          Rendu au client le {{ d.closedAt | date }}.
+          @if (d.finGarantie) {
+            Garantie jusqu'au {{ d.finGarantie | date }}.
+          } @else {
+            Sans garantie.
+          }
+        </p>
+      }
+      @if (d.statut === 'DIAGNOSTIC' && !d.devis) {
+        <p class="doux petit aide">Le client doit accepter un prix ? Faites le devis plus bas.</p>
+      }
+    </section>
+
+    <div class="colonnes">
+      <div>
+        <!-- Infos -->
+        <section class="carte">
+          <h2>
+            Informations
+            @if (d.statut !== 'CLOTURE') {
+              <button class="btn btn-lien btn-petit no-print" (click)="modifierInfos()">Modifier</button>
+            }
+          </h2>
+          <dl class="infos">
+            <dt>Client</dt>
+            <dd>
+              <a [routerLink]="['/clients', d.client.id]">{{ d.client.nom }}</a><br />
+              <a [href]="'tel:' + d.client.telephone">{{ d.client.telephone }}</a>
+              @if (d.client.email) {
+                <br /><a [href]="'mailto:' + d.client.email">{{ d.client.email }}</a>
+              }
+            </dd>
+            <dt>Appareil</dt>
+            <dd>
+              {{ libellesType[d.appareil.type] }} {{ d.appareil.marque }} {{ d.appareil.modele }}
+              @if (d.appareil.numeroSerie) {
+                <br /><span class="doux">N° série : {{ d.appareil.numeroSerie }}</span>
+              }
+            </dd>
+            <dt>Problème</dt>
+            <dd class="pre">{{ d.descriptionProbleme || '—' }}</dd>
+            <dt>Accessoires</dt>
+            <dd>{{ d.accessoires || 'Aucun' }}</dd>
+            <dt>Entrée</dt>
+            <dd>{{ d.dateEntree | date }}</dd>
+            <dt>Prévu pour</dt>
+            <dd [class.danger]="d.enRetard">{{ (d.dateEstimee | date) || '—' }}</dd>
+            @if (d.pretDepuis && d.statut === 'PRET') {
+              <dt>Prêt depuis</dt>
+              <dd>{{ d.pretDepuis | date }}</dd>
+            }
+          </dl>
+
+          <div class="grille-2 reglages no-print">
+            <label class="champ">
+              <span>Technicien</span>
+              <select
+                [ngModel]="d.technicien?.id ?? null"
+                (ngModelChange)="changerTechnicien($event)"
+                [disabled]="d.statut === 'CLOTURE'"
+              >
+                <option [ngValue]="null">Personne</option>
+                @for (t of techniciens(); track t.id) {
+                  <option [ngValue]="t.id">{{ t.prenom }}</option>
+                }
+              </select>
+            </label>
+            <label class="champ">
+              <span>Priorité</span>
+              <select [ngModel]="d.priorite" (ngModelChange)="changerPriorite($event)" [disabled]="d.statut === 'CLOTURE'">
+                @for (p of priorites; track p) {
+                  <option [ngValue]="p">{{ libellesPriorite[p] }}</option>
+                }
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <app-devis-carte [dossier]="d" (modifie)="charger()" />
+        <app-paiements-carte [dossier]="d" (modifie)="charger()" />
+        <app-pieces-carte [dossier]="d" (modifie)="charger()" />
+      </div>
+
+      <div>
+        <app-notes-carte [dossier]="d" (modifie)="charger()" />
+        <app-photos-carte [dossier]="d" (modifie)="charger()" />
+
+        <section class="carte">
+          <h2>Suivi en ligne du client</h2>
+          <p class="doux petit">
+            Le client suit sa réparation avec le QR code du bon de dépôt, ou sur la page de suivi avec sa référence et
+            ce code.
+          </p>
+          <p>
+            Code : <strong class="code">{{ d.codeSuivi }}</strong>
+          </p>
+          @if (d.lienSuivi) {
+            <div class="ligne">
+              <a class="btn btn-petit" [href]="d.lienSuivi" target="_blank" rel="noopener">Voir sa page</a>
+              <button class="btn btn-petit" (click)="copierLien()">Copier le lien</button>
+            </div>
+          }
+        </section>
+
+        <app-historique [evenements]="d.evenements" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Prêt -->
+  <app-dialogue titre="L'appareil est prêt" [ouvert]="dialogue() === 'pret'" (fermer)="dialogue.set(null)">
+    <div class="pile">
+      @if (d.client.email) {
+        <label class="case">
+          <input type="checkbox" [(ngModel)]="notifierClient" />
+          Prévenir {{ d.client.nom }} par email ({{ d.client.email }})
+        </label>
+      } @else {
+        <div class="bandeau bandeau-info">
+          Pas d'email pour ce client : pensez à l'appeler au
+          <a [href]="'tel:' + d.client.telephone">{{ d.client.telephone }}</a>.
+        </div>
+      }
+      @if (d.devis?.statut === 'ACCEPTE' && d.resteAPayer) {
+        <p>Reste à payer au retrait : <strong>{{ d.resteAPayer | euros }}</strong></p>
+      }
+      <label class="champ">
+        <span>Commentaire (facultatif)</span>
+        <input [(ngModel)]="commentaire" placeholder="Ex : disque remplacé, données récupérées" />
+      </label>
+    </div>
+    <div class="dialogue-actions">
+      <button class="btn" (click)="dialogue.set(null)">Annuler</button>
+      <button class="btn btn-ok" [disabled]="envoi()" (click)="confirmerPret()">C'est prêt</button>
+    </div>
+  </app-dialogue>
+
+  <!-- Restitution -->
+  <app-dialogue titre="Rendre l'appareil au client" [ouvert]="dialogue() === 'cloture'" (fermer)="dialogue.set(null)">
+    <div class="pile">
+      @if (d.devis?.statut === 'ACCEPTE') {
+        <p class="doux">
+          Devis accepté : {{ d.devis!.total | euros }}. Déjà payé : {{ d.totalPaye | euros }}.
+        </p>
+      } @else if (d.totalPaye > 0) {
+        <p class="doux">Déjà payé : {{ d.totalPaye | euros }}.</p>
+      }
+      <label class="champ">
+        <span>Montant encaissé maintenant</span>
+        <input type="number" inputmode="decimal" min="0" step="0.01" [(ngModel)]="montant" placeholder="0,00 (rien à payer)" />
+      </label>
+      @if (montant && montant > 0) {
+        <div class="champ">
+          <span>Payé par</span>
+          <div class="choix">
+            @for (m of moyens; track m) {
+              <label>
+                <input type="radio" name="moyenCloture" [value]="m" [(ngModel)]="moyen" />
+                {{ libellesMoyen[m] }}
+              </label>
+            }
+          </div>
+        </div>
+      }
+      <label class="champ">
+        <span>Garantie</span>
+        <select [(ngModel)]="garantieMois">
+          @for (g of garantiesMois; track g) {
+            <option [ngValue]="g">{{ g === 0 ? 'Aucune garantie' : g + ' mois' }}</option>
+          }
+        </select>
+      </label>
+      <label class="champ">
+        <span>Commentaire (facultatif)</span>
+        <input [(ngModel)]="commentaire" />
+      </label>
+    </div>
+    <div class="dialogue-actions">
+      <button class="btn" (click)="dialogue.set(null)">Annuler</button>
+      <button class="btn btn-ok" [disabled]="envoi()" (click)="confirmerCloture()">
+        Rendu{{ montant && montant > 0 ? ' et encaissé' : '' }}
+      </button>
+    </div>
+  </app-dialogue>
+
+  <!-- Réouverture -->
+  <app-dialogue titre="Rouvrir le dossier ?" [ouvert]="dialogue() === 'rouvrir'" (fermer)="dialogue.set(null)">
+    <p>Le dossier repasse en diagnostic et la garantie est retirée.</p>
+    <label class="champ">
+      <span>Raison</span>
+      <input [(ngModel)]="commentaire" placeholder="Ex : le client revient, même panne" />
+    </label>
+    <div class="dialogue-actions">
+      <button class="btn" (click)="dialogue.set(null)">Annuler</button>
+      <button class="btn btn-principal" [disabled]="envoi()" (click)="confirmerReouverture()">Rouvrir</button>
+    </div>
+  </app-dialogue>
+
+  <!-- Modification -->
+  <app-dialogue titre="Modifier le dossier" [ouvert]="dialogue() === 'infos'" (fermer)="dialogue.set(null)">
+    <div class="pile">
+      <div class="choix">
+        @for (t of typesAppareil; track t) {
+          <label>
+            <input type="radio" name="typeInfos" [value]="t" [(ngModel)]="infos.type" />
+            {{ libellesType[t] }}
+          </label>
+        }
+      </div>
+      <div class="grille-2">
+        <label class="champ"><span>Marque</span><input [(ngModel)]="infos.marque" /></label>
+        <label class="champ"><span>Modèle</span><input [(ngModel)]="infos.modele" /></label>
+      </div>
+      <label class="champ"><span>Numéro de série</span><input [(ngModel)]="infos.numeroSerie" /></label>
+      <label class="champ">
+        <span>Problème</span>
+        <textarea [(ngModel)]="infos.descriptionProbleme" rows="3"></textarea>
+      </label>
+      <label class="champ"><span>Accessoires</span><input [(ngModel)]="infos.accessoires" /></label>
+      <label class="champ">
+        <span>Prêt prévu le</span>
+        <input type="date" [min]="d.dateEntree" [(ngModel)]="infos.dateEstimee" />
+      </label>
+    </div>
+    <div class="dialogue-actions">
+      <button class="btn" (click)="dialogue.set(null)">Annuler</button>
+      <button class="btn btn-principal" [disabled]="envoi()" (click)="enregistrerInfos()">Enregistrer</button>
+    </div>
+  </app-dialogue>
+} @else {
+  <div class="page"><p class="vide">Chargement…</p></div>
+}
