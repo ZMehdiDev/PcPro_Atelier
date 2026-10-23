@@ -16,10 +16,11 @@ import { NotificationService } from '../../core/notification.service';
       </div>
 
       <nav class="carte menu">
-        <a routerLink="/dossiers">Dossiers</a>
+        <a routerLink="/dossiers">Réparations</a>
         <a routerLink="/clients">Clients</a>
         @if (auth.estAdmin()) {
-          <a routerLink="/caisse">Caisse</a>
+          <a routerLink="/caisse">Caisse du jour</a>
+          <a routerLink="/chiffre-affaires">Chiffre d’affaires</a>
           <a routerLink="/employes">Employés</a>
         }
         <a routerLink="/suivi" target="_blank">Page de suivi des clients</a>

@@ -39,7 +39,7 @@
       <textarea [(ngModel)]="commentaire" rows="2"></textarea>
     </label>
     <div class="dialogue-actions">
-      <button class="btn" (click)="edition.set(false)">Annuler</button>
+      <button class="btn btn-neutre" (click)="edition.set(false)">Annuler</button>
       <button class="btn btn-principal" [disabled]="envoi()" (click)="enregistrer()">Enregistrer le devis</button>
     </div>
   } @else if (devis(); as d) {
@@ -111,7 +111,7 @@
     <input [(ngModel)]="commentaireRefus" placeholder="Ex : trop cher, rachète un neuf" />
   </label>
   <div class="dialogue-actions">
-    <button class="btn" (click)="refus.set(false)">Annuler</button>
+    <button class="btn btn-neutre" (click)="refus.set(false)">Annuler</button>
     <button class="btn btn-danger" [disabled]="envoi()" (click)="refuser()">Enregistrer le refus</button>
   </div>
 </app-dialogue>

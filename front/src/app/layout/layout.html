@@ -1,25 +1,56 @@
-<header class="barre no-print">
-  <div class="barre-contenu">
-    <a routerLink="/" class="logo">Pc Pro <span>Atelier</span></a>
+<!-- Ordinateur : menu fixe à gauche, l'écran entier pour le travail -->
+<aside class="menu masquer-mobile no-print">
+  <a routerLink="/" class="logo">Pc Pro <span>Atelier</span></a>
 
-    <nav class="nav-haut masquer-mobile">
-      <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
-      <a routerLink="/dossiers" routerLinkActive="actif">Dossiers</a>
-      <a routerLink="/clients" routerLinkActive="actif">Clients</a>
-      @if (auth.estAdmin()) {
-        <a routerLink="/caisse" routerLinkActive="actif">Caisse</a>
-        <a routerLink="/employes" routerLinkActive="actif">Employés</a>
-      }
-    </nav>
+  <a routerLink="/depot" class="menu-depot" routerLinkActive="actif">
+    <span class="plus" aria-hidden="true">+</span> Nouveau dépôt
+  </a>
 
-    <div class="ligne">
-      <a routerLink="/depot" class="btn btn-principal masquer-mobile">+ Nouveau dépôt</a>
-      <a routerLink="/compte" class="compte" routerLinkActive="actif" title="Mon compte">
-        <span class="avatar">{{ auth.employe()?.prenom?.charAt(0) }}</span>
-        <span class="masquer-mobile">{{ auth.employe()?.prenom }}</span>
+  <nav>
+    <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>
+      Accueil
+    </a>
+    <a routerLink="/dossiers" routerLinkActive="actif">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6l2 2h8v12H4z" /></svg>
+      Réparations
+    </a>
+    <a routerLink="/clients" routerLinkActive="actif">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></svg>
+      Clients
+    </a>
+    @if (auth.estAdmin()) {
+      <p class="menu-titre">Gestion</p>
+      <a routerLink="/caisse" routerLinkActive="actif">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 10h18M7 15h3" /></svg>
+        Caisse du jour
       </a>
-    </div>
-  </div>
+      <a routerLink="/chiffre-affaires" routerLinkActive="actif">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
+        Chiffre d'affaires
+      </a>
+      <a routerLink="/employes" routerLinkActive="actif">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2.4.6 4 2.4 4 5.2" /></svg>
+        Employés
+      </a>
+    }
+  </nav>
+
+  <a routerLink="/compte" class="menu-compte" routerLinkActive="actif">
+    <span class="avatar">{{ auth.employe()?.prenom?.charAt(0) }}</span>
+    <span>
+      <strong>{{ auth.employe()?.prenom }}</strong>
+      <small>Mon compte</small>
+    </span>
+  </a>
+</aside>
+
+<!-- Téléphone : barre du haut + barre du bas -->
+<header class="barre masquer-ordi no-print">
+  <a routerLink="/" class="logo">Pc Pro <span>Atelier</span></a>
+  <a routerLink="/compte" class="compte" title="Mon compte">
+    <span class="avatar">{{ auth.employe()?.prenom?.charAt(0) }}</span>
+  </a>
 </header>
 
 <main>
@@ -33,7 +64,7 @@
   </a>
   <a routerLink="/dossiers" routerLinkActive="actif">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6l2 2h8v12H4z" /></svg>
-    Dossiers
+    Réparations
   </a>
   <a routerLink="/depot" class="depot" routerLinkActive="actif">
     <span class="plus">+</span>

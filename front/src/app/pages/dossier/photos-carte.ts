@@ -61,7 +61,7 @@ async function reduire(fichier: File): Promise<Blob> {
         </p>
         <div class="dialogue-actions">
           <button class="btn btn-danger" (click)="supprimer(p)">Supprimer</button>
-          <button class="btn" (click)="agrandie.set(null)">Fermer</button>
+          <button class="btn btn-neutre" (click)="agrandie.set(null)">Fermer</button>
         </div>
       }
     </app-dialogue>

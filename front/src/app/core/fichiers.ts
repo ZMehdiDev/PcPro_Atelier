@@ -28,3 +28,18 @@ export function ouvrirPdf(pdf: Observable<Blob>, nomFichier: string, onErreur: (
     },
   });
 }
+
+/** Télécharge un fichier de l'API (qui demande le token) sous le nom donné. */
+export function telecharger(fichier: Observable<Blob>, nomFichier: string, onErreur: (err: unknown) => void): void {
+  fichier.subscribe({
+    next: (blob) => {
+      const url = URL.createObjectURL(blob);
+      const lien = document.createElement('a');
+      lien.href = url;
+      lien.download = nomFichier;
+      lien.click();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    },
+    error: onErreur,
+  });
+}

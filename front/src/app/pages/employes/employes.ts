@@ -70,7 +70,7 @@ import { Dialogue } from '../../shared/dialogue';
         }
       </div>
       <div class="dialogue-actions">
-        <button class="btn" (click)="dialogue.set(null)">Annuler</button>
+        <button class="btn btn-neutre" (click)="dialogue.set(null)">Annuler</button>
         <button class="btn btn-principal" [disabled]="envoi()" (click)="enregistrer()">Enregistrer</button>
       </div>
     </app-dialogue>
@@ -82,7 +82,7 @@ import { Dialogue } from '../../shared/dialogue';
         <input type="text" [(ngModel)]="mdp" autocomplete="new-password" />
       </label>
       <div class="dialogue-actions">
-        <button class="btn" (click)="dialogue.set(null)">Annuler</button>
+        <button class="btn btn-neutre" (click)="dialogue.set(null)">Annuler</button>
         <button class="btn btn-principal" [disabled]="envoi() || mdp.length < 8" (click)="enregistrerMotDePasse()">Enregistrer</button>
       </div>
     </app-dialogue>

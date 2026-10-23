@@ -1,15 +1,24 @@
-/* Style de l'atelier : sobre, lisible, gros boutons faciles à toucher. */
+/*
+ * Style de l'atelier : sobre, lisible, gros boutons faciles à toucher.
+ * Règle : tout ce qui est cliquable a l'air d'un bouton (couleur, bordure, flèche) ;
+ * ce qui est seulement informatif reste neutre.
+ */
 
 :root {
-  --fond: #f4f5f7;
+  --fond: #e4e9ef;
   --surface: #ffffff;
-  --texte: #1d2733;
-  --texte-doux: #5c6773;
-  --bordure: #d9dee4;
-  --bordure-forte: #b8c0c9;
+  --surface-douce: #f5f7fa;
+  --texte: #1b2532;
+  --texte-doux: #556170;
+  --bordure: #cdd5de;
+  --bordure-forte: #a7b3c1;
   --accent: #1f5c99;
   --accent-fonce: #174a7c;
-  --accent-clair: #e8f0f8;
+  --accent-vif: #2f74b8;
+  --accent-clair: #e3edf8;
+  --accent-bord: #a9c3e0;
+  --menu: #1c2b3a;
+  --largeur-menu: 236px;
   --danger: #b42318;
   --danger-clair: #fdecea;
   --ok: #1b7340;
@@ -17,7 +26,7 @@
   --alerte: #9a5b00;
   --alerte-clair: #fdf3e1;
   --rayon: 8px;
-  --ombre: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+  --ombre: 0 1px 2px rgba(16, 24, 40, 0.08), 0 2px 6px rgba(16, 24, 40, 0.06);
   color-scheme: light;
 }
 
@@ -70,13 +79,11 @@ a {
 /* Mise en page */
 
 .page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 1.25rem 1rem 6rem;
+  padding: 1.5rem 2rem 4rem;
 }
 
 .page-etroite {
-  max-width: 720px;
+  max-width: 820px;
 }
 
 .entete-page {
@@ -106,6 +113,39 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  margin: -1rem -1rem 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface-douce);
+  border-bottom: 1px solid var(--bordure);
+  border-radius: var(--rayon) var(--rayon) 0 0;
+}
+
+/* Carte entière cliquable : bordure colorée à gauche, flèche, survol */
+.carte-lien {
+  position: relative;
+  display: block;
+  padding-right: 2.5rem;
+  border-left: 4px solid var(--accent);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.carte-lien::after {
+  content: '›';
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.8rem;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.carte-lien:hover {
+  background: var(--accent-clair);
+  border-color: var(--accent-bord);
+  border-left-color: var(--accent);
 }
 
 .ligne {
@@ -164,19 +204,20 @@ a {
   gap: 0.4rem;
   min-height: 44px;
   padding: 0.5rem 1rem;
-  border: 1px solid var(--bordure-forte);
+  border: 1px solid var(--accent-bord);
   border-radius: var(--rayon);
-  background: var(--surface);
-  color: var(--texte);
+  background: var(--accent-clair);
+  color: var(--accent-fonce);
   font: inherit;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .btn:hover {
-  background: #eef1f4;
+  background: #d3e2f2;
+  border-color: var(--accent);
 }
 
 .btn:disabled {
@@ -195,12 +236,14 @@ a {
 }
 
 .btn-danger {
+  background: #fff;
   color: var(--danger);
   border-color: #e4b4ae;
 }
 
 .btn-danger:hover {
   background: var(--danger-clair);
+  border-color: var(--danger);
 }
 
 .btn-ok {
@@ -223,6 +266,18 @@ a {
 
 .btn-lien:hover {
   background: var(--accent-clair);
+  border-color: transparent;
+}
+
+.btn-neutre {
+  background: #fff;
+  border-color: var(--bordure-forte);
+  color: var(--texte);
+}
+
+.btn-neutre:hover {
+  background: var(--surface-douce);
+  border-color: var(--texte-doux);
 }
 
 .btn-grand {
@@ -446,6 +501,7 @@ input[type='radio'] {
 }
 
 .tableau th {
+  background: var(--surface-douce);
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -458,7 +514,16 @@ input[type='radio'] {
 }
 
 .tableau tbody tr.cliquable:hover {
-  background: #f7f9fb;
+  background: var(--accent-clair);
+}
+
+.tableau tbody tr.cliquable td:last-child::after {
+  content: '›';
+  float: right;
+  margin-left: 0.5rem;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--accent);
 }
 
 .liste {
@@ -511,6 +576,15 @@ dialog::backdrop {
 @media (max-width: 720px) {
   .page {
     padding: 0.9rem 0.75rem 6rem;
+  }
+
+  .carte {
+    padding: 0.85rem;
+  }
+
+  .carte > h2:first-child {
+    margin: -0.85rem -0.85rem 0.85rem;
+    padding: 0.65rem 0.85rem;
   }
 
   h1 {
@@ -592,4 +666,48 @@ dialog::backdrop {
     grid-column: 1 / -1;
     grid-row: 1;
   }
+}
+
+/* Compteurs des onglets, étapes cliquables (liste des réparations) */
+
+.onglet .compteur {
+  display: inline-block;
+  min-width: 1.5rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--accent-fonce);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.etapes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.etape {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  padding: 0.2rem 0.6rem 0.2rem 0.3rem;
+  border: 1px solid var(--bordure-forte);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--texte);
+  font: inherit;
+  cursor: pointer;
+}
+
+.etape:hover {
+  border-color: var(--accent);
+}
+
+.etape.choisie {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
 }

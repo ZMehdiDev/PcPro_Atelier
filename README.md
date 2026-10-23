@@ -74,11 +74,12 @@ Au premier démarrage, le compte `APP_BOOTSTRAP_ADMIN_LOGIN` reçoit le mot de p
 
 | Écran | Rôle |
 |---|---|
-| **Accueil** | Recherche, « Nouveau dépôt », compteurs (mes dossiers, en cours, prêts, pas récupérés, en retard), remises en retard, mes dossiers, chiffres par statut. |
+| **Cadre** | Plein écran, menu fixe à gauche sur ordinateur ; barres en haut et en bas sur téléphone. Tout ce qui est cliquable a l'air d'un bouton. |
+| **Accueil** | 4 gros boutons (Nouveau dépôt, Rendre un appareil, Mes réparations, Tout l'atelier) avec leurs compteurs, recherche, remises en retard (si il y en a), mes réparations. |
 | **Nouveau dépôt** | Client retrouvé par téléphone ou nom, appareil, problème, accessoires, date promise. Alerte si une garantie est en cours. Puis le bon de dépôt à imprimer. |
-| **Fiche dossier** | Étape suivante en un clic (« Commencer le diagnostic », « C'est prêt », « Rendre au client » avec encaissement et garantie), devis, paiements, pièces, notes (sensibles masquées), photos (réduites avant l'envoi), suivi en ligne, historique. |
-| **Dossiers**, **Clients** | Listes avec filtres et recherche. |
-| **Caisse**, **Employés** | Réservés aux admins. |
+| **Fiche dossier** | Avancement en 5 étapes, encadré « Que faire maintenant ? » avec l'étape suivante en un clic (« Commencer le diagnostic », « C'est prêt », « Rendre au client » avec encaissement et garantie). Le reste en onglets : Résumé (infos, technicien, priorité, suivi en ligne), Devis et paiement, Pièces, Notes et photos (notes sensibles masquées, photos réduites avant l'envoi), Historique. |
+| **Réparations**, **Clients** | Listes avec filtres et recherche ; onglets avec compteurs et étapes cliquables. |
+| **Caisse**, **Chiffre d'affaires**, **Employés** | Réservés aux admins. Chiffre d'affaires : par réparation rendue sur la période, encaissé, coût des pièces et marge, export CSV pour Excel. |
 | **/suivi** | Page publique du client (QR code du bon de dépôt) : avancement, devis à accepter ou refuser, coordonnées de l'atelier. |
 
 Le token d'accès reste en mémoire ; le cookie de session (30 jours) le renouvelle au chargement et quand l'API répond 401.
@@ -95,7 +96,7 @@ Toutes les routes sauf `POST /api/auth/login|refresh|logout`, `GET /api/health` 
 | **Connexion** | `POST /api/auth/login` → token (15 min) + cookie de session · `POST /api/auth/refresh` · `POST /api/auth/logout` · `GET /api/auth/moi` · `POST /api/auth/mot-de-passe` |
 | **Dossiers** | `POST /api/dossiers` · `GET /api/dossiers?q=&statut=&actifs=&priorite=&technicienId=&mesDossiers=&enRetard=&nonRecuperes=` · `GET /api/dossiers/stats` · `GET /api/dossiers/garanties?clientId=&numeroSerie=` · `GET/PUT /api/dossiers/{id}` · `PATCH /api/dossiers/{id}/statut` · `…/technicien` · `…/priorite` · `POST …/relance` · `GET …/bon-depot` (PDF, exemplaires client et atelier) |
 | **Devis** | `PUT /api/dossiers/{id}/devis` · `POST …/devis/decision` · `POST …/devis/envoi` (email) · `DELETE …/devis` |
-| **Paiements** | `POST /api/dossiers/{id}/paiements` · admin : `DELETE …/paiements/{paiementId}`, `GET /api/caisse?du=&au=` |
+| **Paiements** | `POST /api/dossiers/{id}/paiements` · admin : `DELETE …/paiements/{paiementId}`, `GET /api/caisse?du=&au=`, `GET /api/chiffre-affaires?du=&au=`, `GET /api/chiffre-affaires/export?du=&au=` (CSV) |
 | **Suivi client** (public) | `GET /api/public/suivi/{reference}?code=` (ou `?telephone=`) · `POST /api/public/suivi/{reference}/devis` |
 | **Pièces** | `POST /api/dossiers/{id}/pieces` · `PUT …/pieces/{pieceId}` · `PATCH …/pieces/{pieceId}/etat` |
 | **Notes** | `POST /api/dossiers/{id}/notes` |

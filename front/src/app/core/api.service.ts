@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map, shareReplay } from 'rxjs';
 import {
   Caisse,
+  ChiffreAffaires,
   ChangeStatutRequest,
   Client,
   ClientDetail,
@@ -128,6 +129,14 @@ export class ApiService {
 
   caisse(du: string, au: string): Observable<Caisse> {
     return this.http.get<Caisse>('/api/caisse', { params: params({ du, au }) });
+  }
+
+  chiffreAffaires(du: string, au: string): Observable<ChiffreAffaires> {
+    return this.http.get<ChiffreAffaires>('/api/chiffre-affaires', { params: params({ du, au }) });
+  }
+
+  exportChiffreAffaires(du: string, au: string): Observable<Blob> {
+    return this.http.get('/api/chiffre-affaires/export', { params: params({ du, au }), responseType: 'blob' });
   }
 
   // Pièces, notes, photos

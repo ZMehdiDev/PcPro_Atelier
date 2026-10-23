@@ -1,117 +1,158 @@
-.actions-principales {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+.date-du-jour {
+  margin: 0.15rem 0 0;
+}
+
+.date-du-jour::first-letter {
+  text-transform: uppercase;
+}
+
+.gros-boutons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.gros-bouton {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 96px;
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  border: 2px solid var(--accent-bord);
+  border-radius: 12px;
+  color: var(--texte);
+  text-decoration: none;
+  box-shadow: var(--ombre);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.gros-bouton:hover {
+  border-color: var(--accent);
+  background: var(--accent-clair);
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.14);
+  transform: translateY(-1px);
+}
+
+.gros-bouton strong {
+  display: block;
+  font-size: 1.15rem;
+}
+
+.gros-bouton small {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--texte-doux);
+  font-size: 0.92rem;
+}
+
+.icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: var(--accent-clair);
+  color: var(--accent);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.gros-bouton-principal {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.gros-bouton-principal:hover {
+  background: var(--accent-fonce);
+  border-color: var(--accent-fonce);
+}
+
+.gros-bouton-principal small {
+  color: #d6e4f3;
+}
+
+.gros-bouton-principal .icone {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 2rem;
+}
+
+.gros-bouton-ok {
+  border-color: #9fd0b2;
+}
+
+.gros-bouton-ok:hover {
+  border-color: var(--ok);
+  background: var(--ok-clair);
+}
+
+.gros-bouton-ok .icone {
+  background: var(--ok-clair);
+  color: var(--ok);
 }
 
 .recherche {
   display: flex;
   gap: 0.5rem;
-  flex: 1 1 320px;
+  margin-bottom: 1.25rem;
 }
 
 .recherche input {
   min-height: 52px;
+  font-size: 1.05rem;
+  border-width: 2px;
 }
 
-.actions-principales > .btn {
-  flex: 0 0 auto;
+.recherche .btn {
+  min-height: 52px;
+  padding: 0 1.5rem;
 }
 
-.tuiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+.carte-alerte {
+  border-color: #e6c27a;
+  border-left: 5px solid #d98e04;
 }
 
-.tuile {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.9rem 1rem;
-  background: var(--surface);
-  border: 1px solid var(--bordure);
-  border-left: 4px solid var(--bordure-forte);
-  border-radius: var(--rayon);
-  color: var(--texte);
-  text-decoration: none;
-  box-shadow: var(--ombre);
+.carte-alerte > h2:first-child {
+  background: var(--alerte-clair);
+  color: #5e3a00;
 }
 
-.tuile:hover {
-  background: #f8fafb;
-}
-
-.nombre {
-  font-size: 1.8rem;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.tuile-ok {
-  border-left-color: var(--ok);
-}
-
-.tuile-alerte {
-  border-left-color: #d98e04;
-  background: #fffaf0;
-}
-
-.tuile-danger {
-  border-left-color: var(--danger);
-  background: #fff8f7;
-}
-
-.colonnes {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
-  gap: 0 1rem;
-}
-
-.barres {
-  list-style: none;
-  margin: 0 0 0.5rem;
-  padding: 0;
-}
-
-.barres a {
-  display: grid;
-  grid-template-columns: 8.5rem 1fr 2.5rem;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.35rem 0;
-  color: var(--texte);
-  text-decoration: none;
-}
-
-.jauge {
-  height: 12px;
-  background: #f0f2f4;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.jauge span {
-  display: block;
-  height: 100%;
-  min-width: 2px;
-  background: var(--accent);
-  opacity: 0.7;
-}
-
-.valeur {
-  text-align: right;
-  font-weight: 600;
+@media (max-width: 1100px) {
+  .gros-boutons {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 720px) {
-  .actions-principales > .btn {
-    width: 100%;
+  .gros-boutons {
+    gap: 0.6rem;
   }
 
-  .recherche {
-    flex-basis: 100%;
+  .gros-bouton {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    min-height: 0;
+    padding: 0.8rem;
+  }
+
+  .gros-bouton strong {
+    font-size: 1rem;
+  }
+
+  .gros-bouton small {
+    font-size: 0.82rem;
+  }
+
+  .icone {
+    width: 40px;
+    height: 40px;
+    font-size: 1.3rem;
   }
 }

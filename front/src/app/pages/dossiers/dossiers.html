@@ -1,6 +1,6 @@
 <div class="page">
   <div class="entete-page">
-    <h1>Dossiers</h1>
+    <h1>Réparations</h1>
     <a routerLink="/depot" class="btn btn-principal masquer-mobile">+ Nouveau dépôt</a>
   </div>
 
@@ -9,15 +9,30 @@
       <button
         type="button"
         role="tab"
-        class="btn btn-petit"
-        [class.btn-principal]="vue() === v.cle"
+        class="btn btn-petit onglet"
+        [class.btn-principal]="vue() === v.cle && !statut"
         [attr.aria-selected]="vue() === v.cle"
-        (click)="appliquer(v.cle)"
+        (click)="statut = ''; appliquer(v.cle)"
       >
         {{ v.libelle }}
+        @if (v.nombre && stats(); as s) {
+          <span class="compteur">{{ v.nombre(s) }}</span>
+        }
       </button>
     }
   </div>
+
+  @if (stats(); as s) {
+    <div class="etapes" aria-label="Par étape">
+      <span class="doux petit">Par étape :</span>
+      @for (st of statuts; track st) {
+        <button type="button" class="etape" [class.choisie]="statut === st" (click)="filtrerEtape(st)">
+          <span class="badge badge-{{ st }}">{{ libellesStatut[st] }}</span>
+          <span class="gras">{{ s.parStatut[st] }}</span>
+        </button>
+      }
+    </div>
+  }
 
   <div class="filtres">
     <input
@@ -28,8 +43,8 @@
       enterkeyhint="search"
       aria-label="Chercher"
     />
-    <select [(ngModel)]="statut" (change)="appliquer()" aria-label="Statut">
-      <option value="">Tous les statuts</option>
+    <select [(ngModel)]="statut" (change)="appliquer()" aria-label="Étape">
+      <option value="">Toutes les étapes</option>
       @for (s of statuts; track s) {
         <option [value]="s">{{ libellesStatut[s] }}</option>
       }
@@ -46,11 +61,11 @@
     @if (chargement() && dossiers().length === 0) {
       Chargement…
     } @else {
-      {{ total() }} dossier{{ total() > 1 ? 's' : '' }}
+      {{ total() }} réparation{{ total() > 1 ? 's' : '' }}
     }
   </p>
 
-  <app-liste-dossiers [dossiers]="dossiers()" [vide]="chargement() ? '' : 'Aucun dossier ne correspond.'" />
+  <app-liste-dossiers [dossiers]="dossiers()" [vide]="chargement() ? '' : 'Aucune réparation ne correspond.'" />
 
   @if (dossiers().length < total()) {
     <div class="ligne" style="justify-content: center; margin-top: 1rem">

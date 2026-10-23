@@ -33,17 +33,31 @@
 }
 
 .cartes a {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  padding: 0.8rem 0.9rem;
+  padding: 0.8rem 2.4rem 0.8rem 0.9rem;
   background: var(--surface);
   border: 1px solid var(--bordure);
+  border-left: 4px solid var(--accent);
   border-radius: var(--rayon);
   color: var(--texte);
   text-decoration: none;
 }
 
+.cartes a::after {
+  content: '›';
+  position: absolute;
+  right: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.8rem;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.cartes a:hover,
 .cartes a:active {
-  background: #f1f4f7;
+  background: var(--accent-clair);
 }

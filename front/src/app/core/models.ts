@@ -233,6 +233,27 @@ export interface Stats {
   mesDossiers: number;
 }
 
+/** Ce que les réparations rendues sur une période ont rapporté (admin). */
+export interface ChiffreAffaires {
+  du: string;
+  au: string;
+  reparations: number;
+  encaisse: number;
+  coutPieces: number;
+  marge: number;
+  lignes: {
+    dossierId: number;
+    reference: string;
+    renduLe: string;
+    clientNom: string;
+    appareil: string;
+    technicien: string | null;
+    encaisse: number;
+    coutPieces: number;
+    marge: number;
+  }[];
+}
+
 export interface Caisse {
   du: string;
   au: string;

@@ -1,6 +1,6 @@
 @if (dossier(); as d) {
   <div class="page">
-    <a routerLink="/dossiers" class="retour no-print">← Dossiers</a>
+    <a routerLink="/dossiers" class="retour no-print">‹ Retour aux réparations</a>
 
     @if (nouveau()) {
       <div class="bandeau bandeau-ok nouveau">
@@ -18,24 +18,39 @@
       </div>
     }
 
-    <div class="entete-dossier">
-      <div>
+    <!-- En-tête : qui, quoi, où on en est -->
+    <section class="carte entete-dossier">
+      <div class="identite">
         <div class="ligne">
           <h1>{{ d.client.nom }}</h1>
-          <app-statut [statut]="d.statut" />
           @if (d.priorite === 'HAUTE') {
             <span class="badge badge-danger">Urgent</span>
           }
         </div>
-        <div class="doux">
-          {{ d.reference }} · {{ d.appareil.marque }} {{ d.appareil.modele }}
-          @if (!d.appareil.marque && !d.appareil.modele) {
-            {{ libellesType[d.appareil.type] }}
-          }
+        <div class="appareil">
+          {{ libellesType[d.appareil.type] }} {{ d.appareil.marque }} {{ d.appareil.modele }}
+        </div>
+        <div class="doux petit">
+          Réf. {{ d.reference }} · déposé le {{ d.dateEntree | date }} ·
+          <a [href]="'tel:' + d.client.telephone">{{ d.client.telephone }}</a>
         </div>
       </div>
-      <button class="btn no-print" (click)="bonDepot()">Bon de dépôt</button>
-    </div>
+      <button class="btn no-print" (click)="bonDepot()">🖨 Bon de dépôt</button>
+
+      <ol class="parcours" aria-label="Avancement">
+        @for (e of parcours; track e.statut; let i = $index) {
+          <li [class.fait]="i < etapeActuelle()" [class.actuelle]="i === etapeActuelle()">
+            <span class="pastille">{{ i < etapeActuelle() ? '✓' : i + 1 }}</span>
+            <span class="nom">
+              {{ e.libelle }}
+              @if (i === etapeActuelle() && (d.statut === 'ATTENTE_CLIENT' || d.statut === 'ATTENTE_PIECE')) {
+                <small>{{ d.statut === 'ATTENTE_CLIENT' ? 'attente du client' : 'attente d’une pièce' }}</small>
+              }
+            </span>
+          </li>
+        }
+      </ol>
+    </section>
 
     @if (d.nonRecupere) {
       <div class="bandeau bandeau-alerte ligne ligne-espace">
@@ -47,9 +62,9 @@
         }
       </div>
     } @else if (d.enRetard) {
-      <div class="bandeau bandeau-danger">
-        En retard : promis pour le {{ d.dateEstimee | date }}.
-        <button class="btn btn-lien btn-petit" (click)="modifierInfos()">Changer la date</button>
+      <div class="bandeau bandeau-danger ligne ligne-espace">
+        <span>En retard : promis pour le {{ d.dateEstimee | date }}.</span>
+        <button class="btn btn-petit" (click)="modifierInfos()">Changer la date</button>
       </div>
     }
 
@@ -60,131 +75,215 @@
       </div>
     }
 
-    <!-- Étapes -->
-    <section class="carte etapes no-print">
-      @if (etapes().principale; as p) {
-        <button
-          class="btn btn-grand"
-          [class.btn-ok]="p === 'PRET' || p === 'CLOTURE'"
-          [class.btn-principal]="p !== 'PRET' && p !== 'CLOTURE'"
-          [disabled]="envoi()"
-          (click)="changerStatut(p)"
-        >
-          {{ actionStatut(p, d.statut) }}
-        </button>
-      }
-      @for (s of etapes().autres; track s) {
-        <button class="btn" [disabled]="envoi()" (click)="changerStatut(s)">{{ actionStatut(s, d.statut) }}</button>
-      }
-      @if (d.statut === 'CLOTURE') {
-        <p class="doux">
-          Rendu au client le {{ d.closedAt | date }}.
-          @if (d.finGarantie) {
-            Garantie jusqu'au {{ d.finGarantie | date }}.
-          } @else {
-            Sans garantie.
+    <!-- Que faire maintenant ? -->
+    <section class="carte maintenant no-print">
+      <div class="consigne">
+        <h2>Que faire maintenant ?</h2>
+        <p>
+          @switch (d.statut) {
+            @case ('RECU') {
+              L'appareil vient d'arriver. Commencez le diagnostic quand vous vous y mettez.
+            }
+            @case ('DIAGNOSTIC') {
+              Trouvez la panne. Si le client doit accepter un prix, faites-lui un devis.
+            }
+            @case ('ATTENTE_CLIENT') {
+              On attend la réponse du client. Il peut accepter le devis lui-même en ligne.
+            }
+            @case ('ATTENTE_PIECE') {
+              On attend une pièce. Passez en réparation quand elle est arrivée.
+            }
+            @case ('REPARATION') {
+              Quand c'est réparé, cliquez « C'est prêt » : le client sera prévenu.
+            }
+            @case ('PRET') {
+              Le client vient chercher l'appareil ? Cliquez « Rendre au client » pour encaisser.
+              @if (d.resteAPayer) {
+                <strong>Reste à payer : {{ d.resteAPayer | euros }}</strong>
+              }
+            }
+            @case ('CLOTURE') {
+              Rendu au client le {{ d.closedAt | date }}.
+              @if (d.finGarantie) {
+                Garantie jusqu'au {{ d.finGarantie | date }}.
+              } @else {
+                Sans garantie.
+              }
+            }
           }
         </p>
-      }
-      @if (d.statut === 'DIAGNOSTIC' && !d.devis) {
-        <p class="doux petit aide">Le client doit accepter un prix ? Faites le devis plus bas.</p>
+      </div>
+      <div class="boutons">
+        @if (etapes().principale; as p) {
+          <button
+            class="btn btn-grand"
+            [class.btn-ok]="p === 'PRET' || p === 'CLOTURE'"
+            [class.btn-principal]="p !== 'PRET' && p !== 'CLOTURE'"
+            [disabled]="envoi()"
+            (click)="changerStatut(p)"
+          >
+            {{ actionStatut(p, d.statut) }} ›
+          </button>
+        }
+        @if ((d.statut === 'DIAGNOSTIC' || d.statut === 'RECU') && !d.devis) {
+          <button class="btn btn-grand" (click)="onglet.set('argent')">Faire un devis</button>
+        }
+        @if (d.statut === 'ATTENTE_PIECE') {
+          <button class="btn btn-grand" (click)="onglet.set('pieces')">Voir les pièces</button>
+        }
+      </div>
+      @if (etapes().autres.length) {
+        <details class="autres">
+          <summary>Autres actions</summary>
+          <div class="ligne">
+            @for (s of etapes().autres; track s) {
+              <button class="btn btn-petit" [disabled]="envoi()" (click)="changerStatut(s)">
+                {{ actionStatut(s, d.statut) }}
+              </button>
+            }
+          </div>
+        </details>
       }
     </section>
 
-    <div class="colonnes">
-      <div>
-        <!-- Infos -->
-        <section class="carte">
-          <h2>
-            Informations
-            @if (d.statut !== 'CLOTURE') {
-              <button class="btn btn-lien btn-petit no-print" (click)="modifierInfos()">Modifier</button>
-            }
-          </h2>
-          <dl class="infos">
-            <dt>Client</dt>
-            <dd>
-              <a [routerLink]="['/clients', d.client.id]">{{ d.client.nom }}</a><br />
-              <a [href]="'tel:' + d.client.telephone">{{ d.client.telephone }}</a>
-              @if (d.client.email) {
-                <br /><a [href]="'mailto:' + d.client.email">{{ d.client.email }}</a>
-              }
-            </dd>
-            <dt>Appareil</dt>
-            <dd>
-              {{ libellesType[d.appareil.type] }} {{ d.appareil.marque }} {{ d.appareil.modele }}
-              @if (d.appareil.numeroSerie) {
-                <br /><span class="doux">N° série : {{ d.appareil.numeroSerie }}</span>
-              }
-            </dd>
-            <dt>Problème</dt>
-            <dd class="pre">{{ d.descriptionProbleme || '—' }}</dd>
-            <dt>Accessoires</dt>
-            <dd>{{ d.accessoires || 'Aucun' }}</dd>
-            <dt>Entrée</dt>
-            <dd>{{ d.dateEntree | date }}</dd>
-            <dt>Prévu pour</dt>
-            <dd [class.danger]="d.enRetard">{{ (d.dateEstimee | date) || '—' }}</dd>
-            @if (d.pretDepuis && d.statut === 'PRET') {
-              <dt>Prêt depuis</dt>
-              <dd>{{ d.pretDepuis | date }}</dd>
-            }
-          </dl>
-
-          <div class="grille-2 reglages no-print">
-            <label class="champ">
-              <span>Technicien</span>
-              <select
-                [ngModel]="d.technicien?.id ?? null"
-                (ngModelChange)="changerTechnicien($event)"
-                [disabled]="d.statut === 'CLOTURE'"
-              >
-                <option [ngValue]="null">Personne</option>
-                @for (t of techniciens(); track t.id) {
-                  <option [ngValue]="t.id">{{ t.prenom }}</option>
-                }
-              </select>
-            </label>
-            <label class="champ">
-              <span>Priorité</span>
-              <select [ngModel]="d.priorite" (ngModelChange)="changerPriorite($event)" [disabled]="d.statut === 'CLOTURE'">
-                @for (p of priorites; track p) {
-                  <option [ngValue]="p">{{ libellesPriorite[p] }}</option>
-                }
-              </select>
-            </label>
-          </div>
-        </section>
-
-        <app-devis-carte [dossier]="d" (modifie)="charger()" />
-        <app-paiements-carte [dossier]="d" (modifie)="charger()" />
-        <app-pieces-carte [dossier]="d" (modifie)="charger()" />
-      </div>
-
-      <div>
-        <app-notes-carte [dossier]="d" (modifie)="charger()" />
-        <app-photos-carte [dossier]="d" (modifie)="charger()" />
-
-        <section class="carte">
-          <h2>Suivi en ligne du client</h2>
-          <p class="doux petit">
-            Le client suit sa réparation avec le QR code du bon de dépôt, ou sur la page de suivi avec sa référence et
-            ce code.
-          </p>
-          <p>
-            Code : <strong class="code">{{ d.codeSuivi }}</strong>
-          </p>
-          @if (d.lienSuivi) {
-            <div class="ligne">
-              <a class="btn btn-petit" [href]="d.lienSuivi" target="_blank" rel="noopener">Voir sa page</a>
-              <button class="btn btn-petit" (click)="copierLien()">Copier le lien</button>
-            </div>
+    <!-- Le reste, rangé par onglets -->
+    <div class="onglets onglets-dossier no-print" role="tablist">
+      @for (o of onglets; track o.cle) {
+        <button
+          type="button"
+          role="tab"
+          class="onglet-dossier"
+          [class.actif]="onglet() === o.cle"
+          [attr.aria-selected]="onglet() === o.cle"
+          (click)="onglet.set(o.cle)"
+        >
+          {{ o.libelle }}
+          @if (compteOnglet(o.cle, d); as n) {
+            <span class="compteur">{{ n }}</span>
           }
-        </section>
-
-        <app-historique [evenements]="d.evenements" />
-      </div>
+        </button>
+      }
     </div>
+
+    @switch (onglet()) {
+      @case ('resume') {
+        <div class="colonnes">
+          <section class="carte">
+            <h2>
+              Informations
+              @if (d.statut !== 'CLOTURE') {
+                <button class="btn btn-petit no-print" (click)="modifierInfos()">✎ Modifier</button>
+              }
+            </h2>
+            <dl class="infos">
+              <dt>Client</dt>
+              <dd>
+                <a [routerLink]="['/clients', d.client.id]">{{ d.client.nom }}</a><br />
+                <a [href]="'tel:' + d.client.telephone">{{ d.client.telephone }}</a>
+                @if (d.client.email) {
+                  <br /><a [href]="'mailto:' + d.client.email">{{ d.client.email }}</a>
+                }
+              </dd>
+              <dt>Appareil</dt>
+              <dd>
+                {{ libellesType[d.appareil.type] }} {{ d.appareil.marque }} {{ d.appareil.modele }}
+                @if (d.appareil.numeroSerie) {
+                  <br /><span class="doux">N° série : {{ d.appareil.numeroSerie }}</span>
+                }
+              </dd>
+              <dt>Problème</dt>
+              <dd class="pre">{{ d.descriptionProbleme || '—' }}</dd>
+              <dt>Accessoires</dt>
+              <dd>{{ d.accessoires || 'Aucun' }}</dd>
+              <dt>Entrée</dt>
+              <dd>{{ d.dateEntree | date }}</dd>
+              <dt>Prévu pour</dt>
+              <dd [class.danger]="d.enRetard">{{ (d.dateEstimee | date) || '—' }}</dd>
+              @if (d.pretDepuis && d.statut === 'PRET') {
+                <dt>Prêt depuis</dt>
+                <dd>{{ d.pretDepuis | date }}</dd>
+              }
+            </dl>
+
+            <div class="grille-2 reglages no-print">
+              <label class="champ">
+                <span>Technicien</span>
+                <select
+                  [ngModel]="d.technicien?.id ?? null"
+                  (ngModelChange)="changerTechnicien($event)"
+                  [disabled]="d.statut === 'CLOTURE'"
+                >
+                  <option [ngValue]="null">Personne</option>
+                  @for (t of techniciens(); track t.id) {
+                    <option [ngValue]="t.id">{{ t.prenom }}</option>
+                  }
+                </select>
+              </label>
+              <label class="champ">
+                <span>Priorité</span>
+                <select [ngModel]="d.priorite" (ngModelChange)="changerPriorite($event)" [disabled]="d.statut === 'CLOTURE'">
+                  @for (p of priorites; track p) {
+                    <option [ngValue]="p">{{ libellesPriorite[p] }}</option>
+                  }
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <div>
+            <button type="button" class="carte carte-lien resume-argent" (click)="onglet.set('argent')">
+              <strong>Devis et paiement</strong>
+              <span class="doux">
+                @if (d.devis; as dv) {
+                  Devis {{ dv.total | euros }} ({{ libellesDevis[dv.statut] | lowercase }})
+                } @else {
+                  Pas encore de devis
+                }
+                · payé {{ d.totalPaye | euros }}
+                @if (d.resteAPayer) {
+                  · <strong class="danger">reste {{ d.resteAPayer | euros }}</strong>
+                }
+              </span>
+            </button>
+
+            <section class="carte">
+              <h2>Suivi en ligne du client</h2>
+              <p class="doux petit">
+                Le client suit sa réparation avec le QR code du bon de dépôt, ou sur la page de suivi avec sa référence
+                et ce code.
+              </p>
+              <p>
+                Code : <strong class="code">{{ d.codeSuivi }}</strong>
+              </p>
+              @if (d.lienSuivi) {
+                <div class="ligne">
+                  <a class="btn btn-petit" [href]="d.lienSuivi" target="_blank" rel="noopener">Voir sa page</a>
+                  <button class="btn btn-petit" (click)="copierLien()">Copier le lien</button>
+                </div>
+              }
+            </section>
+          </div>
+        </div>
+      }
+      @case ('argent') {
+        <div class="colonnes">
+          <app-devis-carte [dossier]="d" (modifie)="charger()" />
+          <app-paiements-carte [dossier]="d" (modifie)="charger()" />
+        </div>
+      }
+      @case ('pieces') {
+        <app-pieces-carte [dossier]="d" (modifie)="charger()" />
+      }
+      @case ('notes') {
+        <div class="colonnes">
+          <app-notes-carte [dossier]="d" (modifie)="charger()" />
+          <app-photos-carte [dossier]="d" (modifie)="charger()" />
+        </div>
+      }
+      @case ('historique') {
+        <app-historique [evenements]="d.evenements" />
+      }
+    }
   </div>
 
   <!-- Prêt -->
@@ -210,7 +309,7 @@
       </label>
     </div>
     <div class="dialogue-actions">
-      <button class="btn" (click)="dialogue.set(null)">Annuler</button>
+      <button class="btn btn-neutre" (click)="dialogue.set(null)">Annuler</button>
       <button class="btn btn-ok" [disabled]="envoi()" (click)="confirmerPret()">C'est prêt</button>
     </div>
   </app-dialogue>
@@ -256,7 +355,7 @@
       </label>
     </div>
     <div class="dialogue-actions">
-      <button class="btn" (click)="dialogue.set(null)">Annuler</button>
+      <button class="btn btn-neutre" (click)="dialogue.set(null)">Annuler</button>
       <button class="btn btn-ok" [disabled]="envoi()" (click)="confirmerCloture()">
         Rendu{{ montant && montant > 0 ? ' et encaissé' : '' }}
       </button>
@@ -271,7 +370,7 @@
       <input [(ngModel)]="commentaire" placeholder="Ex : le client revient, même panne" />
     </label>
     <div class="dialogue-actions">
-      <button class="btn" (click)="dialogue.set(null)">Annuler</button>
+      <button class="btn btn-neutre" (click)="dialogue.set(null)">Annuler</button>
       <button class="btn btn-principal" [disabled]="envoi()" (click)="confirmerReouverture()">Rouvrir</button>
     </div>
   </app-dialogue>
@@ -303,7 +402,7 @@
       </label>
     </div>
     <div class="dialogue-actions">
-      <button class="btn" (click)="dialogue.set(null)">Annuler</button>
+      <button class="btn btn-neutre" (click)="dialogue.set(null)">Annuler</button>
       <button class="btn btn-principal" [disabled]="envoi()" (click)="enregistrerInfos()">Enregistrer</button>
     </div>
   </app-dialogue>

@@ -1,3 +1,4 @@
+import { LowerCasePipe } from '@angular/common';
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -5,7 +6,7 @@ import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { ouvrirPdf } from '../../core/fichiers';
 import { DatePipe, DepuisPipe, EurosPipe, aujourdhui } from '../../core/formats';
-import { ETAPE_SUIVANTE, MOYEN_PAIEMENT, PRIORITE, TYPE_APPAREIL, actionStatut } from '../../core/libelles';
+import { ETAPE_SUIVANTE, MOYEN_PAIEMENT, PRIORITE, STATUT_DEVIS, TYPE_APPAREIL, actionStatut } from '../../core/libelles';
 import {
   DossierDetail,
   Employe,
@@ -16,7 +17,6 @@ import {
 } from '../../core/models';
 import { NotificationService } from '../../core/notification.service';
 import { Dialogue } from '../../shared/dialogue';
-import { Statut } from '../../shared/statut';
 import { DevisCarte } from './devis-carte';
 import { Historique } from './historique';
 import { NotesCarte } from './notes-carte';
@@ -24,17 +24,19 @@ import { PaiementsCarte } from './paiements-carte';
 import { PhotosCarte } from './photos-carte';
 import { PiecesCarte } from './pieces-carte';
 
+type Onglet = 'resume' | 'argent' | 'pieces' | 'notes' | 'historique';
+
 /** Fiche d'un dossier : tout ce qu'on fait sur un appareil, de l'entrée à la restitution. */
 @Component({
   selector: 'app-dossier',
   imports: [
     FormsModule,
     RouterLink,
-    Statut,
     Dialogue,
     DatePipe,
     DepuisPipe,
     EurosPipe,
+    LowerCasePipe,
     DevisCarte,
     PaiementsCarte,
     PiecesCarte,
@@ -65,6 +67,38 @@ export class DossierPage {
   protected readonly typesAppareil = Object.keys(TYPE_APPAREIL) as TypeAppareil[];
   protected readonly libellesType = TYPE_APPAREIL;
   protected readonly garantiesMois = [0, 1, 3, 6, 12, 24];
+  protected readonly libellesDevis = STATUT_DEVIS;
+
+  /** Les 5 grandes étapes montrées en haut de la fiche ; les attentes restent dans leur étape. */
+  protected readonly parcours: { statut: StatutDossier; libelle: string }[] = [
+    { statut: 'RECU', libelle: 'Reçu' },
+    { statut: 'DIAGNOSTIC', libelle: 'Diagnostic' },
+    { statut: 'REPARATION', libelle: 'Réparation' },
+    { statut: 'PRET', libelle: 'Prêt' },
+    { statut: 'CLOTURE', libelle: 'Rendu' },
+  ];
+  private readonly rangEtape: Record<StatutDossier, number> = {
+    RECU: 0,
+    DIAGNOSTIC: 1,
+    ATTENTE_CLIENT: 1,
+    ATTENTE_PIECE: 2,
+    REPARATION: 2,
+    PRET: 3,
+    CLOTURE: 4,
+  };
+  protected readonly etapeActuelle = computed(() => {
+    const d = this.dossier();
+    return d ? this.rangEtape[d.statut] : 0;
+  });
+
+  protected readonly onglets: { cle: Onglet; libelle: string }[] = [
+    { cle: 'resume', libelle: 'Résumé' },
+    { cle: 'argent', libelle: 'Devis et paiement' },
+    { cle: 'pieces', libelle: 'Pièces' },
+    { cle: 'notes', libelle: 'Notes et photos' },
+    { cle: 'historique', libelle: 'Historique' },
+  ];
+  protected readonly onglet = signal<Onglet>('resume');
 
   /** Étape suivante mise en avant, puis les autres changements de statut possibles. */
   protected readonly etapes = computed(() => {
@@ -99,7 +133,22 @@ export class DossierPage {
 
   constructor() {
     this.api.techniciens().subscribe((t) => this.techniciens.set(t));
-    effect(() => this.charger(this.id()));
+    effect(() => {
+      this.charger(this.id());
+      this.onglet.set('resume');
+    });
+  }
+
+  /** Petit nombre sur l'onglet, pour voir d'un coup d'œil s'il y a quelque chose dedans. */
+  protected compteOnglet(cle: Onglet, d: DossierDetail): number | null {
+    switch (cle) {
+      case 'pieces':
+        return d.pieces.length || null;
+      case 'notes':
+        return d.notes.length + d.photos.length || null;
+      default:
+        return null;
+    }
   }
 
   protected charger(id = this.id()): void {

@@ -43,7 +43,7 @@ import { ListeDossiers } from '../../shared/liste-dossiers';
           <label class="champ"><span>Email</span><input type="email" [(ngModel)]="email" /></label>
         </div>
         <div class="dialogue-actions">
-          <button class="btn" (click)="edition.set(false)">Annuler</button>
+          <button class="btn btn-neutre" (click)="edition.set(false)">Annuler</button>
           <button class="btn btn-principal" (click)="enregistrer()">Enregistrer</button>
         </div>
       </app-dialogue>

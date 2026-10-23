@@ -1,7 +1,12 @@
 .retour {
   display: inline-block;
   margin-bottom: 0.75rem;
+  font-weight: 600;
   text-decoration: none;
+}
+
+.retour:hover {
+  text-decoration: underline;
 }
 
 .nouveau {
@@ -12,34 +17,213 @@
   gap: 0.75rem;
 }
 
+/* En-tête */
+
 .entete-dossier {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem 1rem;
+  align-items: start;
 }
 
 .entete-dossier h1 {
   margin: 0;
 }
 
-.etapes {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
+.appareil {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0.15rem 0;
 }
 
-.etapes p {
-  flex-basis: 100%;
-  margin: 0.25rem 0 0;
+.parcours {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  counter-reset: none;
 }
+
+.parcours li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  text-align: center;
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+
+/* trait entre deux étapes */
+.parcours li + li::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  right: 50%;
+  width: 100%;
+  height: 3px;
+  background: var(--bordure);
+  z-index: 0;
+}
+
+.parcours li.fait::before,
+.parcours li.actuelle::before {
+  background: var(--accent);
+}
+
+.pastille {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--bordure-forte);
+  background: #fff;
+  font-weight: 700;
+}
+
+.parcours .fait .pastille {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.parcours .actuelle .pastille {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-clair);
+}
+
+.parcours .actuelle {
+  color: var(--texte);
+  font-weight: 700;
+}
+
+.parcours small {
+  display: block;
+  font-weight: 500;
+  color: var(--alerte);
+}
+
+/* Que faire maintenant ? */
+
+.maintenant {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+  border: 2px solid var(--accent-bord);
+  background: linear-gradient(var(--accent-clair), #fff 70%);
+}
+
+.consigne h2 {
+  margin-bottom: 0.25rem;
+}
+
+.consigne p {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.boutons .btn {
+  min-width: 220px;
+}
+
+.autres {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--bordure);
+  padding-top: 0.5rem;
+}
+
+.autres summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+  padding: 0.3rem 0;
+}
+
+.autres .ligne {
+  margin-top: 0.4rem;
+}
+
+/* Onglets */
+
+.onglets-dossier {
+  gap: 0;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--bordure-forte);
+  padding-bottom: 0;
+}
+
+.onglet-dossier {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 48px;
+  padding: 0.5rem 1.1rem;
+  margin-bottom: -2px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--texte-doux);
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.onglet-dossier:hover {
+  color: var(--accent);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.onglet-dossier.actif {
+  color: var(--accent-fonce);
+  border-bottom-color: var(--accent);
+  background: #fff;
+  border-radius: var(--rayon) var(--rayon) 0 0;
+}
+
+.onglet-dossier .compteur {
+  display: inline-block;
+  min-width: 1.4rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--accent-clair);
+  color: var(--accent-fonce);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* Contenu */
 
 .colonnes {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 0 1rem;
+  align-items: start;
+}
+
+.resume-argent {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
 .infos {
@@ -75,18 +259,48 @@
   letter-spacing: 0.08em;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1000px) {
   .colonnes {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .maintenant {
+    grid-template-columns: 1fr;
+  }
+
+  .boutons {
+    justify-content: stretch;
+  }
+
+  .boutons .btn {
+    flex: 1 1 100%;
   }
 }
 
 @media (max-width: 720px) {
-  .etapes .btn {
-    flex: 1 1 100%;
+  .entete-dossier {
+    grid-template-columns: 1fr;
+  }
+
+  .parcours li {
+    font-size: 0.72rem;
+  }
+
+  .pastille {
+    width: 26px;
+    height: 26px;
+    font-size: 0.8rem;
+  }
+
+  .parcours li + li::before {
+    top: 12px;
   }
 
   .infos {
     grid-template-columns: 6.5rem 1fr;
+  }
+
+  .onglet-dossier {
+    padding: 0.5rem 0.8rem;
   }
 }

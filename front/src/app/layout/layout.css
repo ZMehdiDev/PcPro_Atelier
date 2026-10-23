@@ -1,88 +1,177 @@
-.barre {
-  background: var(--surface);
-  border-bottom: 1px solid var(--bordure);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
-
-.barre-contenu {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0.5rem 1rem;
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  min-height: 60px;
+:host {
+  display: block;
+  min-height: 100dvh;
 }
 
 .logo {
   font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--texte);
+  font-size: 1.15rem;
   text-decoration: none;
   white-space: nowrap;
-}
-
-.logo span {
-  color: var(--accent);
-  font-weight: 600;
-}
-
-.nav-haut {
-  display: flex;
-  gap: 0.25rem;
-  flex: 1;
-}
-
-.nav-haut a {
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--rayon);
-  color: var(--texte-doux);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.nav-haut a:hover {
-  background: #eef1f4;
-  color: var(--texte);
-}
-
-.nav-haut a.actif {
-  color: var(--accent);
-  background: var(--accent-clair);
-}
-
-.barre-contenu > .ligne {
-  margin-left: auto;
-}
-
-.compte {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--rayon);
-  color: var(--texte);
-  text-decoration: none;
-}
-
-.compte:hover,
-.compte.actif {
-  background: #eef1f4;
 }
 
 .avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  flex: none;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: var(--accent-clair);
-  color: var(--accent);
+  background: var(--accent);
+  color: #fff;
   font-weight: 700;
   text-transform: uppercase;
+}
+
+svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Menu de gauche (ordinateur) */
+
+.menu {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--largeur-menu);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.1rem 0.75rem;
+  background: var(--menu);
+  color: #dbe3ec;
+  overflow-y: auto;
+}
+
+.menu .logo {
+  color: #fff;
+  padding: 0 0.6rem 0.9rem;
+}
+
+.menu .logo span {
+  color: #8fb8e3;
+  font-weight: 600;
+}
+
+.menu-depot {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: var(--rayon);
+  background: var(--accent-vif);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1.05rem;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.menu-depot:hover,
+.menu-depot.actif {
+  background: #3b82c9;
+}
+
+.menu-depot .plus {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.menu nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.menu nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 46px;
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--rayon);
+  color: #dbe3ec;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.02rem;
+}
+
+.menu nav a:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.menu nav a.actif {
+  background: #fff;
+  color: var(--menu);
+  font-weight: 650;
+}
+
+.menu-titre {
+  margin: 1rem 0.8rem 0.3rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8a9bb0;
+}
+
+.menu-compte {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem;
+  border-radius: var(--rayon);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  text-decoration: none;
+}
+
+.menu-compte:hover,
+.menu-compte.actif {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.menu-compte small {
+  display: block;
+  color: #9fb0c3;
+}
+
+@media (min-width: 721px) {
+  main {
+    margin-left: var(--largeur-menu);
+  }
+}
+
+/* Barres du téléphone */
+
+.barre {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 0.4rem 0.9rem;
+  background: var(--menu);
+}
+
+.barre .logo {
+  color: #fff;
+}
+
+.barre .logo span {
+  color: #8fb8e3;
 }
 
 .nav-bas {
@@ -94,7 +183,8 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   background: var(--surface);
-  border-top: 1px solid var(--bordure);
+  border-top: 1px solid var(--bordure-forte);
+  box-shadow: 0 -2px 8px rgba(16, 24, 40, 0.08);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -112,24 +202,19 @@
 
 .nav-bas a.actif {
   color: var(--accent);
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .nav-bas svg {
   width: 24px;
   height: 24px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linejoin: round;
-  stroke-linecap: round;
 }
 
 .nav-bas .plus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
+  width: 42px;
   height: 30px;
   border-radius: 8px;
   background: var(--accent);

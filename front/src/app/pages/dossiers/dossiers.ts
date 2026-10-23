@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { STATUT, STATUTS } from '../../core/libelles';
-import { DossierFiltres, DossierResume, Employe, StatutDossier } from '../../core/models';
+import { DossierFiltres, DossierResume, Employe, Stats, StatutDossier } from '../../core/models';
 import { NotificationService } from '../../core/notification.service';
 import { ListeDossiers } from '../../shared/liste-dossiers';
 
@@ -13,14 +13,16 @@ interface Vue {
   cle: string;
   libelle: string;
   filtres: DossierFiltres;
+  /** Nombre affiché sur l'onglet, lu dans les statistiques. */
+  nombre?: (s: Stats) => number;
 }
 
 const VUES: Vue[] = [
-  { cle: 'actifs', libelle: 'En cours', filtres: { actifs: true } },
-  { cle: 'mes', libelle: 'Mes dossiers', filtres: { mesDossiers: true, actifs: true } },
-  { cle: 'prets', libelle: 'Prêts à rendre', filtres: { statut: 'PRET', sort: 'dateEstimee,asc' } },
-  { cle: 'nonrecuperes', libelle: 'Pas récupérés', filtres: { nonRecuperes: true } },
-  { cle: 'retard', libelle: 'En retard', filtres: { enRetard: true, sort: 'dateEstimee,asc' } },
+  { cle: 'actifs', libelle: 'En cours', filtres: { actifs: true }, nombre: (s) => s.actifs },
+  { cle: 'mes', libelle: 'Les miennes', filtres: { mesDossiers: true, actifs: true }, nombre: (s) => s.mesDossiers },
+  { cle: 'prets', libelle: 'Prêts à rendre', filtres: { statut: 'PRET', sort: 'dateEstimee,asc' }, nombre: (s) => s.parStatut.PRET },
+  { cle: 'nonrecuperes', libelle: 'Pas récupérés', filtres: { nonRecuperes: true }, nombre: (s) => s.nonRecuperes },
+  { cle: 'retard', libelle: 'En retard', filtres: { enRetard: true, sort: 'dateEstimee,asc' }, nombre: (s) => s.enRetard },
   { cle: 'tous', libelle: 'Tous', filtres: {} },
 ];
 
@@ -46,6 +48,7 @@ export class Dossiers {
   protected statut: StatutDossier | '' = '';
   protected technicienId: number | '' = '';
   protected readonly techniciens = signal<Employe[]>([]);
+  protected readonly stats = signal<Stats | null>(null);
 
   protected readonly dossiers = signal<DossierResume[]>([]);
   protected readonly total = signal(0);
@@ -55,6 +58,7 @@ export class Dossiers {
 
   constructor() {
     this.api.techniciens().subscribe((t) => this.techniciens.set(t));
+    this.api.stats().subscribe((s) => this.stats.set(s));
 
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((p) => {
       this.vue.set(VUES.some((v) => v.cle === p.get('vue')) ? p.get('vue')! : p.get('q') ? 'tous' : 'actifs');
@@ -84,6 +88,12 @@ export class Dossiers {
       },
       replaceUrl: true,
     });
+  }
+
+  /** Clic sur une étape : affiche tous les dossiers à cette étape (un 2e clic enlève le filtre). */
+  protected filtrerEtape(s: StatutDossier): void {
+    this.statut = this.statut === s ? '' : s;
+    this.appliquer(this.statut ? 'tous' : this.vue());
   }
 
   protected plus(): void {

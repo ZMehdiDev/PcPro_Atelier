@@ -63,7 +63,7 @@ import { Dialogue } from '../../shared/dialogue';
         </div>
       </div>
       <div class="dialogue-actions">
-        <button class="btn" (click)="dialogue.set(false)">Annuler</button>
+        <button class="btn btn-neutre" (click)="dialogue.set(false)">Annuler</button>
         <button class="btn btn-principal" [disabled]="envoi() || !montant" (click)="encaisser()">Encaisser</button>
       </div>
     </app-dialogue>
