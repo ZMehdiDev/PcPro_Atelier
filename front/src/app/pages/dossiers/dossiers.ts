@@ -90,12 +90,6 @@ export class Dossiers {
     });
   }
 
-  /** Clic sur une étape : affiche tous les dossiers à cette étape (un 2e clic enlève le filtre). */
-  protected filtrerEtape(s: StatutDossier): void {
-    this.statut = this.statut === s ? '' : s;
-    this.appliquer(this.statut ? 'tous' : this.vue());
-  }
-
   protected plus(): void {
     this.page++;
     this.charger(false);

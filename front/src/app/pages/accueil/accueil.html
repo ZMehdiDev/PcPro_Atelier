@@ -1,35 +1,27 @@
 <div class="page">
   <div class="entete-page">
-    <div>
-      <h1>Bonjour {{ auth.employe()?.prenom }}</h1>
-      <p class="doux date-du-jour">{{ aujourdhui }}</p>
-    </div>
+    <h1>Bonjour {{ auth.employe()?.prenom }}</h1>
   </div>
 
   <div class="gros-boutons">
     <a routerLink="/depot" class="gros-bouton gros-bouton-principal">
-      <span class="icone" aria-hidden="true">+</span>
       <span>
-        <strong>Nouveau dépôt</strong>
-        <small>Un client dépose un appareil</small>
+        <strong>+ Nouveau dépôt</strong>
       </span>
     </a>
     <a routerLink="/dossiers" [queryParams]="{ vue: 'prets' }" class="gros-bouton gros-bouton-ok">
-      <span class="icone" aria-hidden="true">✓</span>
       <span>
         <strong>Rendre un appareil</strong>
         <small>{{ compte(stats()?.parStatut?.PRET, 'Aucun appareil prêt', 'appareil prêt', 'appareils prêts') }}</small>
       </span>
     </a>
     <a routerLink="/dossiers" [queryParams]="{ vue: 'mes' }" class="gros-bouton">
-      <span class="icone" aria-hidden="true">🔧</span>
       <span>
         <strong>Mes réparations</strong>
         <small>{{ compte(stats()?.mesDossiers, 'Rien pour moi', 'en cours pour moi', 'en cours pour moi') }}</small>
       </span>
     </a>
     <a routerLink="/dossiers" [queryParams]="{ vue: 'actifs' }" class="gros-bouton">
-      <span class="icone" aria-hidden="true">▤</span>
       <span>
         <strong>Tout l'atelier</strong>
         <small>{{ compte(stats()?.actifs, 'Aucun appareil en cours', 'appareil en cours', 'appareils en cours') }}</small>
@@ -42,7 +34,7 @@
       name="q"
       type="search"
       [(ngModel)]="recherche"
-      placeholder="Retrouver une réparation : nom, téléphone, référence…"
+      placeholder="Chercher un client, un téléphone, une référence…"
       enterkeyhint="search"
     />
     <button class="btn btn-principal">Chercher</button>
@@ -51,17 +43,8 @@
   @if (aSurveiller().length > 0) {
     <section class="carte carte-alerte">
       <h2>
-        <span>⚠ À régler : {{ aSurveiller().length }} remise{{ aSurveiller().length > 1 ? 's' : '' }} en retard</span>
+        <span>À régler : {{ aSurveiller().length }} remise{{ aSurveiller().length > 1 ? 's' : '' }} en retard</span>
       </h2>
-      <p class="doux petit">
-        Prêts depuis plus de 7 jours sans être récupérés, ou date promise au client dépassée.
-        @if (stats(); as s) {
-          Voir :
-          <a routerLink="/dossiers" [queryParams]="{ vue: 'nonrecuperes' }">{{ s.nonRecuperes }} pas récupéré{{ s.nonRecuperes > 1 ? 's' : '' }}</a>
-          ·
-          <a routerLink="/dossiers" [queryParams]="{ vue: 'retard' }">{{ s.enRetard }} en retard</a>
-        }
-      </p>
       <app-liste-dossiers [dossiers]="aSurveiller()" vide="" />
     </section>
   }
@@ -69,7 +52,7 @@
   <section class="carte">
     <h2>
       Mes réparations en cours
-      <a routerLink="/dossiers" [queryParams]="{ vue: 'mes' }" class="btn btn-petit">Tout voir ›</a>
+      <a routerLink="/dossiers" [queryParams]="{ vue: 'mes' }" class="btn btn-petit">Tout voir</a>
     </h2>
     <app-liste-dossiers [dossiers]="mesDossiers()" vide="Aucune réparation ne vous est assignée pour l'instant." />
   </section>

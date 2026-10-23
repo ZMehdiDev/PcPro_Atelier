@@ -25,11 +25,6 @@ export class Accueil {
   protected readonly aSurveiller = signal<DossierResume[]>([]);
   protected readonly mesDossiers = signal<DossierResume[]>([]);
   protected recherche = '';
-  protected readonly aujourdhui = new Date().toLocaleDateString('fr-BE', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
 
   constructor() {
     forkJoin({

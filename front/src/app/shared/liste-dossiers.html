@@ -12,7 +12,6 @@
         <th>Appareil</th>
         <th>Statut</th>
         <th>Technicien</th>
-        <th>Entrée</th>
         <th>Prévu</th>
       </tr>
     </thead>
@@ -26,10 +25,7 @@
             }
           </td>
           @if (!masquerClient()) {
-            <td>
-              {{ d.clientNom }}
-              <div class="doux petit">{{ d.clientTelephone }}</div>
-            </td>
+            <td>{{ d.clientNom }}</td>
           }
           <td>{{ appareil(d) }}</td>
           <td>
@@ -41,7 +37,6 @@
             }
           </td>
           <td>{{ d.technicien?.prenom ?? '—' }}</td>
-          <td>{{ d.dateEntree | date }}</td>
           <td [class.danger]="d.enRetard">{{ d.dateEstimee | date }}</td>
         </tr>
       }
@@ -68,7 +63,6 @@
             @if (!masquerClient()) {
               <span>{{ d.reference }}</span>
             }
-            <span>Entré le {{ d.dateEntree | date }}</span>
             @if (d.technicien) {
               <span>· {{ d.technicien.prenom }}</span>
             }

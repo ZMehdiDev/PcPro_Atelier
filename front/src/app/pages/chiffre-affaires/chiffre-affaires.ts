@@ -24,12 +24,9 @@ const maintenant = () => new Date();
   template: `
     <div class="page">
       <div class="entete-page">
-        <div>
-          <h1>Chiffre d'affaires</h1>
-          <p class="doux" style="margin: 0">Réparations rendues au client sur la période choisie.</p>
-        </div>
+        <h1>Chiffre d'affaires</h1>
         <button class="btn btn-principal" [disabled]="!ca()?.reparations || export()" (click)="exporter()">
-          ⤓ Exporter pour Excel (CSV)
+          Exporter pour Excel
         </button>
       </div>
 
@@ -66,7 +63,7 @@ const maintenant = () => new Date();
             <strong class="moins">− {{ c.coutPieces | euros }}</strong>
           </div>
           <div class="carte marge">
-            <span class="doux">Ce qu'il reste (marge)</span>
+            <span class="doux">Marge</span>
             <strong [class.negatif]="c.marge < 0">{{ c.marge | euros }}</strong>
           </div>
         </div>
@@ -103,10 +100,6 @@ const maintenant = () => new Date();
                 </tbody>
               </table>
             </div>
-            <p class="doux petit aide">
-              Le prix des pièces vient de l'onglet « Pièces » de chaque réparation (les pièces annulées ne comptent pas).
-              Ce qui est encaissé comprend les acomptes.
-            </p>
           } @else {
             <p class="vide">Aucune réparation rendue sur cette période.</p>
           }

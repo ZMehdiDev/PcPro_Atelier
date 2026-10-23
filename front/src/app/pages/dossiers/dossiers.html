@@ -22,18 +22,6 @@
     }
   </div>
 
-  @if (stats(); as s) {
-    <div class="etapes" aria-label="Par étape">
-      <span class="doux petit">Par étape :</span>
-      @for (st of statuts; track st) {
-        <button type="button" class="etape" [class.choisie]="statut === st" (click)="filtrerEtape(st)">
-          <span class="badge badge-{{ st }}">{{ libellesStatut[st] }}</span>
-          <span class="gras">{{ s.parStatut[st] }}</span>
-        </button>
-      }
-    </div>
-  }
-
   <div class="filtres">
     <input
       type="search"

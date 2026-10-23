@@ -22,7 +22,7 @@
     <section class="carte entete-dossier">
       <div class="identite">
         <div class="ligne">
-          <h1>{{ d.client.nom }}</h1>
+          <h1><a [routerLink]="['/clients', d.client.id]" class="nom-client">{{ d.client.nom }}</a></h1>
           @if (d.priorite === 'HAUTE') {
             <span class="badge badge-danger">Urgent</span>
           }
@@ -30,17 +30,14 @@
         <div class="appareil">
           {{ libellesType[d.appareil.type] }} {{ d.appareil.marque }} {{ d.appareil.modele }}
         </div>
-        <div class="doux petit">
-          Réf. {{ d.reference }} · déposé le {{ d.dateEntree | date }} ·
-          <a [href]="'tel:' + d.client.telephone">{{ d.client.telephone }}</a>
-        </div>
+        <div class="doux petit">{{ d.reference }}</div>
       </div>
-      <button class="btn no-print" (click)="bonDepot()">🖨 Bon de dépôt</button>
+      <button class="btn no-print" (click)="bonDepot()">Bon de dépôt</button>
 
       <ol class="parcours" aria-label="Avancement">
         @for (e of parcours; track e.statut; let i = $index) {
           <li [class.fait]="i < etapeActuelle()" [class.actuelle]="i === etapeActuelle()">
-            <span class="pastille">{{ i < etapeActuelle() ? '✓' : i + 1 }}</span>
+            <span class="pastille">{{ i + 1 }}</span>
             <span class="nom">
               {{ e.libelle }}
               @if (i === etapeActuelle() && (d.statut === 'ATTENTE_CLIENT' || d.statut === 'ATTENTE_PIECE')) {
@@ -78,26 +75,26 @@
     <!-- Que faire maintenant ? -->
     <section class="carte maintenant no-print">
       <div class="consigne">
-        <h2>Que faire maintenant ?</h2>
+        <h2>Prochaine étape</h2>
         <p>
           @switch (d.statut) {
             @case ('RECU') {
-              L'appareil vient d'arriver. Commencez le diagnostic quand vous vous y mettez.
+              L'appareil vient d'arriver.
             }
             @case ('DIAGNOSTIC') {
-              Trouvez la panne. Si le client doit accepter un prix, faites-lui un devis.
+              Trouver la panne, puis faire un devis si besoin.
             }
             @case ('ATTENTE_CLIENT') {
-              On attend la réponse du client. Il peut accepter le devis lui-même en ligne.
+              On attend la réponse du client.
             }
             @case ('ATTENTE_PIECE') {
-              On attend une pièce. Passez en réparation quand elle est arrivée.
+              On attend une pièce.
             }
             @case ('REPARATION') {
-              Quand c'est réparé, cliquez « C'est prêt » : le client sera prévenu.
+              Quand c'est réparé, le client sera prévenu.
             }
             @case ('PRET') {
-              Le client vient chercher l'appareil ? Cliquez « Rendre au client » pour encaisser.
+              À rendre au client.
               @if (d.resteAPayer) {
                 <strong>Reste à payer : {{ d.resteAPayer | euros }}</strong>
               }
@@ -122,7 +119,7 @@
             [disabled]="envoi()"
             (click)="changerStatut(p)"
           >
-            {{ actionStatut(p, d.statut) }} ›
+            {{ actionStatut(p, d.statut) }}
           </button>
         }
         @if ((d.statut === 'DIAGNOSTIC' || d.statut === 'RECU') && !d.devis) {
@@ -172,25 +169,20 @@
             <h2>
               Informations
               @if (d.statut !== 'CLOTURE') {
-                <button class="btn btn-petit no-print" (click)="modifierInfos()">✎ Modifier</button>
+                <button class="btn btn-petit no-print" (click)="modifierInfos()">Modifier</button>
               }
             </h2>
             <dl class="infos">
-              <dt>Client</dt>
-              <dd>
-                <a [routerLink]="['/clients', d.client.id]">{{ d.client.nom }}</a><br />
-                <a [href]="'tel:' + d.client.telephone">{{ d.client.telephone }}</a>
-                @if (d.client.email) {
-                  <br /><a [href]="'mailto:' + d.client.email">{{ d.client.email }}</a>
-                }
-              </dd>
-              <dt>Appareil</dt>
-              <dd>
-                {{ libellesType[d.appareil.type] }} {{ d.appareil.marque }} {{ d.appareil.modele }}
-                @if (d.appareil.numeroSerie) {
-                  <br /><span class="doux">N° série : {{ d.appareil.numeroSerie }}</span>
-                }
-              </dd>
+              <dt>Téléphone</dt>
+              <dd><a [href]="'tel:' + d.client.telephone">{{ d.client.telephone }}</a></dd>
+              @if (d.client.email) {
+                <dt>Email</dt>
+                <dd><a [href]="'mailto:' + d.client.email">{{ d.client.email }}</a></dd>
+              }
+              @if (d.appareil.numeroSerie) {
+                <dt>N° de série</dt>
+                <dd>{{ d.appareil.numeroSerie }}</dd>
+              }
               <dt>Problème</dt>
               <dd class="pre">{{ d.descriptionProbleme || '—' }}</dd>
               <dt>Accessoires</dt>
@@ -248,10 +240,6 @@
 
             <section class="carte">
               <h2>Suivi en ligne du client</h2>
-              <p class="doux petit">
-                Le client suit sa réparation avec le QR code du bon de dépôt, ou sur la page de suivi avec sa référence
-                et ce code.
-              </p>
               <p>
                 Code : <strong class="code">{{ d.codeSuivi }}</strong>
               </p>
