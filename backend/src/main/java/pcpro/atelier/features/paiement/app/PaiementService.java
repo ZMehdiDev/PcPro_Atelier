@@ -3,6 +3,7 @@ package pcpro.atelier.features.paiement.app;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.EnumMap;
 import java.util.List;
@@ -96,19 +97,10 @@ public class PaiementService {
   /** Encaissements entre deux dates incluses (aujourd'hui par défaut). */
   @Transactional(readOnly = true)
   public CaisseDto caisse(LocalDate du, LocalDate au) {
-    LocalDate aujourdhui = LocalDate.now(clock);
-    LocalDate debut = du != null ? du : (au != null ? au : aujourdhui);
-    LocalDate fin = au != null ? au : (du != null ? du : aujourdhui);
-    if (fin.isBefore(debut)) {
-      throw new BadRequestException("La date de fin est avant la date de début");
-    }
-    if (debut.plusDays(MAX_JOURS_CAISSE).isBefore(fin)) {
-      throw new BadRequestException("Période trop longue (un an maximum)");
-    }
-
-    ZoneId zone = clock.getZone();
-    List<Paiement> paiements = paiementRepository.findEntre(
-        debut.atStartOfDay(zone).toOffsetDateTime(), fin.plusDays(1).atStartOfDay(zone).toOffsetDateTime());
+    Periode periode = Periode.of(du, au, clock);
+    LocalDate debut = periode.du();
+    LocalDate fin = periode.au();
+    List<Paiement> paiements = paiementRepository.findEntre(periode.debut(), periode.fin());
 
     Map<MoyenPaiement, BigDecimal> parMoyen = new EnumMap<>(MoyenPaiement.class);
     for (MoyenPaiement moyen : MoyenPaiement.values()) {
@@ -132,6 +124,28 @@ public class PaiementService {
             p.getCreatedAt()
         )).toList()
     );
+  }
+
+  /**
+   * Période en jours entiers (bornes incluses, aujourd'hui par défaut, un an maximum) et ses instants
+   * de début et de fin (exclue) dans le fuseau de l'atelier.
+   */
+  public record Periode(LocalDate du, LocalDate au, OffsetDateTime debut, OffsetDateTime fin) {
+
+    public static Periode of(LocalDate du, LocalDate au, Clock clock) {
+      LocalDate aujourdhui = LocalDate.now(clock);
+      LocalDate debut = du != null ? du : (au != null ? au : aujourdhui);
+      LocalDate fin = au != null ? au : (du != null ? du : aujourdhui);
+      if (fin.isBefore(debut)) {
+        throw new BadRequestException("La date de fin est avant la date de début");
+      }
+      if (debut.plusDays(MAX_JOURS_CAISSE).isBefore(fin)) {
+        throw new BadRequestException("Période trop longue (un an maximum)");
+      }
+      ZoneId zone = clock.getZone();
+      return new Periode(debut, fin,
+          debut.atStartOfDay(zone).toOffsetDateTime(), fin.plusDays(1).atStartOfDay(zone).toOffsetDateTime());
+    }
   }
 
   public static BigDecimal total(List<Paiement> paiements) {
