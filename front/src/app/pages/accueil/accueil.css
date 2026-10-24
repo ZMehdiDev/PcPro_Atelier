@@ -1,0 +1,149 @@
+.bonjour {
+  margin-bottom: 1.25rem;
+}
+
+/* Le grand chiffre et les actions rondes, comme le solde dans Revolut */
+.solde {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem 2rem;
+  padding: 1.75rem 2rem;
+}
+
+.chiffre {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--texte);
+  text-decoration: none;
+}
+
+.chiffre .montant {
+  font-size: 3rem;
+}
+
+.chiffre:hover .doux {
+  color: var(--accent);
+}
+
+.actions {
+  display: flex;
+  gap: 1.75rem;
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 76px;
+  color: var(--texte);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.rond {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--champ);
+  color: var(--texte);
+  transition: background 0.12s, transform 0.08s;
+}
+
+.action:hover .rond {
+  background: #e0e3e8;
+  transform: translateY(-1px);
+}
+
+.rond-principal {
+  background: var(--accent);
+  color: #fff;
+}
+
+.action:hover .rond-principal {
+  background: var(--accent-fonce);
+}
+
+.rond svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bulle {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 0.4rem;
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.recherche {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.recherche input {
+  min-height: 54px;
+  background: var(--surface);
+  font-size: 1.05rem;
+}
+
+.recherche .btn {
+  min-height: 54px;
+  padding: 0 1.6rem;
+}
+
+@media (max-width: 720px) {
+  .solde {
+    padding: 1.25rem;
+  }
+
+  .chiffre .montant {
+    font-size: 2.4rem;
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .action {
+    min-width: 0;
+    flex: 1;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  .rond {
+    width: 54px;
+    height: 54px;
+  }
+
+  .recherche .btn {
+    display: none;
+  }
+}

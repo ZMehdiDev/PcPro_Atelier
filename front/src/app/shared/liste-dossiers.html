@@ -1,0 +1,50 @@
+@if (dossiers().length === 0) {
+  <p class="vide">{{ vide() }}</p>
+} @else {
+  <ul class="rangees">
+    @for (d of dossiers(); track d.id) {
+      <li>
+        <a [routerLink]="['/dossiers', d.id]" class="rangee">
+          <span class="avatar-initiales" [class.urgent]="d.priorite === 'HAUTE'" aria-hidden="true">
+            {{ initiales(masquerClient() ? appareil(d) : d.clientNom) }}
+          </span>
+
+          <span class="qui">
+            <span class="titre">{{ masquerClient() ? appareil(d) : d.clientNom }}</span>
+            <span class="sous-titre">
+              @if (!masquerClient()) {
+                {{ appareil(d) }} ·
+              }
+              {{ d.reference }}
+            </span>
+          </span>
+
+          <span class="etat">
+            <span class="ligne">
+              <app-statut [statut]="d.statut" />
+              @if (d.priorite === 'HAUTE') {
+                <span class="badge badge-danger">Urgent</span>
+              }
+            </span>
+            @if (d.nonRecupere) {
+              <span class="alerte">Pas récupéré, prêt {{ d.pretDepuis | depuis }}</span>
+            } @else if (d.enRetard) {
+              <span class="danger">En retard</span>
+            }
+          </span>
+
+          <span class="technicien masquer-mobile">{{ d.technicien?.prenom ?? '—' }}</span>
+
+          <span class="quand" [class.danger]="d.enRetard">
+            @if (d.dateEstimee) {
+              <span class="doux petit masquer-mobile">Prévu le</span>
+              {{ d.dateEstimee | date }}
+            }
+          </span>
+
+          <span class="fleche" aria-hidden="true">›</span>
+        </a>
+      </li>
+    }
+  </ul>
+}

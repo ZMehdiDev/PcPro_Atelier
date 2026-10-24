@@ -1,0 +1,125 @@
+.suivi {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 0.75rem 3rem;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 1rem 0.25rem;
+}
+
+header strong {
+  font-size: 1.15rem;
+}
+
+header span {
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+
+h1 {
+  font-size: 1.35rem;
+}
+
+.appareil {
+  color: var(--texte-doux);
+  text-transform: capitalize;
+}
+
+.etapes {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin: 1.25rem 0;
+  padding: 0;
+}
+
+.etapes li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--texte-doux);
+  text-align: center;
+}
+
+.etapes li::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: -50%;
+  width: 100%;
+  height: 3px;
+  background: var(--bordure);
+}
+
+.etapes li:first-child::before {
+  display: none;
+}
+
+.etapes li.fait::before {
+  background: var(--ok);
+}
+
+.point {
+  position: relative;
+  z-index: 1;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--bordure);
+}
+
+.fait .point {
+  background: var(--ok);
+  border-color: var(--ok);
+}
+
+.actuel {
+  color: var(--texte) !important;
+  font-weight: 700;
+}
+
+.actuel .point {
+  box-shadow: 0 0 0 4px var(--ok-clair);
+}
+
+dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4rem 1rem;
+  margin: 0;
+}
+
+dt {
+  color: var(--texte-doux);
+}
+
+dd {
+  margin: 0;
+}
+
+.reponse {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.reponse .btn {
+  flex: 1 1 140px;
+}
+
+.contact p {
+  margin-bottom: 0.25rem;
+}
+
+.centre {
+  text-align: center;
+}

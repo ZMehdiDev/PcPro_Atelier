@@ -107,4 +107,3 @@ temp/
 # Production (infra/docker-compose.prod.yml)
 ####################################
 infra/backups/
-infra/front/

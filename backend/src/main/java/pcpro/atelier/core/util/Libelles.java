@@ -25,6 +25,8 @@ public final class Libelles {
     String nature = switch (type) {
       case PORTABLE -> "ordinateur portable";
       case TOUR -> "ordinateur";
+      case TELEVISION -> "télévision";
+      case CONSOLE -> "console";
       case AUTRE -> "appareil";
     };
     return Stream.of(nature, marque, modele)

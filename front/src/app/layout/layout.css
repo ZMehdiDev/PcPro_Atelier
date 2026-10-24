@@ -1,0 +1,292 @@
+:host {
+  --largeur: var(--largeur-menu);
+  display: block;
+  min-height: 100dvh;
+}
+
+:host(.replie) {
+  --largeur: 76px;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: -0.03em;
+  color: var(--texte);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.logo span {
+  color: var(--accent);
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--noir);
+  color: #fff;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Menu de gauche (ordinateur), clair comme l'appli Revolut */
+
+.menu {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--largeur);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.4rem 0.9rem 1rem;
+  background: var(--surface);
+  border-right: 1px solid var(--bordure);
+}
+
+.menu > .logo {
+  padding: 0 0.7rem 1.2rem;
+}
+
+/* Flèches « » sur le bord du menu pour le replier */
+.menu-bord {
+  position: absolute;
+  top: 1.3rem;
+  right: -17px;
+  z-index: 51;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--bordure-forte);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--texte);
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(25, 28, 31, 0.12);
+}
+
+.menu-bord:hover {
+  background: var(--noir);
+  border-color: var(--noir);
+  color: #fff;
+}
+
+.menu-depot,
+.menu-vente {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 48px;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.menu-depot {
+  background: var(--accent);
+  color: #fff;
+}
+
+.menu-depot:hover,
+.menu-depot.actif {
+  background: var(--accent-fonce);
+}
+
+.menu-vente {
+  margin-bottom: 1rem;
+  background: var(--champ);
+  color: var(--texte);
+}
+
+.menu-vente:hover,
+.menu-vente.actif {
+  background: #e3e6ea;
+}
+
+.plus {
+  display: inline-flex;
+  justify-content: center;
+  width: 22px;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.menu nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.menu nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 46px;
+  padding: 0.5rem 0.9rem;
+  border-radius: 14px;
+  color: var(--texte-doux);
+  text-decoration: none;
+  font-weight: 550;
+}
+
+.menu nav a:hover {
+  background: var(--surface-douce);
+  color: var(--texte);
+}
+
+.menu nav a.actif {
+  background: var(--champ);
+  color: var(--texte);
+  font-weight: 700;
+}
+
+.menu-titre {
+  margin: 1rem 0.9rem 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9aa1aa;
+}
+
+.menu-compte {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem;
+  border-radius: 16px;
+  color: var(--texte);
+  text-decoration: none;
+}
+
+.menu-compte:hover,
+.menu-compte.actif {
+  background: var(--surface-douce);
+}
+
+.menu-compte small {
+  display: block;
+  color: var(--texte-doux);
+}
+
+/* Menu replié : seulement les icônes, le nom s'affiche au survol */
+:host(.replie) .menu {
+  padding-left: 0.7rem;
+  padding-right: 0.7rem;
+}
+
+:host(.replie) .texte {
+  display: none;
+}
+
+:host(.replie) .menu > .logo {
+  padding: 0 0 1.2rem;
+  text-align: center;
+}
+
+:host(.replie) .menu-depot,
+:host(.replie) .menu-vente,
+:host(.replie) .menu nav a,
+:host(.replie) .menu-compte {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+:host(.replie) .menu-titre {
+  margin: 0.6rem 0.3rem;
+  border-top: 1px solid var(--bordure);
+}
+
+@media (min-width: 721px) {
+  main {
+    margin-left: var(--largeur);
+  }
+}
+
+/* Barres du téléphone */
+
+.barre {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 58px;
+  padding: 0.4rem 0.9rem;
+  background: rgba(238, 240, 243, 0.92);
+  backdrop-filter: blur(10px);
+}
+
+.nav-bas {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--bordure);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-bas a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 62px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--texte-doux);
+  text-decoration: none;
+}
+
+.nav-bas a.actif {
+  color: var(--texte);
+  font-weight: 700;
+}
+
+.nav-bas svg {
+  width: 24px;
+  height: 24px;
+}
+
+.nav-bas .plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.4rem;
+  line-height: 1;
+}

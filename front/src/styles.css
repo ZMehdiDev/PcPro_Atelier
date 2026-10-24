@@ -1,0 +1,763 @@
+/*
+ * Style de l'atelier, inspiré de Revolut : fond gris clair, cartes blanches très arrondies,
+ * typographie grasse, boutons en pilule.
+ * Règle : tout ce qui est cliquable est une pilule ou une ligne qui réagit au survol ;
+ * ce qui est seulement informatif reste du texte.
+ */
+
+:root {
+  --fond: #eef0f3;
+  --surface: #ffffff;
+  --surface-douce: #f5f6f8;
+  --champ: #f1f2f5;
+  --texte: #191c1f;
+  --texte-doux: #6f7782;
+  --bordure: #e6e8ec;
+  --bordure-forte: #cfd4db;
+  --accent: #0666eb;
+  --accent-fonce: #0451bd;
+  --accent-clair: #e7f0fd;
+  --accent-bord: #b6cff7;
+  --noir: #191c1f;
+  --danger: #d92d20;
+  --danger-clair: #fdeceb;
+  --ok: #068a55;
+  --ok-clair: #e3f5ec;
+  --alerte: #b26b00;
+  --alerte-clair: #fdf3e2;
+  --rayon: 12px;
+  --rayon-carte: 20px;
+  --ombre: 0 1px 2px rgba(25, 28, 31, 0.04), 0 4px 16px rgba(25, 28, 31, 0.04);
+  --largeur-menu: 248px;
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+h3 {
+  font-size: 1rem;
+}
+
+p {
+  margin: 0 0 0.5rem;
+}
+
+a {
+  color: var(--accent);
+}
+
+/* Mise en page */
+
+.page {
+  padding: 2rem 2.5rem 4rem;
+}
+
+.page-etroite {
+  max-width: 860px;
+}
+
+.entete-page {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.entete-page h1 {
+  margin: 0;
+}
+
+.carte {
+  background: var(--surface);
+  border-radius: var(--rayon-carte);
+  box-shadow: var(--ombre);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.carte > h2:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Carte entière cliquable : réagit au survol, flèche à droite */
+.carte-lien {
+  position: relative;
+  display: block;
+  padding-right: 3rem;
+  border: 0;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.carte-lien::after {
+  content: '›';
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.8rem;
+  line-height: 1;
+  color: var(--texte-doux);
+}
+
+.carte-lien:hover {
+  background: var(--surface-douce);
+}
+
+.ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ligne-espace {
+  justify-content: space-between;
+}
+
+.pile > * + * {
+  margin-top: 0.9rem;
+}
+
+.grille-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.9rem 1rem;
+}
+
+.doux {
+  color: var(--texte-doux);
+}
+
+.petit {
+  font-size: 0.875rem;
+}
+
+.gras {
+  font-weight: 650;
+}
+
+.droite {
+  text-align: right;
+}
+
+.vide {
+  color: var(--texte-doux);
+  text-align: center;
+  padding: 2rem 0.5rem;
+}
+
+.pre {
+  white-space: pre-wrap;
+}
+
+/* Pastille ronde avec les initiales (clients, réparations) */
+.avatar-initiales {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent-clair);
+  color: var(--accent-fonce);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+
+/* Grand montant, façon solde de compte */
+.montant {
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+/* Boutons : des pilules */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0.5rem 1.15rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--champ);
+  color: var(--texte);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, transform 0.06s;
+}
+
+.btn:hover {
+  background: #e3e6ea;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+}
+
+.btn-principal {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-principal:hover {
+  background: var(--accent-fonce);
+}
+
+.btn-noir {
+  background: var(--noir);
+  color: #fff;
+}
+
+.btn-noir:hover {
+  background: #33383d;
+}
+
+.btn-danger {
+  background: var(--danger-clair);
+  color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: #fad6d3;
+}
+
+.btn-ok {
+  background: var(--ok);
+  color: #fff;
+}
+
+.btn-ok:hover {
+  background: #05734a;
+}
+
+.btn-lien {
+  background: transparent;
+  color: var(--accent);
+  padding-left: 0.6rem;
+  padding-right: 0.6rem;
+}
+
+.btn-lien:hover {
+  background: var(--accent-clair);
+}
+
+.btn-neutre {
+  background: var(--champ);
+  color: var(--texte);
+}
+
+.btn-grand {
+  min-height: 54px;
+  font-size: 1.05rem;
+  padding: 0.6rem 1.6rem;
+}
+
+.btn-petit {
+  min-height: 36px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.9rem;
+}
+
+.btn-bloc {
+  width: 100%;
+}
+
+/* Formulaires : champs remplis de gris, sans bordure */
+
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.champ > span {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--texte-doux);
+}
+
+.champ small {
+  color: var(--texte-doux);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.6rem 0.9rem;
+  border: 1.5px solid transparent;
+  border-radius: var(--rayon);
+  background: var(--champ);
+  color: var(--texte);
+  font: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9aa1aa;
+}
+
+textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+}
+
+.btn:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  width: 1.25rem;
+  height: 1.25rem;
+  min-height: 0;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.case {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.choix {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.choix label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0.4rem 1.1rem;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  background: var(--champ);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.choix label:hover {
+  background: #e3e6ea;
+}
+
+.choix label:has(input:checked) {
+  background: var(--noir);
+  color: #fff;
+  font-weight: 600;
+}
+
+.choix input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.erreur-champ {
+  color: var(--danger);
+  font-size: 0.875rem;
+}
+
+/* Bandeaux */
+
+.bandeau {
+  border-radius: 16px;
+  padding: 0.9rem 1.2rem;
+  margin-bottom: 1.25rem;
+}
+
+.bandeau-alerte {
+  background: var(--alerte-clair);
+  color: #5e3a00;
+}
+
+.bandeau-danger {
+  background: var(--danger-clair);
+  color: #7a1a12;
+}
+
+.bandeau-ok {
+  background: var(--ok-clair);
+  color: #0d4a30;
+}
+
+.bandeau-info {
+  background: var(--accent-clair);
+  color: #0b3a80;
+}
+
+/* Étiquettes */
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #eceef1;
+  color: #4a525c;
+}
+
+.badge-RECU {
+  background: #eceef1;
+  color: #4a525c;
+}
+
+.badge-DIAGNOSTIC {
+  background: #e7f0fd;
+  color: #0451bd;
+}
+
+.badge-ATTENTE_CLIENT,
+.badge-ATTENTE_PIECE {
+  background: #fdf0d9;
+  color: #8a5300;
+}
+
+.badge-REPARATION {
+  background: #eeeafd;
+  color: #4c35b5;
+}
+
+.badge-PRET {
+  background: #dff4e9;
+  color: #06704a;
+}
+
+.badge-CLOTURE {
+  background: #f1f2f4;
+  color: #7a828c;
+}
+
+.badge-danger {
+  background: var(--danger-clair);
+  color: var(--danger);
+}
+
+.badge-alerte {
+  background: var(--alerte-clair);
+  color: var(--alerte);
+}
+
+.badge-ok {
+  background: var(--ok-clair);
+  color: var(--ok);
+}
+
+/* Tableaux */
+
+.tableau {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.tableau th,
+.tableau td {
+  padding: 0.95rem 0.9rem;
+  border-bottom: 1px solid var(--bordure);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.tableau th {
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--texte-doux);
+  font-weight: 500;
+}
+
+.tableau tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.tableau tbody tr.cliquable {
+  cursor: pointer;
+}
+
+.tableau tbody tr.cliquable:hover {
+  background: var(--surface-douce);
+}
+
+.tableau tbody tr.cliquable td:last-child::after {
+  content: '›';
+  float: right;
+  margin-left: 0.5rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--texte-doux);
+}
+
+.liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.liste > li {
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--bordure);
+}
+
+.liste > li:last-child {
+  border-bottom: 0;
+}
+
+/* Fenêtres de dialogue */
+
+dialog {
+  width: min(560px, calc(100vw - 1.5rem));
+  max-height: calc(100dvh - 2rem);
+  border: 0;
+  border-radius: 24px;
+  padding: 0;
+  box-shadow: 0 24px 60px rgba(25, 28, 31, 0.22);
+  color: var(--texte);
+}
+
+dialog::backdrop {
+  background: rgba(25, 28, 31, 0.4);
+}
+
+.dialogue-corps {
+  padding: 1.5rem;
+}
+
+.dialogue-corps h2 {
+  margin-bottom: 1.1rem;
+  font-size: 1.35rem;
+}
+
+.dialogue-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 1rem 0.85rem 6.5rem;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  .carte {
+    padding: 1rem 1.1rem;
+    border-radius: 18px;
+  }
+
+  .masquer-mobile {
+    display: none !important;
+  }
+
+  .dialogue-actions .btn {
+    flex: 1 1 auto;
+  }
+}
+
+@media (min-width: 721px) {
+  .masquer-ordi {
+    display: none !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .carte {
+    box-shadow: none;
+  }
+}
+
+/* Onglets des listes : pilules, la choisie en noir */
+
+.onglets {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  margin-bottom: 1rem;
+  scrollbar-width: none;
+}
+
+.onglets .btn {
+  background: var(--surface);
+}
+
+.onglets .btn:hover {
+  background: #e3e6ea;
+}
+
+.onglets .btn.btn-principal {
+  background: var(--noir);
+  color: #fff;
+}
+
+.onglet .compteur {
+  display: inline-block;
+  min-width: 1.5rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--champ);
+  color: var(--texte);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.btn-principal .compteur {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.filtres {
+  display: grid;
+  grid-template-columns: 1fr 210px 210px;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.filtres input,
+.filtres select {
+  background: var(--surface);
+}
+
+.filtres input:focus,
+.filtres select:focus {
+  background: #fff;
+}
+
+@media (max-width: 720px) {
+  .filtres {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filtres input {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Lignes du devis et de la vente */
+
+.lignes-devis {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ligne-devis {
+  display: grid;
+  grid-template-columns: 9rem 1fr 4.5rem 6.5rem auto;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+@media (max-width: 720px) {
+  .ligne-devis {
+    grid-template-columns: 1fr 4.5rem 6.5rem auto;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--bordure);
+  }
+
+  .ligne-devis .libelle {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+}
+
+/* Bouton posé sur le fond gris (hors carte) */
+.btn-blanc {
+  background: var(--surface);
+  box-shadow: var(--ombre);
+}
+
+.btn-blanc:hover {
+  background: #e3e6ea;
+}

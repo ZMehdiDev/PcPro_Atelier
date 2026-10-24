@@ -145,4 +145,83 @@ class PaiementIntegrationTest extends IntegrationTest {
     mvc.perform(as(techToken, get("/api/dossiers/garanties").param("numeroSerie", "AUTRE")))
         .andExpect(jsonPath("$.length()").value(0));
   }
+
+  @Test
+  void chiffreAffairesParReparationRendueEtExportCsv() throws Exception {
+    long rendu = dossierPret("SN-1");
+    mvc.perform(json(techToken, post("/api/dossiers/" + rendu + "/pieces"),
+        Map.of("reference", "SSD 500 Go", "cout", "45.10", "etat", "MONTEE"))).andExpect(status().isCreated());
+    mvc.perform(json(techToken, post("/api/dossiers/" + rendu + "/pieces"),
+        Map.of("reference", "Clavier", "cout", "20", "etat", "A_COMMANDER"))).andExpect(status().isCreated());
+    String annulee = mvc.perform(json(techToken, post("/api/dossiers/" + rendu + "/pieces"),
+        Map.of("reference", "Écran", "cout", "99", "etat", "A_COMMANDER"))).andReturn().getResponse().getContentAsString();
+    mvc.perform(json(techToken, patch("/api/dossiers/" + rendu + "/pieces/" + ((Number) read(annulee, "$.id")).longValue() + "/etat"),
+        Map.of("nouvelEtat", "ANNULEE"))).andExpect(status().isOk());
+    mvc.perform(json(techToken, post("/api/dossiers/" + rendu + "/paiements"), Map.of("montant", "50", "moyen", "ESPECES")));
+    mvc.perform(json(techToken, patch("/api/dossiers/" + rendu + "/statut"), Map.of(
+        "statut", "CLOTURE", "paiement", Map.of("montant", "100", "moyen", "BANCONTACT")))).andExpect(status().isOk());
+
+    // Encaissé mais pas encore rendu : pas dans le chiffre d'affaires
+    long enCours = creerDossier(Fixtures.nouveauDossier("Sophie Laurent", "0480999888"));
+    mvc.perform(json(techToken, post("/api/dossiers/" + enCours + "/paiements"), Map.of("montant", "30", "moyen", "ESPECES")));
+
+    mvc.perform(as(techToken, get("/api/chiffre-affaires"))).andExpect(status().isForbidden());
+    mvc.perform(as(adminToken, get("/api/chiffre-affaires")))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.reparations").value(1))
+        .andExpect(jsonPath("$.encaisse").value(150.0))
+        .andExpect(jsonPath("$.coutPieces").value(65.1))
+        .andExpect(jsonPath("$.marge").value(84.9))
+        .andExpect(jsonPath("$.lignes[0].clientNom").value("Martin Dubois"))
+        .andExpect(jsonPath("$.lignes[0].appareil").value("ordinateur portable Lenovo T14"));
+    mvc.perform(as(adminToken, get("/api/chiffre-affaires").param("au", AUJOURDHUI.minusDays(1).toString())
+            .param("du", AUJOURDHUI.minusDays(30).toString())))
+        .andExpect(jsonPath("$.reparations").value(0))
+        .andExpect(jsonPath("$.marge").value(0));
+
+    String csv = mvc.perform(as(adminToken, get("/api/chiffre-affaires/export")))
+        .andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+    org.assertj.core.api.Assertions.assertThat(csv)
+        .startsWith("\uFEFFRendu le;Référence;Client")
+        .contains(";Martin Dubois;ordinateur portable Lenovo T14;;150,00;65,10;84,90\r\n")
+        .contains("Total;;1 réparations;;;150,00;65,10;84,90");
+  }
+
+  @Test
+  void venteAuComptoirDansLaCaisseEtLeChiffreAffaires() throws Exception {
+    mvc.perform(json(techToken, post("/api/ventes"), Map.of("moyen", "ESPECES", "lignes", List.of())))
+        .andExpect(status().isUnprocessableContent());
+
+    String vente = mvc.perform(json(techToken, post("/api/ventes"), Map.of("moyen", "ESPECES", "lignes", List.of(
+            Map.of("article", "Protection d'écran", "quantite", 2, "prixUnitaire", "10", "coutUnitaire", "2"),
+            Map.of("article", "Écouteurs", "quantite", 1, "prixUnitaire", "25")))))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.total").value(45.0))
+        .andExpect(jsonPath("$.employe").value("Frere"))
+        .andReturn().getResponse().getContentAsString();
+    long venteId = ((Number) read(vente, "$.id")).longValue();
+
+    mvc.perform(as(adminToken, get("/api/caisse")))
+        .andExpect(jsonPath("$.total").value(45.0))
+        .andExpect(jsonPath("$.parMoyen.ESPECES").value(45.0))
+        .andExpect(jsonPath("$.ventes[0].articles").value("2 × Protection d'écran, Écouteurs"));
+
+    mvc.perform(as(adminToken, get("/api/chiffre-affaires")))
+        .andExpect(jsonPath("$.reparations").value(0))
+        .andExpect(jsonPath("$.ventes.nombre").value(1))
+        .andExpect(jsonPath("$.ventes.encaisse").value(45.0))
+        .andExpect(jsonPath("$.ventes.cout").value(4.0))
+        .andExpect(jsonPath("$.ventes.lignes[0].marge").value(16.0))
+        .andExpect(jsonPath("$.total.marge").value(41.0));
+    String csv = mvc.perform(as(adminToken, get("/api/chiffre-affaires/export")))
+        .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+    org.assertj.core.api.Assertions.assertThat(csv)
+        .contains(";2;Protection d'écran;Frere;20,00;4,00;16,00\r\n")
+        .contains("Total général;;;;;45,00;4,00;41,00");
+
+    mvc.perform(as(techToken, delete("/api/ventes/" + venteId))).andExpect(status().isForbidden());
+    mvc.perform(as(adminToken, delete("/api/ventes/" + venteId))).andExpect(status().isNoContent());
+    mvc.perform(as(adminToken, get("/api/caisse"))).andExpect(jsonPath("$.total").value(0));
+  }
 }
