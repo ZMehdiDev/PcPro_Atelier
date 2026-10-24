@@ -26,6 +26,9 @@ import pcpro.atelier.features.paiement.api.dto.PaiementDto;
 import pcpro.atelier.features.paiement.api.dto.PaiementRequest;
 import pcpro.atelier.features.paiement.domain.Paiement;
 import pcpro.atelier.features.paiement.infra.PaiementRepository;
+import pcpro.atelier.features.vente.api.dto.VenteDto;
+import pcpro.atelier.features.vente.domain.Vente;
+import pcpro.atelier.features.vente.infra.VenteRepository;
 
 /**
  * Encaissements : à la clôture d'un dossier (avec le changement de statut) ou en acompte.
@@ -38,6 +41,7 @@ public class PaiementService {
 
   private final PaiementRepository paiementRepository;
   private final DossierRepository dossierRepository;
+  private final VenteRepository venteRepository;
   private final EvenementService evenementService;
   private final CurrentEmploye currentEmploye;
   private final Clock clock;
@@ -45,12 +49,14 @@ public class PaiementService {
   public PaiementService(
       PaiementRepository paiementRepository,
       DossierRepository dossierRepository,
+      VenteRepository venteRepository,
       EvenementService evenementService,
       CurrentEmploye currentEmploye,
       Clock clock
   ) {
     this.paiementRepository = paiementRepository;
     this.dossierRepository = dossierRepository;
+    this.venteRepository = venteRepository;
     this.evenementService = evenementService;
     this.currentEmploye = currentEmploye;
     this.clock = clock;
@@ -94,24 +100,27 @@ public class PaiementService {
     return paiementRepository.findByDossier(dossier);
   }
 
-  /** Encaissements entre deux dates incluses (aujourd'hui par défaut). */
+  /** Encaissements (réparations et ventes) entre deux dates incluses (aujourd'hui par défaut). */
   @Transactional(readOnly = true)
   public CaisseDto caisse(LocalDate du, LocalDate au) {
     Periode periode = Periode.of(du, au, clock);
     LocalDate debut = periode.du();
     LocalDate fin = periode.au();
     List<Paiement> paiements = paiementRepository.findEntre(periode.debut(), periode.fin());
+    List<Vente> ventes = venteRepository.findEntre(periode.debut(), periode.fin());
 
     Map<MoyenPaiement, BigDecimal> parMoyen = new EnumMap<>(MoyenPaiement.class);
     for (MoyenPaiement moyen : MoyenPaiement.values()) {
       parMoyen.put(moyen, BigDecimal.ZERO);
     }
     paiements.forEach(p -> parMoyen.merge(p.getMoyen(), p.getMontant(), BigDecimal::add));
+    ventes.forEach(v -> parMoyen.merge(v.getMoyen(), v.total(), BigDecimal::add));
+    BigDecimal totalVentes = ventes.stream().map(Vente::total).reduce(BigDecimal.ZERO, BigDecimal::add);
 
     return new CaisseDto(
         debut,
         fin,
-        total(paiements),
+        total(paiements).add(totalVentes),
         parMoyen,
         paiements.stream().map(p -> new CaisseDto.Ligne(
             p.getId(),
@@ -122,6 +131,14 @@ public class PaiementService {
             p.getMoyen(),
             p.getEmploye().getPrenom(),
             p.getCreatedAt()
+        )).toList(),
+        ventes.stream().map(v -> new CaisseDto.LigneVente(
+            v.getId(),
+            VenteDto.resume(v),
+            v.total(),
+            v.getMoyen(),
+            v.getEmploye().getPrenom(),
+            v.getCreatedAt()
         )).toList()
     );
   }

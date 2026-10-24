@@ -187,4 +187,41 @@ class PaiementIntegrationTest extends IntegrationTest {
         .contains(";Martin Dubois;ordinateur portable Lenovo T14;;150,00;65,10;84,90\r\n")
         .contains("Total;;1 réparations;;;150,00;65,10;84,90");
   }
+
+  @Test
+  void venteAuComptoirDansLaCaisseEtLeChiffreAffaires() throws Exception {
+    mvc.perform(json(techToken, post("/api/ventes"), Map.of("moyen", "ESPECES", "lignes", List.of())))
+        .andExpect(status().isUnprocessableContent());
+
+    String vente = mvc.perform(json(techToken, post("/api/ventes"), Map.of("moyen", "ESPECES", "lignes", List.of(
+            Map.of("article", "Protection d'écran", "quantite", 2, "prixUnitaire", "10", "coutUnitaire", "2"),
+            Map.of("article", "Écouteurs", "quantite", 1, "prixUnitaire", "25")))))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.total").value(45.0))
+        .andExpect(jsonPath("$.employe").value("Frere"))
+        .andReturn().getResponse().getContentAsString();
+    long venteId = ((Number) read(vente, "$.id")).longValue();
+
+    mvc.perform(as(adminToken, get("/api/caisse")))
+        .andExpect(jsonPath("$.total").value(45.0))
+        .andExpect(jsonPath("$.parMoyen.ESPECES").value(45.0))
+        .andExpect(jsonPath("$.ventes[0].articles").value("2 × Protection d'écran, Écouteurs"));
+
+    mvc.perform(as(adminToken, get("/api/chiffre-affaires")))
+        .andExpect(jsonPath("$.reparations").value(0))
+        .andExpect(jsonPath("$.ventes.nombre").value(1))
+        .andExpect(jsonPath("$.ventes.encaisse").value(45.0))
+        .andExpect(jsonPath("$.ventes.cout").value(4.0))
+        .andExpect(jsonPath("$.ventes.lignes[0].marge").value(16.0))
+        .andExpect(jsonPath("$.total.marge").value(41.0));
+    String csv = mvc.perform(as(adminToken, get("/api/chiffre-affaires/export")))
+        .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+    org.assertj.core.api.Assertions.assertThat(csv)
+        .contains(";2;Protection d'écran;Frere;20,00;4,00;16,00\r\n")
+        .contains("Total général;;;;;45,00;4,00;41,00");
+
+    mvc.perform(as(techToken, delete("/api/ventes/" + venteId))).andExpect(status().isForbidden());
+    mvc.perform(as(adminToken, delete("/api/ventes/" + venteId))).andExpect(status().isNoContent());
+    mvc.perform(as(adminToken, get("/api/caisse"))).andExpect(jsonPath("$.total").value(0));
+  }
 }

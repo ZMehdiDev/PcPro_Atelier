@@ -20,10 +20,13 @@ import pcpro.atelier.features.dossier.infra.DossierRepository;
 import pcpro.atelier.features.paiement.api.dto.ChiffreAffairesDto;
 import pcpro.atelier.features.paiement.infra.PaiementRepository;
 import pcpro.atelier.features.piece.infra.PieceRepository;
+import pcpro.atelier.features.vente.domain.Vente;
+import pcpro.atelier.features.vente.domain.VenteLigne;
+import pcpro.atelier.features.vente.infra.VenteRepository;
 
 /**
- * Chiffre d'affaires par réparation rendue : encaissé, coût des pièces et marge, avec un export CSV
- * pour le comptable ou un tableur.
+ * Chiffre d'affaires par réparation rendue (encaissé, coût des pièces, marge) et par article vendu
+ * au comptoir, avec un export CSV pour le comptable ou un tableur.
  */
 @Service
 @Transactional(readOnly = true)
@@ -34,17 +37,20 @@ public class ChiffreAffairesService {
   private final DossierRepository dossierRepository;
   private final PaiementRepository paiementRepository;
   private final PieceRepository pieceRepository;
+  private final VenteRepository venteRepository;
   private final Clock clock;
 
   public ChiffreAffairesService(
       DossierRepository dossierRepository,
       PaiementRepository paiementRepository,
       PieceRepository pieceRepository,
+      VenteRepository venteRepository,
       Clock clock
   ) {
     this.dossierRepository = dossierRepository;
     this.paiementRepository = paiementRepository;
     this.pieceRepository = pieceRepository;
+    this.venteRepository = venteRepository;
     this.clock = clock;
   }
 
@@ -76,8 +82,25 @@ public class ChiffreAffairesService {
 
     BigDecimal totalEncaisse = somme(lignes, ChiffreAffairesDto.Ligne::encaisse);
     BigDecimal totalPieces = somme(lignes, ChiffreAffairesDto.Ligne::coutPieces);
+
+    List<Vente> ventes = venteRepository.findEntre(periode.debut(), periode.fin());
+    List<ChiffreAffairesDto.LigneVente> articles = ventes.stream()
+        .flatMap(v -> v.getLignes().stream().map(l -> ligneVente(v, l)))
+        .toList();
+    BigDecimal ventesEncaisse = articles.stream().map(ChiffreAffairesDto.LigneVente::encaisse).reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal ventesCout = articles.stream().map(ChiffreAffairesDto.LigneVente::cout).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    BigDecimal toutEncaisse = totalEncaisse.add(ventesEncaisse);
+    BigDecimal cout = totalPieces.add(ventesCout);
     return new ChiffreAffairesDto(periode.du(), periode.au(), lignes.size(), totalEncaisse, totalPieces,
-        totalEncaisse.subtract(totalPieces), lignes);
+        totalEncaisse.subtract(totalPieces), lignes,
+        new ChiffreAffairesDto.Ventes(ventes.size(), ventesEncaisse, ventesCout, ventesEncaisse.subtract(ventesCout), articles),
+        new ChiffreAffairesDto.Total(toutEncaisse, cout, toutEncaisse.subtract(cout)));
+  }
+
+  private static ChiffreAffairesDto.LigneVente ligneVente(Vente vente, VenteLigne ligne) {
+    return new ChiffreAffairesDto.LigneVente(vente.getId(), vente.getCreatedAt(), ligne.getArticle(), ligne.getQuantite(),
+        vente.getEmploye().getPrenom(), ligne.total(), ligne.cout(), ligne.total().subtract(ligne.cout()));
   }
 
   /** CSV pour Excel en français : séparateur « ; », virgule décimale, UTF-8 avec BOM. */
@@ -99,6 +122,25 @@ public class ChiffreAffairesService {
     }
     csv.append(String.join(";", "Total", "", ca.reparations() + " réparations", "", "",
         nombre(ca.encaisse()), nombre(ca.coutPieces()), nombre(ca.marge()))).append("\r\n");
+
+    csv.append("\r\nVendu le;Vente n°;Quantité;Article;Vendeur;Encaissé;Prix d'achat;Marge\r\n");
+    for (ChiffreAffairesDto.LigneVente l : ca.ventes().lignes()) {
+      csv.append(String.join(";",
+          l.venduLe().atZoneSameInstant(clock.getZone()).format(DATE_CSV),
+          String.valueOf(l.venteId()),
+          String.valueOf(l.quantite()),
+          champ(l.article()),
+          champ(l.employe()),
+          nombre(l.encaisse()),
+          nombre(l.cout()),
+          nombre(l.marge())
+      )).append("\r\n");
+    }
+    csv.append(String.join(";", "Total", "", "", ca.ventes().nombre() + " ventes", "",
+        nombre(ca.ventes().encaisse()), nombre(ca.ventes().cout()), nombre(ca.ventes().marge()))).append("\r\n");
+
+    csv.append("\r\n").append(String.join(";", "Total général", "", "", "", "",
+        nombre(ca.total().encaisse()), nombre(ca.total().cout()), nombre(ca.total().marge()))).append("\r\n");
     return csv.toString().getBytes(StandardCharsets.UTF_8);
   }
 
