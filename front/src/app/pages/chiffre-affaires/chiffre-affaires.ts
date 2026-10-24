@@ -15,8 +15,8 @@ function date(annee: number, mois: number, jour: number): string {
 const maintenant = () => new Date();
 
 /**
- * Chiffre d'affaires (admin) : pour chaque réparation rendue sur la période,
- * ce qui a été encaissé, ce que les pièces ont coûté et ce qu'il reste.
+ * Chiffre d'affaires (admin) : pour chaque réparation rendue et chaque article vendu sur la
+ * période, ce qui a été encaissé, ce que les pièces ou l'article ont coûté et ce qu'il reste.
  */
 @Component({
   selector: 'app-chiffre-affaires',
@@ -25,7 +25,7 @@ const maintenant = () => new Date();
     <div class="page">
       <div class="entete-page">
         <h1>Chiffre d'affaires</h1>
-        <button class="btn btn-principal" [disabled]="!ca()?.reparations || export()" (click)="exporter()">
+        <button class="btn btn-noir" [disabled]="(!ca()?.reparations && !ca()?.ventes?.nombre) || export()" (click)="exporter()">
           Exporter pour Excel
         </button>
       </div>
@@ -49,27 +49,33 @@ const maintenant = () => new Date();
       </section>
 
       @if (ca(); as c) {
-        <div class="totaux">
-          <div class="carte">
-            <span class="doux">Réparations rendues</span>
-            <strong>{{ c.reparations }}</strong>
+        <section class="carte solde">
+          <div>
+            <span class="doux">Encaissé sur la période</span>
+            <div class="montant">{{ c.total.encaisse | euros }}</div>
           </div>
-          <div class="carte">
-            <span class="doux">Encaissé</span>
-            <strong>{{ c.encaisse | euros }}</strong>
+          <div class="chiffres">
+            <div>
+              <span class="doux petit">Réparations ({{ c.reparations }})</span>
+              <strong>{{ c.encaisse | euros }}</strong>
+            </div>
+            <div>
+              <span class="doux petit">Ventes ({{ c.ventes.nombre }})</span>
+              <strong>{{ c.ventes.encaisse | euros }}</strong>
+            </div>
+            <div>
+              <span class="doux petit">Pièces et achats</span>
+              <strong class="moins">− {{ c.total.cout | euros }}</strong>
+            </div>
+            <div>
+              <span class="doux petit">Marge</span>
+              <strong class="marge" [class.negatif]="c.total.marge < 0">{{ c.total.marge | euros }}</strong>
+            </div>
           </div>
-          <div class="carte">
-            <span class="doux">Pièces achetées</span>
-            <strong class="moins">− {{ c.coutPieces | euros }}</strong>
-          </div>
-          <div class="carte marge">
-            <span class="doux">Marge</span>
-            <strong [class.negatif]="c.marge < 0">{{ c.marge | euros }}</strong>
-          </div>
-        </div>
+        </section>
 
         <section class="carte">
-          <h2>Détail par réparation</h2>
+          <h2>Réparations rendues</h2>
           @if (c.lignes.length) {
             <div class="defile">
               <table class="tableau">
@@ -89,11 +95,11 @@ const maintenant = () => new Date();
                       <td>{{ l.renduLe | date }}</td>
                       <td>
                         <a [routerLink]="['/dossiers', l.dossierId]" (click)="$event.stopPropagation()">{{ l.clientNom }}</a>
-                        <div class="doux petit">{{ l.appareil }} · {{ l.reference }}</div>
+                        <div class="doux petit">{{ l.appareil }}</div>
                       </td>
                       <td class="masquer-mobile">{{ l.technicien ?? '—' }}</td>
                       <td class="droite">{{ l.encaisse | euros }}</td>
-                      <td class="droite moins">{{ l.coutPieces ? '− ' : '' }}{{ l.coutPieces | euros }}</td>
+                      <td class="droite moins">{{ l.coutPieces | euros }}</td>
                       <td class="droite gras" [class.negatif]="l.marge < 0">{{ l.marge | euros }}</td>
                     </tr>
                   }
@@ -102,6 +108,40 @@ const maintenant = () => new Date();
             </div>
           } @else {
             <p class="vide">Aucune réparation rendue sur cette période.</p>
+          }
+        </section>
+
+        <section class="carte">
+          <h2>Ventes au comptoir</h2>
+          @if (c.ventes.lignes.length) {
+            <div class="defile">
+              <table class="tableau">
+                <thead>
+                  <tr>
+                    <th>Vendu le</th>
+                    <th>Article</th>
+                    <th class="masquer-mobile">Vendeur</th>
+                    <th class="droite">Encaissé</th>
+                    <th class="droite">Acheté à</th>
+                    <th class="droite">Marge</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (l of c.ventes.lignes; track $index) {
+                    <tr>
+                      <td>{{ l.venduLe | date }}</td>
+                      <td>{{ l.quantite > 1 ? l.quantite + ' × ' : '' }}{{ l.article }}</td>
+                      <td class="masquer-mobile">{{ l.employe }}</td>
+                      <td class="droite">{{ l.encaisse | euros }}</td>
+                      <td class="droite moins">{{ l.cout | euros }}</td>
+                      <td class="droite gras" [class.negatif]="l.marge < 0">{{ l.marge | euros }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="vide">Aucune vente sur cette période.</p>
           }
         </section>
       }
@@ -118,46 +158,38 @@ const maintenant = () => new Date();
     .periode .champ {
       flex: 1 1 150px;
     }
-    .totaux {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0 1rem;
+    .solde {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.25rem 2rem;
+      padding: 1.75rem 2rem;
     }
-    .totaux .carte {
+    .chiffres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 2.25rem;
+    }
+    .chiffres > div {
       display: flex;
       flex-direction: column;
-      gap: 0.2rem;
     }
-    .totaux strong {
-      font-size: 1.6rem;
+    .chiffres strong {
+      font-size: 1.25rem;
     }
     .marge {
-      border-left: 5px solid var(--ok);
-    }
-    .marge strong {
       color: var(--ok);
     }
     .moins {
       color: var(--texte-doux);
     }
     .negatif,
-    .marge strong.negatif {
+    .marge.negatif {
       color: var(--danger);
     }
     .defile {
       overflow-x: auto;
-    }
-    .aide {
-      margin: 0.75rem 0 0;
-    }
-    @media (max-width: 900px) {
-      .totaux {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0 0.75rem;
-      }
-      .totaux strong {
-        font-size: 1.25rem;
-      }
     }
   `,
 })

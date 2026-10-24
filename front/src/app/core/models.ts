@@ -9,7 +9,7 @@ export type StatutDossier =
   | 'PRET'
   | 'CLOTURE';
 export type Priorite = 'BASSE' | 'NORMALE' | 'HAUTE';
-export type TypeAppareil = 'PORTABLE' | 'TOUR' | 'AUTRE';
+export type TypeAppareil = 'PORTABLE' | 'TOUR' | 'TELEVISION' | 'CONSOLE' | 'AUTRE';
 export type EtatPiece = 'A_COMMANDER' | 'COMMANDEE' | 'RECUE' | 'MONTEE' | 'ANNULEE';
 export type MoyenPaiement = 'ESPECES' | 'BANCONTACT' | 'VIREMENT' | 'AUTRE';
 export type StatutDevis = 'EN_ATTENTE' | 'ACCEPTE' | 'REFUSE';
@@ -252,6 +252,24 @@ export interface ChiffreAffaires {
     coutPieces: number;
     marge: number;
   }[];
+  ventes: {
+    nombre: number;
+    encaisse: number;
+    cout: number;
+    marge: number;
+    lignes: {
+      venteId: number;
+      venduLe: string;
+      article: string;
+      quantite: number;
+      employe: string;
+      encaisse: number;
+      cout: number;
+      marge: number;
+    }[];
+  };
+  /** Réparations et ventes ensemble. */
+  total: { encaisse: number; cout: number; marge: number };
 }
 
 export interface Caisse {
@@ -269,6 +287,28 @@ export interface Caisse {
     employe: string;
     createdAt: string;
   }[];
+  /** Ventes au comptoir, comptées dans le total et par moyen. */
+  ventes: {
+    id: number;
+    articles: string;
+    montant: number;
+    moyen: MoyenPaiement;
+    employe: string;
+    createdAt: string;
+  }[];
+}
+
+export interface VenteRequest {
+  moyen: MoyenPaiement;
+  lignes: { article: string; quantite: number; prixUnitaire: number; coutUnitaire: number | null }[];
+}
+
+export interface Vente {
+  id: number;
+  moyen: MoyenPaiement;
+  total: number;
+  employe: string;
+  createdAt: string;
 }
 
 export interface Suivi {

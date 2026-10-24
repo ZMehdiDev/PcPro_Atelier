@@ -16,7 +16,19 @@ function debutMois(): string {
   return aujourdhui().slice(0, 8) + '01';
 }
 
-/** Caisse (admin) : encaissements d'une journée ou d'une période, par moyen de paiement. */
+interface Mouvement {
+  cle: string;
+  createdAt: string;
+  titre: string;
+  detail: string;
+  dossierId: number | null;
+  venteId: number | null;
+  employe: string;
+  moyen: MoyenPaiement;
+  montant: number;
+}
+
+/** Caisse (admin) : réparations et ventes encaissées sur une journée ou une période, par moyen de paiement. */
 @Component({
   selector: 'app-caisse',
   imports: [FormsModule, RouterLink, DatePipe, EurosPipe],
@@ -24,7 +36,10 @@ function debutMois(): string {
     <div class="page">
       <div class="entete-page">
         <h1>Caisse</h1>
-        <button class="btn no-print" (click)="imprimer()">Imprimer</button>
+        <div class="ligne no-print">
+          <button class="btn btn-blanc" (click)="imprimer()">Imprimer</button>
+          <a routerLink="/vente" class="btn btn-principal">Nouvelle vente</a>
+        </div>
       </div>
 
       <div class="ligne no-print" style="margin-bottom: 0.75rem">
@@ -40,43 +55,56 @@ function debutMois(): string {
       </div>
 
       @if (caisse(); as c) {
-        <div class="totaux">
-          <div class="carte total">
-            <span class="doux">Total {{ c.du === c.au ? 'du ' + (c.du | date) : 'du ' + (c.du | date) + ' au ' + (c.au | date) }}</span>
-            <strong>{{ c.total | euros }}</strong>
+        <section class="carte solde">
+          <div>
+            <span class="doux">Encaissé {{ c.du === c.au ? 'le ' + (c.du | date) : 'du ' + (c.du | date) + ' au ' + (c.au | date) }}</span>
+            <div class="montant">{{ c.total | euros }}</div>
           </div>
-          @for (m of moyens; track m) {
-            <div class="carte">
-              <span class="doux">{{ libelles[m] }}</span>
-              <strong>{{ c.parMoyen[m] | euros }}</strong>
-            </div>
-          }
-        </div>
+          <div class="moyens">
+            @for (m of moyens; track m) {
+              <div>
+                <span class="doux petit">{{ libelles[m] }}</span>
+                <strong>{{ c.parMoyen[m] | euros }}</strong>
+              </div>
+            }
+          </div>
+        </section>
 
         <section class="carte">
-          <h2>{{ c.paiements.length }} paiement{{ c.paiements.length > 1 ? 's' : '' }}</h2>
-          @if (c.paiements.length) {
+          <h2>{{ mouvements(c).length }} encaissement{{ mouvements(c).length > 1 ? 's' : '' }}</h2>
+          @if (mouvements(c).length) {
             <table class="tableau">
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Dossier</th>
-                  <th class="masquer-mobile">Encaissé par</th>
+                  <th>Pour</th>
+                  <th class="masquer-mobile">Par</th>
                   <th>Moyen</th>
                   <th class="droite">Montant</th>
+                  <th class="no-print"></th>
                 </tr>
               </thead>
               <tbody>
-                @for (p of c.paiements; track p.id) {
+                @for (m of mouvements(c); track m.cle) {
                   <tr>
-                    <td>{{ p.createdAt | date: true }}</td>
+                    <td>{{ m.createdAt | date: true }}</td>
                     <td>
-                      <a [routerLink]="['/dossiers', p.dossierId]">{{ p.clientNom }}</a>
-                      <div class="doux petit">{{ p.reference }}</div>
+                      @if (m.dossierId) {
+                        <a [routerLink]="['/dossiers', m.dossierId]">{{ m.titre }}</a>
+                        <div class="doux petit">Réparation {{ m.detail }}</div>
+                      } @else {
+                        <strong>{{ m.titre }}</strong>
+                        <div class="doux petit">Vente au comptoir</div>
+                      }
                     </td>
-                    <td class="masquer-mobile">{{ p.employe }}</td>
-                    <td>{{ libelles[p.moyen] }}</td>
-                    <td class="droite gras">{{ p.montant | euros }}</td>
+                    <td class="masquer-mobile">{{ m.employe }}</td>
+                    <td>{{ libelles[m.moyen] }}</td>
+                    <td class="droite gras">{{ m.montant | euros }}</td>
+                    <td class="droite no-print">
+                      @if (m.venteId) {
+                        <button class="btn btn-petit btn-lien" (click)="annulerVente(m.venteId)">Annuler</button>
+                      }
+                    </td>
                   </tr>
                 }
               </tbody>
@@ -89,25 +117,25 @@ function debutMois(): string {
     </div>
   `,
   styles: `
-    .totaux {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 0 0.75rem;
+    .solde {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.25rem 2rem;
+      padding: 1.75rem 2rem;
     }
-    .totaux .carte {
+    .moyens {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 2rem;
+    }
+    .moyens > div {
       display: flex;
       flex-direction: column;
-      gap: 0.2rem;
     }
-    .totaux strong {
-      font-size: 1.3rem;
-    }
-    .total {
-      grid-column: 1 / -1;
-      border-left: 4px solid var(--accent);
-    }
-    .total strong {
-      font-size: 1.8rem;
+    .moyens strong {
+      font-size: 1.15rem;
     }
     .champ {
       flex: 1 1 140px;
@@ -146,6 +174,47 @@ export class CaissePage {
     }
     this.api.caisse(this.du, this.au).subscribe({
       next: (c) => this.caisse.set(c),
+      error: (err) => this.notifications.erreur(err),
+    });
+  }
+
+  /** Paiements des réparations et ventes au comptoir, dans l'ordre où ils ont été encaissés. */
+  protected mouvements(c: Caisse): Mouvement[] {
+    return [
+      ...c.paiements.map((p) => ({
+        cle: 'p' + p.id,
+        createdAt: p.createdAt,
+        titre: p.clientNom,
+        detail: p.reference,
+        dossierId: p.dossierId,
+        venteId: null,
+        employe: p.employe,
+        moyen: p.moyen,
+        montant: p.montant,
+      })),
+      ...(c.ventes ?? []).map((v) => ({
+        cle: 'v' + v.id,
+        createdAt: v.createdAt,
+        titre: v.articles,
+        detail: '',
+        dossierId: null,
+        venteId: v.id,
+        employe: v.employe,
+        moyen: v.moyen,
+        montant: v.montant,
+      })),
+    ].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  }
+
+  protected annulerVente(id: number): void {
+    if (!confirm('Annuler cette vente ? Elle sera retirée de la caisse.')) {
+      return;
+    }
+    this.api.annulerVente(id).subscribe({
+      next: () => {
+        this.notifications.ok('Vente annulée');
+        this.charger();
+      },
       error: (err) => this.notifications.erreur(err),
     });
   }

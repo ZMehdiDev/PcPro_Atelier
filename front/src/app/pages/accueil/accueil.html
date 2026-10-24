@@ -1,33 +1,45 @@
 <div class="page">
-  <div class="entete-page">
-    <h1>Bonjour {{ auth.employe()?.prenom }}</h1>
-  </div>
+  <h1 class="bonjour">Bonjour {{ auth.employe()?.prenom }}</h1>
 
-  <div class="gros-boutons">
-    <a routerLink="/depot" class="gros-bouton gros-bouton-principal">
-      <span>
-        <strong>+ Nouveau dépôt</strong>
-      </span>
+  <section class="carte solde">
+    <a routerLink="/dossiers" [queryParams]="{ vue: 'actifs' }" class="chiffre">
+      <span class="montant">{{ stats()?.actifs ?? '…' }}</span>
+      <span class="doux">réparations en cours à l'atelier ›</span>
     </a>
-    <a routerLink="/dossiers" [queryParams]="{ vue: 'prets' }" class="gros-bouton gros-bouton-ok">
-      <span>
-        <strong>Rendre un appareil</strong>
-        <small>{{ compte(stats()?.parStatut?.PRET, 'Aucun appareil prêt', 'appareil prêt', 'appareils prêts') }}</small>
-      </span>
-    </a>
-    <a routerLink="/dossiers" [queryParams]="{ vue: 'mes' }" class="gros-bouton">
-      <span>
-        <strong>Mes réparations</strong>
-        <small>{{ compte(stats()?.mesDossiers, 'Rien pour moi', 'en cours pour moi', 'en cours pour moi') }}</small>
-      </span>
-    </a>
-    <a routerLink="/dossiers" [queryParams]="{ vue: 'actifs' }" class="gros-bouton">
-      <span>
-        <strong>Tout l'atelier</strong>
-        <small>{{ compte(stats()?.actifs, 'Aucun appareil en cours', 'appareil en cours', 'appareils en cours') }}</small>
-      </span>
-    </a>
-  </div>
+
+    <nav class="actions" aria-label="Actions">
+      <a routerLink="/depot" class="action">
+        <span class="rond rond-principal">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+        </span>
+        Nouveau dépôt
+      </a>
+      <a routerLink="/vente" class="action">
+        <span class="rond">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12.5V4h8.5L21 13.5 13.5 21z" /><circle cx="7.5" cy="8.5" r="1.5" /></svg>
+        </span>
+        Vente
+      </a>
+      <a routerLink="/dossiers" [queryParams]="{ vue: 'prets' }" class="action">
+        <span class="rond">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+          @if (stats()?.parStatut?.PRET; as n) {
+            <span class="bulle">{{ n }}</span>
+          }
+        </span>
+        Rendre
+      </a>
+      <a routerLink="/dossiers" [queryParams]="{ vue: 'mes' }" class="action">
+        <span class="rond">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></svg>
+          @if (stats()?.mesDossiers; as n) {
+            <span class="bulle">{{ n }}</span>
+          }
+        </span>
+        Les miennes
+      </a>
+    </nav>
+  </section>
 
   <form class="recherche" (ngSubmit)="chercher()" role="search">
     <input
@@ -37,13 +49,19 @@
       placeholder="Chercher un client, un téléphone, une référence…"
       enterkeyhint="search"
     />
-    <button class="btn btn-principal">Chercher</button>
+    <button class="btn btn-noir">Chercher</button>
   </form>
 
   @if (aSurveiller().length > 0) {
-    <section class="carte carte-alerte">
+    <section class="carte">
       <h2>
-        <span>À régler : {{ aSurveiller().length }} remise{{ aSurveiller().length > 1 ? 's' : '' }} en retard</span>
+        <span>À régler <span class="badge badge-alerte">{{ aSurveiller().length }}</span></span>
+        @if (stats(); as s) {
+          <span class="ligne masquer-mobile">
+            <a routerLink="/dossiers" [queryParams]="{ vue: 'nonrecuperes' }" class="btn btn-petit">{{ s.nonRecuperes }} pas récupérés</a>
+            <a routerLink="/dossiers" [queryParams]="{ vue: 'retard' }" class="btn btn-petit">{{ s.enRetard }} en retard</a>
+          </span>
+        }
       </h2>
       <app-liste-dossiers [dossiers]="aSurveiller()" vide="" />
     </section>
@@ -51,7 +69,7 @@
 
   <section class="carte">
     <h2>
-      Mes réparations en cours
+      Mes réparations
       <a routerLink="/dossiers" [queryParams]="{ vue: 'mes' }" class="btn btn-petit">Tout voir</a>
     </h2>
     <app-liste-dossiers [dossiers]="mesDossiers()" vide="Aucune réparation ne vous est assignée pour l'instant." />

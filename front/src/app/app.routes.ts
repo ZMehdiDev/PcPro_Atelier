@@ -60,6 +60,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/caisse/caisse').then((m) => m.CaissePage),
       },
       {
+        path: 'vente',
+        title: 'Vente · Pc Pro Atelier',
+        loadComponent: () => import('./pages/vente/vente').then((m) => m.VentePage),
+      },
+      {
         path: 'chiffre-affaires',
         title: 'Chiffre d’affaires · Pc Pro Atelier',
         canActivate: [adminGuard],

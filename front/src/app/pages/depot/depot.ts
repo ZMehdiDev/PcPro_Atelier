@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, input, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -24,6 +24,9 @@ export class Depot {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
+
+  /** ?client=ID : dépôt lancé depuis la fiche d'un client, déjà rempli. */
+  readonly client = input<string>();
 
   protected readonly typesAppareil = Object.keys(TYPE_APPAREIL) as TypeAppareil[];
   protected readonly libellesType = TYPE_APPAREIL;
@@ -59,6 +62,13 @@ export class Depot {
   private readonly rechercheGarantie = new Subject<void>();
 
   constructor() {
+    effect(() => {
+      const id = Number(this.client());
+      if (id) {
+        untracked(() => this.api.client(id).subscribe((d) => this.choisirClient(d.client)));
+      }
+    });
+
     this.api.techniciens().subscribe((t) => {
       this.techniciens.set(t);
       this.technicienId = this.auth.employe()?.id ?? null;

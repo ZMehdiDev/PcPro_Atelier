@@ -1,84 +1,48 @@
 @if (dossiers().length === 0) {
   <p class="vide">{{ vide() }}</p>
 } @else {
-  @if (!compact()) {
-  <table class="tableau masquer-mobile">
-    <thead>
-      <tr>
-        <th>Dossier</th>
-        @if (!masquerClient()) {
-          <th>Client</th>
-        }
-        <th>Appareil</th>
-        <th>Statut</th>
-        <th>Technicien</th>
-        <th>Prévu</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (d of dossiers(); track d.id) {
-        <tr class="cliquable" (click)="router.navigate(['/dossiers', d.id])">
-          <td>
-            <a [routerLink]="['/dossiers', d.id]" class="gras" (click)="$event.stopPropagation()">{{ d.reference }}</a>
-            @if (d.priorite === 'HAUTE') {
-              <span class="badge badge-danger">Urgent</span>
-            }
-          </td>
-          @if (!masquerClient()) {
-            <td>{{ d.clientNom }}</td>
-          }
-          <td>{{ appareil(d) }}</td>
-          <td>
-            <app-statut [statut]="d.statut" />
-            @if (d.nonRecupere) {
-              <div class="petit alerte">Pas récupéré, prêt {{ d.pretDepuis | depuis }}</div>
-            } @else if (d.enRetard) {
-              <div class="petit danger">En retard</div>
-            }
-          </td>
-          <td>{{ d.technicien?.prenom ?? '—' }}</td>
-          <td [class.danger]="d.enRetard">{{ d.dateEstimee | date }}</td>
-        </tr>
-      }
-    </tbody>
-  </table>
-  }
-
-  <ul class="cartes" [class.masquer-ordi]="!compact()">
+  <ul class="rangees">
     @for (d of dossiers(); track d.id) {
       <li>
-        <a [routerLink]="['/dossiers', d.id]">
-          <div class="ligne ligne-espace">
-            <span class="gras">
+        <a [routerLink]="['/dossiers', d.id]" class="rangee">
+          <span class="avatar-initiales" [class.urgent]="d.priorite === 'HAUTE'" aria-hidden="true">
+            {{ initiales(masquerClient() ? appareil(d) : d.clientNom) }}
+          </span>
+
+          <span class="qui">
+            <span class="titre">{{ masquerClient() ? appareil(d) : d.clientNom }}</span>
+            <span class="sous-titre">
               @if (!masquerClient()) {
-                {{ d.clientNom }}
-              } @else {
-                {{ d.reference }}
+                {{ appareil(d) }} ·
               }
+              {{ d.reference }}
             </span>
-            <app-statut [statut]="d.statut" />
-          </div>
-          <div>{{ appareil(d) }}</div>
-          <div class="doux petit ligne">
-            @if (!masquerClient()) {
-              <span>{{ d.reference }}</span>
-            }
-            @if (d.technicien) {
-              <span>· {{ d.technicien.prenom }}</span>
-            }
-          </div>
-          @if (d.priorite === 'HAUTE' || d.nonRecupere || d.enRetard) {
-            <div class="ligne">
+          </span>
+
+          <span class="etat">
+            <span class="ligne">
+              <app-statut [statut]="d.statut" />
               @if (d.priorite === 'HAUTE') {
                 <span class="badge badge-danger">Urgent</span>
               }
-              @if (d.nonRecupere) {
-                <span class="badge badge-alerte">Pas récupéré ({{ d.pretDepuis | depuis }})</span>
-              } @else if (d.enRetard) {
-                <span class="badge badge-danger">En retard (prévu le {{ d.dateEstimee | date }})</span>
-              }
-            </div>
-          }
+            </span>
+            @if (d.nonRecupere) {
+              <span class="alerte">Pas récupéré, prêt {{ d.pretDepuis | depuis }}</span>
+            } @else if (d.enRetard) {
+              <span class="danger">En retard</span>
+            }
+          </span>
+
+          <span class="technicien masquer-mobile">{{ d.technicien?.prenom ?? '—' }}</span>
+
+          <span class="quand" [class.danger]="d.enRetard">
+            @if (d.dateEstimee) {
+              <span class="doux petit masquer-mobile">Prévu le</span>
+              {{ d.dateEstimee | date }}
+            }
+          </span>
+
+          <span class="fleche" aria-hidden="true">›</span>
         </a>
       </li>
     }

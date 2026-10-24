@@ -79,6 +79,7 @@ Au premier démarrage, le compte `APP_BOOTSTRAP_ADMIN_LOGIN` reçoit le mot de p
 | **Nouveau dépôt** | Client retrouvé par téléphone ou nom, appareil, problème, accessoires, date promise. Alerte si une garantie est en cours. Puis le bon de dépôt à imprimer. |
 | **Fiche dossier** | Avancement en 5 étapes, encadré « Que faire maintenant ? » avec l'étape suivante en un clic (« Commencer le diagnostic », « C'est prêt », « Rendre au client » avec encaissement et garantie). Le reste en onglets : Résumé (infos, technicien, priorité, suivi en ligne), Devis et paiement, Pièces, Notes et photos (notes sensibles masquées, photos réduites avant l'envoi), Historique. |
 | **Réparations**, **Clients** | Listes avec filtres et recherche ; onglets avec compteurs et étapes cliquables. |
+| **Vente au comptoir** | Articles (raccourcis : protection d'écran, écouteurs, chargeur…), quantité, prix, prix d'achat facultatif, moyen de paiement. Compté dans la caisse et le chiffre d'affaires. |
 | **Caisse**, **Chiffre d'affaires**, **Employés** | Réservés aux admins. Chiffre d'affaires : par réparation rendue sur la période, encaissé, coût des pièces et marge, export CSV pour Excel. |
 | **/suivi** | Page publique du client (QR code du bon de dépôt) : avancement, devis à accepter ou refuser, coordonnées de l'atelier. |
 
@@ -97,6 +98,7 @@ Toutes les routes sauf `POST /api/auth/login|refresh|logout`, `GET /api/health` 
 | **Dossiers** | `POST /api/dossiers` · `GET /api/dossiers?q=&statut=&actifs=&priorite=&technicienId=&mesDossiers=&enRetard=&nonRecuperes=` · `GET /api/dossiers/stats` · `GET /api/dossiers/garanties?clientId=&numeroSerie=` · `GET/PUT /api/dossiers/{id}` · `PATCH /api/dossiers/{id}/statut` · `…/technicien` · `…/priorite` · `POST …/relance` · `GET …/bon-depot` (PDF, exemplaires client et atelier) |
 | **Devis** | `PUT /api/dossiers/{id}/devis` · `POST …/devis/decision` · `POST …/devis/envoi` (email) · `DELETE …/devis` |
 | **Paiements** | `POST /api/dossiers/{id}/paiements` · admin : `DELETE …/paiements/{paiementId}`, `GET /api/caisse?du=&au=`, `GET /api/chiffre-affaires?du=&au=`, `GET /api/chiffre-affaires/export?du=&au=` (CSV) |
+| **Ventes** | `POST /api/ventes` · admin : `DELETE /api/ventes/{id}` (caisse et chiffre d'affaires les incluent) |
 | **Suivi client** (public) | `GET /api/public/suivi/{reference}?code=` (ou `?telephone=`) · `POST /api/public/suivi/{reference}/devis` |
 | **Pièces** | `POST /api/dossiers/{id}/pieces` · `PUT …/pieces/{pieceId}` · `PATCH …/pieces/{pieceId}/etat` |
 | **Notes** | `POST /api/dossiers/{id}/notes` |

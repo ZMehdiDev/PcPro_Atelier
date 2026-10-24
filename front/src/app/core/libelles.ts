@@ -72,6 +72,8 @@ export const PRIORITE: Record<Priorite, string> = {
 export const TYPE_APPAREIL: Record<TypeAppareil, string> = {
   PORTABLE: 'Portable',
   TOUR: 'Tour / fixe',
+  TELEVISION: 'Télévision',
+  CONSOLE: 'Console',
   AUTRE: 'Autre',
 };
 
@@ -145,4 +147,10 @@ export function traduireValeur(valeur: string | null): string | null {
 export function appareil(d: { typeAppareil?: TypeAppareil; marque: string | null; modele: string | null }): string {
   const nom = [d.marque, d.modele].filter((s) => s && s.trim()).join(' ');
   return nom || (d.typeAppareil ? TYPE_APPAREIL[d.typeAppareil] : 'Appareil');
+}
+
+/** « Martin Dubois » → « MD », pour la pastille ronde des listes. */
+export function initiales(nom: string | null | undefined): string {
+  const mots = (nom ?? '').trim().split(/\s+/).filter((m) => m);
+  return mots.slice(0, 2).map((m) => m.charAt(0)).join('') || '?';
 }

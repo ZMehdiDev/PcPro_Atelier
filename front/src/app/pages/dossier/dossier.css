@@ -28,6 +28,7 @@
 
 .entete-dossier h1 {
   margin: 0;
+  font-size: 2.1rem;
 }
 
 .nom-client {
@@ -128,8 +129,6 @@
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 0.75rem 1.5rem;
-  border: 2px solid var(--accent-bord);
-  background: linear-gradient(var(--accent-clair), #fff 70%);
 }
 
 .consigne h2 {
@@ -169,26 +168,23 @@
   margin-top: 0.4rem;
 }
 
-/* Onglets */
+/* Onglets : pilules, la choisie en noir */
 
 .onglets-dossier {
-  gap: 0;
-  margin-bottom: 1rem;
-  border-bottom: 2px solid var(--bordure-forte);
-  padding-bottom: 0;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
 }
 
 .onglet-dossier {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  min-height: 48px;
-  padding: 0.5rem 1.1rem;
-  margin-bottom: -2px;
+  min-height: 42px;
+  padding: 0.4rem 1.1rem;
   border: 0;
-  border-bottom: 3px solid transparent;
-  background: transparent;
-  color: var(--texte-doux);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--texte);
   font: inherit;
   font-weight: 600;
   white-space: nowrap;
@@ -196,15 +192,12 @@
 }
 
 .onglet-dossier:hover {
-  color: var(--accent);
-  background: rgba(255, 255, 255, 0.6);
+  background: #e3e6ea;
 }
 
 .onglet-dossier.actif {
-  color: var(--accent-fonce);
-  border-bottom-color: var(--accent);
-  background: #fff;
-  border-radius: var(--rayon) var(--rayon) 0 0;
+  background: var(--noir);
+  color: #fff;
 }
 
 .onglet-dossier .compteur {
@@ -212,10 +205,15 @@
   min-width: 1.4rem;
   padding: 0 0.35rem;
   border-radius: 999px;
-  background: var(--accent-clair);
-  color: var(--accent-fonce);
+  background: var(--champ);
+  color: var(--texte);
   font-size: 0.8rem;
   text-align: center;
+}
+
+.onglet-dossier.actif .compteur {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
 }
 
 /* Contenu */

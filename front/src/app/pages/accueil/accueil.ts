@@ -8,7 +8,7 @@ import { DossierResume, Stats } from '../../core/models';
 import { NotificationService } from '../../core/notification.service';
 import { ListeDossiers } from '../../shared/liste-dossiers';
 
-/** Accueil : les 4 choses qu'on fait tout le temps, puis ce qui demande de l'attention. */
+/** Accueil : le nombre de réparations en cours, les 4 actions de tous les jours, puis ce qui demande de l'attention. */
 @Component({
   selector: 'app-accueil',
   imports: [FormsModule, RouterLink, ListeDossiers],
@@ -43,13 +43,6 @@ export class Accueil {
       },
       error: (err) => this.notifications.erreur(err),
     });
-  }
-
-  protected compte(n: number | undefined, aucun: string, un: string, plusieurs: string): string {
-    if (n === undefined) {
-      return '…';
-    }
-    return n === 0 ? aucun : `${n} ${n > 1 ? plusieurs : un}`;
   }
 
   protected chercher(): void {

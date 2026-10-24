@@ -4,6 +4,8 @@ import { Observable, map, shareReplay } from 'rxjs';
 import {
   Caisse,
   ChiffreAffaires,
+  Vente,
+  VenteRequest,
   ChangeStatutRequest,
   Client,
   ClientDetail,
@@ -129,6 +131,14 @@ export class ApiService {
 
   caisse(du: string, au: string): Observable<Caisse> {
     return this.http.get<Caisse>('/api/caisse', { params: params({ du, au }) });
+  }
+
+  enregistrerVente(req: VenteRequest): Observable<Vente> {
+    return this.http.post<Vente>('/api/ventes', req);
+  }
+
+  annulerVente(id: number): Observable<void> {
+    return this.http.delete<void>(`/api/ventes/${id}`);
   }
 
   chiffreAffaires(du: string, au: string): Observable<ChiffreAffaires> {

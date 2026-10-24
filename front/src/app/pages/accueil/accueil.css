@@ -1,70 +1,103 @@
-.gros-boutons {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 1rem;
+.bonjour {
+  margin-bottom: 1.25rem;
 }
 
-.gros-bouton {
+/* Le grand chiffre et les actions rondes, comme le solde dans Revolut */
+.solde {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.9rem;
-  min-height: 84px;
-  padding: 1rem 1.1rem;
-  background: var(--surface);
-  border: 2px solid var(--accent-bord);
-  border-radius: 12px;
+  justify-content: space-between;
+  gap: 1.5rem 2rem;
+  padding: 1.75rem 2rem;
+}
+
+.chiffre {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
   color: var(--texte);
   text-decoration: none;
-  box-shadow: var(--ombre);
-  transition: transform 0.08s, box-shadow 0.08s;
 }
 
-.gros-bouton:hover {
-  border-color: var(--accent);
-  background: var(--accent-clair);
-  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.14);
+.chiffre .montant {
+  font-size: 3rem;
+}
+
+.chiffre:hover .doux {
+  color: var(--accent);
+}
+
+.actions {
+  display: flex;
+  gap: 1.75rem;
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 76px;
+  color: var(--texte);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.rond {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--champ);
+  color: var(--texte);
+  transition: background 0.12s, transform 0.08s;
+}
+
+.action:hover .rond {
+  background: #e0e3e8;
   transform: translateY(-1px);
 }
 
-.gros-bouton strong {
-  display: block;
-  font-size: 1.15rem;
-}
-
-.gros-bouton small {
-  display: block;
-  margin-top: 0.15rem;
-  color: var(--texte-doux);
-  font-size: 0.92rem;
-}
-
-
-.gros-bouton-principal {
+.rond-principal {
   background: var(--accent);
-  border-color: var(--accent);
   color: #fff;
 }
 
-.gros-bouton-principal:hover {
+.action:hover .rond-principal {
   background: var(--accent-fonce);
-  border-color: var(--accent-fonce);
 }
 
-.gros-bouton-principal small {
-  color: #d6e4f3;
+.rond svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-
-.gros-bouton-ok {
-  border-color: #9fd0b2;
+.bulle {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 0.4rem;
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
 }
-
-.gros-bouton-ok:hover {
-  border-color: var(--ok);
-  background: var(--ok-clair);
-}
-
 
 .recherche {
   display: flex;
@@ -73,51 +106,44 @@
 }
 
 .recherche input {
-  min-height: 52px;
+  min-height: 54px;
+  background: var(--surface);
   font-size: 1.05rem;
-  border-width: 2px;
 }
 
 .recherche .btn {
-  min-height: 52px;
-  padding: 0 1.5rem;
-}
-
-.carte-alerte {
-  border-color: #e6c27a;
-  border-left: 5px solid #d98e04;
-}
-
-.carte-alerte > h2:first-child {
-  background: var(--alerte-clair);
-  color: #5e3a00;
-}
-
-@media (max-width: 1100px) {
-  .gros-boutons {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  min-height: 54px;
+  padding: 0 1.6rem;
 }
 
 @media (max-width: 720px) {
-  .gros-boutons {
-    gap: 0.6rem;
+  .solde {
+    padding: 1.25rem;
   }
 
-  .gros-bouton {
-    flex-direction: column;
-    align-items: flex-start;
+  .chiffre .montant {
+    font-size: 2.4rem;
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: space-between;
     gap: 0.5rem;
-    min-height: 0;
-    padding: 0.8rem;
   }
 
-  .gros-bouton strong {
-    font-size: 1rem;
+  .action {
+    min-width: 0;
+    flex: 1;
+    font-size: 0.8rem;
+    text-align: center;
   }
 
-  .gros-bouton small {
-    font-size: 0.82rem;
+  .rond {
+    width: 54px;
+    height: 54px;
   }
 
+  .recherche .btn {
+    display: none;
+  }
 }
