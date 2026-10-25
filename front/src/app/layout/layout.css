@@ -212,10 +212,23 @@ svg {
 
 .plus {
   display: inline-flex;
+  align-items: center;
   justify-content: center;
+  flex: none;
   width: 22px;
-  font-size: 1.25rem;
+  height: 22px;
+  font-size: 1.15rem;
   line-height: 1;
+}
+
+/* Croix dessinée plutôt que le caractère « + », qui n'est jamais pile au centre */
+.plus .croix {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
 }
 
 .menu nav {
@@ -458,6 +471,9 @@ svg {
   border-radius: 999px;
   background: var(--accent);
   color: #fff;
-  font-size: 1.4rem;
-  line-height: 1;
+}
+
+.nav-bas .plus .croix {
+  width: 20px;
+  height: 20px;
 }
