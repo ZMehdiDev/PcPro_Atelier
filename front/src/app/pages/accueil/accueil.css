@@ -46,6 +46,7 @@
 }
 
 .rond {
+  transition: background 0.15s, transform 0.25s var(--ressort), box-shadow 0.2s;
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -59,13 +60,102 @@
 }
 
 .action:hover .rond {
-  background: #e0e3e8;
-  transform: translateY(-1px);
+  background: var(--survol);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.action:active .rond {
+  transform: scale(0.94);
+}
+
+/* Chaque action a sa petite animation au survol */
+.rond svg {
+  transition: transform 0.35s var(--ressort);
+}
+
+.action-depot:hover svg {
+  transform: rotate(90deg) scale(1.1);
+}
+
+.action-vente:hover svg {
+  animation: balance 0.6s var(--ressort);
+}
+
+.action-rendre svg path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 0;
+}
+
+.action-rendre:hover svg path {
+  animation: trace 0.5s var(--ressort);
+}
+
+.action-miennes:hover svg {
+  animation: saut 0.5s var(--ressort);
+}
+
+@keyframes balance {
+  25% {
+    transform: rotate(-14deg);
+  }
+  60% {
+    transform: rotate(10deg);
+  }
+  85% {
+    transform: rotate(-4deg);
+  }
+}
+
+@keyframes trace {
+  from {
+    stroke-dashoffset: 24;
+  }
+}
+
+@keyframes saut {
+  40% {
+    transform: translateY(-5px);
+  }
+  70% {
+    transform: translateY(1px);
+  }
+}
+
+/* Les cartes arrivent l'une après l'autre */
+.page > * {
+  animation: entree 0.4s var(--ressort) both;
+}
+
+.page > :nth-child(2) {
+  animation-delay: 0.04s;
+}
+
+.page > :nth-child(3) {
+  animation-delay: 0.08s;
+}
+
+.page > :nth-child(4) {
+  animation-delay: 0.12s;
+}
+
+.page > :nth-child(5) {
+  animation-delay: 0.16s;
 }
 
 .rond-principal {
   background: var(--accent);
   color: #fff;
+}
+
+.bulle {
+  animation: bulle 0.5s 0.3s var(--ressort) both;
+}
+
+@keyframes bulle {
+  from {
+    transform: scale(0);
+  }
 }
 
 .action:hover .rond-principal {

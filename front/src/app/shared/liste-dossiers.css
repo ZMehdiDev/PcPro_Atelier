@@ -93,6 +93,20 @@ li:hover + li .rangee::before {
   font-size: 1.6rem;
   line-height: 1;
   color: var(--texte-doux);
+  transition: transform 0.25s var(--ressort), color 0.15s;
+}
+
+.rangee:hover .fleche {
+  transform: translateX(4px);
+  color: var(--texte);
+}
+
+.avatar-initiales {
+  transition: transform 0.25s var(--ressort);
+}
+
+.rangee:hover .avatar-initiales {
+  transform: scale(1.08);
 }
 
 .danger {

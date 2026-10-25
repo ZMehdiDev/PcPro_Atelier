@@ -28,15 +28,24 @@ import { NotificationService } from './core/notification.service';
       z-index: 1000;
     }
     .toast {
-      background: #1f2a36;
-      color: #fff;
-      padding: 0.8rem 1rem;
-      border-radius: 8px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+      background: var(--noir);
+      color: var(--sur-noir);
+      padding: 0.85rem 1.1rem;
+      border-radius: 16px;
+      font-weight: 500;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
       cursor: pointer;
+      animation: toast 0.3s var(--ressort);
     }
     .toast-erreur {
-      background: #9b1c12;
+      background: var(--danger);
+      color: #fff;
+    }
+    @keyframes toast {
+      from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.96);
+      }
     }
   `,
 })

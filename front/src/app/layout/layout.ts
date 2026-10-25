@@ -1,6 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/auth.service';
+import { ThemeService } from '../core/theme.service';
 
 const CLE_MENU = 'atelier.menuReplie';
 
@@ -22,6 +23,8 @@ function lireMenuReplie(): boolean {
 })
 export class Layout {
   protected readonly auth = inject(AuthService);
+  protected readonly theme = inject(ThemeService);
+  protected readonly sombre = computed(() => this.theme.theme() === 'dark');
   protected readonly replie = signal(lireMenuReplie());
 
   protected basculer(): void {

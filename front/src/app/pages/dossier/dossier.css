@@ -95,8 +95,9 @@
   height: 32px;
   border-radius: 50%;
   border: 2px solid var(--bordure-forte);
-  background: #fff;
+  background: var(--surface);
   font-weight: 700;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s var(--ressort);
 }
 
 .parcours .fait .pastille {
@@ -191,13 +192,17 @@
   cursor: pointer;
 }
 
+.onglet-dossier {
+  transition: background 0.15s, color 0.15s;
+}
+
 .onglet-dossier:hover {
-  background: #e3e6ea;
+  background: var(--survol);
 }
 
 .onglet-dossier.actif {
   background: var(--noir);
-  color: #fff;
+  color: var(--sur-noir);
 }
 
 .onglet-dossier .compteur {
@@ -212,8 +217,19 @@
 }
 
 .onglet-dossier.actif .compteur {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: color-mix(in srgb, currentColor 22%, transparent);
+  color: inherit;
+}
+
+/* L'étape en cours respire doucement */
+.parcours .actuelle .pastille {
+  animation: pouls 2.4s ease-in-out infinite;
+}
+
+@keyframes pouls {
+  50% {
+    box-shadow: 0 0 0 8px var(--accent-clair);
+  }
 }
 
 /* Contenu */

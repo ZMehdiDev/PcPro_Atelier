@@ -7,15 +7,12 @@
     [title]="replie() ? 'Afficher le menu' : 'Réduire le menu'"
     [attr.aria-label]="replie() ? 'Afficher le menu' : 'Réduire le menu'"
   >
-    {{ replie() ? '»' : '«' }}
+    <span class="chevrons" aria-hidden="true">«</span>
   </button>
 
   <a routerLink="/" class="logo" title="Accueil">
-    @if (replie()) {
-      PC
-    } @else {
-      Pc Pro <span>Atelier</span>
-    }
+    <span class="logo-court">PC</span>
+    <span class="logo-long">Pc Pro <span>Atelier</span></span>
   </a>
 
   <a routerLink="/depot" class="menu-depot" routerLinkActive="actif" title="Nouveau dépôt">
@@ -23,7 +20,7 @@
   </a>
 
   <a routerLink="/vente" class="menu-vente" routerLinkActive="actif" title="Vente au comptoir">
-    <span class="plus" aria-hidden="true">€</span> <span class="texte">Vente au comptoir</span>
+    <span class="plus piece" aria-hidden="true">€</span> <span class="texte">Vente au comptoir</span>
   </a>
 
   <nav>
@@ -57,6 +54,18 @@
   </nav>
 
 
+  <button type="button" class="menu-theme" (click)="theme.basculer($event)" [title]="sombre() ? 'Passer en mode clair' : 'Passer en mode sombre'">
+    <span class="icone-theme" aria-hidden="true">
+      @if (sombre()) {
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+      } @else {
+        <svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" /></svg>
+      }
+    </span>
+    <span class="texte">Mode sombre</span>
+    <span class="interrupteur texte" [class.allume]="sombre()" aria-hidden="true"><span></span></span>
+  </button>
+
   <a routerLink="/compte" class="menu-compte" routerLinkActive="actif" title="Mon compte">
     <span class="avatar">{{ auth.employe()?.prenom?.charAt(0) }}</span>
     <span class="texte">
@@ -69,9 +78,18 @@
 <!-- Téléphone : barre du haut + barre du bas -->
 <header class="barre masquer-ordi no-print">
   <a routerLink="/" class="logo">Pc Pro <span>Atelier</span></a>
-  <a routerLink="/compte" class="compte" title="Mon compte">
-    <span class="avatar">{{ auth.employe()?.prenom?.charAt(0) }}</span>
-  </a>
+  <span class="ligne">
+    <button type="button" class="theme-mobile" (click)="theme.basculer($event)" [attr.aria-label]="sombre() ? 'Passer en mode clair' : 'Passer en mode sombre'">
+      @if (sombre()) {
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+      } @else {
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" /></svg>
+      }
+    </button>
+    <a routerLink="/compte" class="compte" title="Mon compte">
+      <span class="avatar">{{ auth.employe()?.prenom?.charAt(0) }}</span>
+    </a>
+  </span>
 </header>
 
 <main>

@@ -3,24 +3,24 @@
 
   <section class="carte solde">
     <a routerLink="/dossiers" [queryParams]="{ vue: 'actifs' }" class="chiffre">
-      <span class="montant">{{ stats()?.actifs ?? '…' }}</span>
+      <span class="montant">{{ stats() ? compteur() : '…' }}</span>
       <span class="doux">réparations en cours à l'atelier ›</span>
     </a>
 
     <nav class="actions" aria-label="Actions">
-      <a routerLink="/depot" class="action">
+      <a routerLink="/depot" class="action action-depot">
         <span class="rond rond-principal">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
         </span>
         Nouveau dépôt
       </a>
-      <a routerLink="/vente" class="action">
+      <a routerLink="/vente" class="action action-vente">
         <span class="rond">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12.5V4h8.5L21 13.5 13.5 21z" /><circle cx="7.5" cy="8.5" r="1.5" /></svg>
         </span>
         Vente
       </a>
-      <a routerLink="/dossiers" [queryParams]="{ vue: 'prets' }" class="action">
+      <a routerLink="/dossiers" [queryParams]="{ vue: 'prets' }" class="action action-rendre">
         <span class="rond">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
           @if (stats()?.parStatut?.PRET; as n) {
@@ -29,7 +29,7 @@
         </span>
         Rendre
       </a>
-      <a routerLink="/dossiers" [queryParams]="{ vue: 'mes' }" class="action">
+      <a routerLink="/dossiers" [queryParams]="{ vue: 'mes' }" class="action action-miennes">
         <span class="rond">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></svg>
           @if (stats()?.mesDossiers; as n) {

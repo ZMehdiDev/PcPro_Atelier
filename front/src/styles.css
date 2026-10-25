@@ -19,6 +19,11 @@
   --accent-clair: #e7f0fd;
   --accent-bord: #b6cff7;
   --noir: #191c1f;
+  --noir-survol: #33383d;
+  --sur-noir: #ffffff;
+  --survol: #e3e6ea;
+  --verre: rgba(238, 240, 243, 0.9);
+  --verre-surface: rgba(255, 255, 255, 0.94);
   --danger: #d92d20;
   --danger-clair: #fdeceb;
   --ok: #068a55;
@@ -29,7 +34,38 @@
   --rayon-carte: 20px;
   --ombre: 0 1px 2px rgba(25, 28, 31, 0.04), 0 4px 16px rgba(25, 28, 31, 0.04);
   --largeur-menu: 248px;
+  --ressort: cubic-bezier(0.22, 1, 0.36, 1);
   color-scheme: light;
+}
+
+/* Mode sombre, façon Revolut : noir profond, cartes gris anthracite, texte blanc */
+:root[data-theme='dark'] {
+  --fond: #08090a;
+  --surface: #17181b;
+  --surface-douce: #1f2024;
+  --champ: #25272b;
+  --texte: #f4f5f6;
+  --texte-doux: #8f96a0;
+  --bordure: #26282d;
+  --bordure-forte: #393c42;
+  --accent: #3d8bff;
+  --accent-fonce: #2c78ec;
+  --accent-clair: #132744;
+  --accent-bord: #23497f;
+  --noir: #f4f5f6;
+  --noir-survol: #d7d9dc;
+  --sur-noir: #0b0c0e;
+  --survol: #2e3035;
+  --verre: rgba(8, 9, 10, 0.86);
+  --verre-surface: rgba(23, 24, 27, 0.92);
+  --danger: #ff5c50;
+  --danger-clair: #3a1614;
+  --ok: #17a36b;
+  --ok-clair: #0f2c20;
+  --alerte: #f2a93b;
+  --alerte-clair: #33260e;
+  --ombre: 0 0 0 1px rgba(255, 255, 255, 0.03);
+  color-scheme: dark;
 }
 
 *,
@@ -50,6 +86,34 @@ body {
   font-size: 16px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Les pages arrivent en glissant légèrement */
+.page {
+  animation: entree 0.32s var(--ressort) both;
+}
+
+@keyframes entree {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Changement de thème : le nouveau thème s'ouvre en cercle depuis le bouton */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 h1,
@@ -237,11 +301,11 @@ a {
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.12s, transform 0.06s;
+  transition: background 0.15s, transform 0.15s var(--ressort), box-shadow 0.15s;
 }
 
 .btn:hover {
-  background: #e3e6ea;
+  background: var(--survol);
 }
 
 .btn:active {
@@ -261,15 +325,18 @@ a {
 
 .btn-principal:hover {
   background: var(--accent-fonce);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .btn-noir {
   background: var(--noir);
-  color: #fff;
+  color: var(--sur-noir);
 }
 
 .btn-noir:hover {
-  background: #33383d;
+  background: var(--noir-survol);
+  transform: translateY(-1px);
 }
 
 .btn-danger {
@@ -278,7 +345,7 @@ a {
 }
 
 .btn-danger:hover {
-  background: #fad6d3;
+  background: color-mix(in srgb, var(--danger) 22%, var(--surface));
 }
 
 .btn-ok {
@@ -287,7 +354,9 @@ a {
 }
 
 .btn-ok:hover {
-  background: #05734a;
+  background: color-mix(in srgb, var(--ok) 85%, #000);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--ok) 35%, transparent);
 }
 
 .btn-lien {
@@ -368,7 +437,13 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--accent);
-  background: #fff;
+  background: var(--surface);
+}
+
+input,
+select,
+textarea {
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .btn:focus-visible,
@@ -413,13 +488,17 @@ input[type='radio'] {
   cursor: pointer;
 }
 
+.choix label {
+  transition: background 0.15s, color 0.15s, transform 0.15s var(--ressort);
+}
+
 .choix label:hover {
-  background: #e3e6ea;
+  background: var(--survol);
 }
 
 .choix label:has(input:checked) {
   background: var(--noir);
-  color: #fff;
+  color: var(--sur-noir);
   font-weight: 600;
 }
 
@@ -584,6 +663,7 @@ input[type='radio'] {
 /* Fenêtres de dialogue */
 
 dialog {
+  background: var(--surface);
   width: min(560px, calc(100vw - 1.5rem));
   max-height: calc(100dvh - 2rem);
   border: 0;
@@ -594,7 +674,18 @@ dialog {
 }
 
 dialog::backdrop {
-  background: rgba(25, 28, 31, 0.4);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+dialog[open] {
+  animation: apparition 0.24s var(--ressort);
+}
+
+@keyframes apparition {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
 }
 
 .dialogue-corps {
@@ -673,12 +764,14 @@ dialog::backdrop {
 }
 
 .onglets .btn:hover {
-  background: #e3e6ea;
+  background: var(--survol);
+  transform: none;
+  box-shadow: none;
 }
 
 .onglets .btn.btn-principal {
   background: var(--noir);
-  color: #fff;
+  color: var(--sur-noir);
 }
 
 .onglet .compteur {
@@ -693,8 +786,8 @@ dialog::backdrop {
 }
 
 .btn-principal .compteur {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: color-mix(in srgb, currentColor 22%, transparent);
+  color: inherit;
 }
 
 .filtres {
@@ -711,7 +804,7 @@ dialog::backdrop {
 
 .filtres input:focus,
 .filtres select:focus {
-  background: #fff;
+  background: var(--surface);
 }
 
 @media (max-width: 720px) {
@@ -759,5 +852,73 @@ dialog::backdrop {
 }
 
 .btn-blanc:hover {
-  background: #e3e6ea;
+  background: var(--survol);
+}
+
+/* Mode sombre : étiquettes et bandeaux en teintes transparentes, lisibles sur fond noir */
+:root[data-theme='dark'] .bandeau-alerte {
+  color: #f6cf8f;
+}
+
+:root[data-theme='dark'] .bandeau-danger {
+  color: #ffb4ad;
+}
+
+:root[data-theme='dark'] .bandeau-ok {
+  color: #8fe0b9;
+}
+
+:root[data-theme='dark'] .bandeau-info {
+  color: #a9c9ff;
+}
+
+:root[data-theme='dark'] .badge,
+:root[data-theme='dark'] .badge-RECU {
+  background: #2a2c31;
+  color: #c3c8cf;
+}
+
+:root[data-theme='dark'] .badge-DIAGNOSTIC {
+  background: rgba(61, 139, 255, 0.16);
+  color: #8dbbff;
+}
+
+:root[data-theme='dark'] .badge-ATTENTE_CLIENT,
+:root[data-theme='dark'] .badge-ATTENTE_PIECE {
+  background: rgba(242, 169, 59, 0.16);
+  color: #f6c370;
+}
+
+:root[data-theme='dark'] .badge-REPARATION {
+  background: rgba(150, 125, 255, 0.18);
+  color: #c0b2ff;
+}
+
+:root[data-theme='dark'] .badge-PRET {
+  background: rgba(23, 163, 107, 0.18);
+  color: #6fdcaa;
+}
+
+:root[data-theme='dark'] .badge-CLOTURE {
+  background: #222428;
+  color: #858c95;
+}
+
+:root[data-theme='dark'] .badge-danger {
+  background: rgba(255, 92, 80, 0.16);
+  color: #ff8a80;
+}
+
+:root[data-theme='dark'] .badge-alerte {
+  background: rgba(242, 169, 59, 0.16);
+  color: #f6c370;
+}
+
+:root[data-theme='dark'] .badge-ok {
+  background: rgba(23, 163, 107, 0.18);
+  color: #6fdcaa;
+}
+
+:root[data-theme='dark'] input[type='date'] {
+  color-scheme: dark;
 }

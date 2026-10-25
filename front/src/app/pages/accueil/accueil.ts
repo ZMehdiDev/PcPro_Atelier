@@ -35,6 +35,7 @@ export class Accueil {
     }).subscribe({
       next: (r) => {
         this.stats.set(r.stats);
+        this.compterJusqua(r.stats.actifs);
         const vus = new Set<number>();
         this.aSurveiller.set(
           [...r.nonRecuperes.content, ...r.enRetard.content].filter((d) => !vus.has(d.id) && vus.add(d.id)),
@@ -43,6 +44,26 @@ export class Accueil {
       },
       error: (err) => this.notifications.erreur(err),
     });
+  }
+
+  /** Le grand chiffre défile de 0 à sa valeur, comme un solde qui s'affiche. */
+  protected readonly compteur = signal(0);
+
+  private compterJusqua(cible: number): void {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.compteur.set(cible);
+      return;
+    }
+    const debut = performance.now();
+    const duree = 700;
+    const etape = (t: number) => {
+      const p = Math.min(1, (t - debut) / duree);
+      this.compteur.set(Math.round(cible * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) {
+        requestAnimationFrame(etape);
+      }
+    };
+    requestAnimationFrame(etape);
   }
 
   protected chercher(): void {

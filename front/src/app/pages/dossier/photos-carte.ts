@@ -78,7 +78,7 @@ async function reduire(fichier: File): Promise<Blob> {
       padding: 0;
       border: 1px solid var(--bordure);
       border-radius: 6px;
-      background: #eef1f4;
+      background: var(--champ);
       overflow: hidden;
       cursor: zoom-in;
     }
@@ -93,7 +93,7 @@ async function reduire(fichier: File): Promise<Blob> {
       width: 100%;
       max-height: 65dvh;
       object-fit: contain;
-      background: #f0f2f4;
+      background: var(--champ);
       border-radius: 6px;
       margin-bottom: 0.5rem;
     }
