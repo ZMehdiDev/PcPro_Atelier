@@ -162,8 +162,8 @@ public class ChiffreAffairesService {
     if (valeur == null) {
       return "";
     }
-    // Une cellule commençant par = + - @ serait exécutée comme une formule par le tableur
-    String v = valeur.matches("^[=+\\-@].*") ? "'" + valeur : valeur;
+    // Une cellule commençant par = + - @ (ou tabulation, retour chariot) serait lue comme une formule par le tableur
+    String v = valeur.matches("(?s)^[=+\\-@\t\r].*") ? "'" + valeur : valeur;
     return v.matches("(?s).*[;\"\\r\\n].*") ? "\"" + v.replace("\"", "\"\"") + "\"" : v;
   }
 }

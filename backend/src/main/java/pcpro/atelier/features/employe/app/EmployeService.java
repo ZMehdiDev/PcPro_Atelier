@@ -103,6 +103,13 @@ public class EmployeService {
     definirMotDePasse(employe, motDePasse);
   }
 
+  public void deconnecterPartout(Long id) {
+    Employe employe = employeRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Employé", id));
+    employe.setCredentialsChangedAt(OffsetDateTime.now(clock));
+    sessionService.fermerToutes(employe);
+  }
+
   /**
    * Change le mot de passe et déconnecte l'employé de tous ses appareils.
    */

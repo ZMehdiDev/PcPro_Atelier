@@ -83,7 +83,7 @@ public class SuiviService {
       tentatives.echec(cle, ip);
       throw new ResourceNotFoundException(INTROUVABLE);
     }
-    tentatives.succes(cle);
+    tentatives.succes(cle, ip);
     return dossier;
   }
 

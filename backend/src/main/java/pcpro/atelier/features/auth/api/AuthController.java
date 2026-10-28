@@ -70,7 +70,14 @@ public class AuthController {
       HttpServletRequest http
   ) {
     return avecCookie(authService.changerMotDePasse(
-        request.ancienMotDePasse(), request.nouveauMotDePasse(), http.getHeader(HttpHeaders.USER_AGENT)));
+        request.ancienMotDePasse(), request.nouveauMotDePasse(), http.getRemoteAddr(),
+        http.getHeader(HttpHeaders.USER_AGENT)));
+  }
+
+  /** Déconnecte tous les autres appareils de l'employé ; celui-ci reste connecté. */
+  @PostMapping("/deconnecter-autres-appareils")
+  public ResponseEntity<LoginResponse> deconnecterAutresAppareils(HttpServletRequest http) {
+    return avecCookie(authService.deconnecterAutresAppareils(http.getHeader(HttpHeaders.USER_AGENT)));
   }
 
   private ResponseEntity<LoginResponse> avecCookie(AuthService.Connexion connexion) {
