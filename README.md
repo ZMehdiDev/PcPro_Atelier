@@ -65,9 +65,11 @@ Au premier démarrage, le compte `APP_BOOTSTRAP_ADMIN_LOGIN` reçoit le mot de p
 | `APP_COOKIE_SECURE` | `false` seulement en local sans HTTPS (`true` par défaut). |
 | `APP_SWAGGER_ENABLED` | `true` pour exposer Swagger (désactivé par défaut). |
 | `APP_STORAGE_PHOTOS_DIRECTORY` | Dossier de stockage des photos. |
-| `APP_ATELIER_*` | Nom, adresse, téléphone, email et horaires de l'atelier (bon de dépôt, emails, suivi en ligne). |
+| `APP_ATELIER_*` | Identité imprimée sur les documents et dans les emails : `_NOM`, `_SLOGAN`, `_RAISON_SOCIALE` (nom légal du titulaire), `_BCE` (0895968808 par défaut), `_ADRESSE`, `_TELEPHONE`, `_EMAIL`, `_SITE_WEB`, `_HORAIRES`, `_IBAN` / `_BIC` (virement et QR code de paiement sur les factures), `_LOGO` (chemin d'un PNG/JPG, sinon logo dessiné). |
+| `APP_ATELIER_TVA_REGIME` | `FRANCHISE` (par défaut : petite entreprise, pas de TVA, mention légale sur les factures) ou `ASSUJETTI` (prix saisis TVAC, factures en HTVA / TVA / TVAC). Taux : `APP_ATELIER_TVA_TAUX` (21). |
+| `APP_DEVIS_VALIDITE_JOURS` | Durée de validité imprimée sur les devis (30). `APP_MENTION_FACTURE` : texte libre en bas des factures. |
 | `APP_URL_PUBLIQUE` | Adresse de l'appli pour les liens de suivi et le QR code (mise automatiquement en prod). |
-| `APP_GARANTIE_MOIS` | Garantie par défaut d'une réparation (3 mois). `APP_CONDITIONS_DEPOT` : texte en bas du bon de dépôt. |
+| `APP_GARANTIE_MOIS` | Garantie par défaut d'une réparation (3 mois). `APP_CONDITIONS_DEPOT` : conditions du bon de dépôt, une par ligne (vide : conditions par défaut). |
 | `SPRING_MAIL_HOST` / `_USERNAME` / `_PASSWORD`, `APP_MAIL_EXPEDITEUR` | Envoi des emails (SMTP, ex : Brevo `smtp-relay.brevo.com`). Vide = aucun email. |
 
 ## Front
@@ -81,6 +83,7 @@ Au premier démarrage, le compte `APP_BOOTSTRAP_ADMIN_LOGIN` reçoit le mot de p
 | **Réparations**, **Clients** | Listes avec filtres et recherche ; onglets avec compteurs et étapes cliquables. |
 | **Vente au comptoir** | Articles (raccourcis : protection d'écran, écouteurs, chargeur…), quantité, prix, prix d'achat facultatif, moyen de paiement. Compté dans la caisse et le chiffre d'affaires. |
 | **Caisse**, **Chiffre d'affaires**, **Employés** | Réservés aux admins. Chiffre d'affaires : par réparation rendue sur la période, encaissé, coût des pièces et marge, export CSV pour Excel. |
+| **Factures** | Réservé aux admins : factures et notes de crédit de la période (PDF, annulation par note de crédit) et journal des recettes en PDF pour le comptable. Une facture se fait depuis la fiche (onglet Devis et paiement) ou après une vente. |
 | **/suivi** | Page publique du client (QR code du bon de dépôt) : avancement, devis à accepter ou refuser, coordonnées de l'atelier. |
 
 Le token d'accès reste en mémoire ; le cookie de session (30 jours) le renouvelle au chargement et quand l'API répond 401.
@@ -96,7 +99,8 @@ Toutes les routes sauf `POST /api/auth/login|refresh|logout`, `GET /api/health` 
 |---|---|
 | **Connexion** | `POST /api/auth/login` → token (15 min) + cookie de session · `POST /api/auth/refresh` · `POST /api/auth/logout` · `GET /api/auth/moi` · `POST /api/auth/mot-de-passe` |
 | **Dossiers** | `POST /api/dossiers` · `GET /api/dossiers?q=&statut=&actifs=&priorite=&technicienId=&mesDossiers=&enRetard=&nonRecuperes=` · `GET /api/dossiers/stats` · `GET /api/dossiers/garanties?clientId=&numeroSerie=` · `GET/PUT /api/dossiers/{id}` · `PATCH /api/dossiers/{id}/statut` · `…/technicien` · `…/priorite` · `POST …/relance` · `GET …/bon-depot` (PDF, exemplaires client et atelier) |
-| **Devis** | `PUT /api/dossiers/{id}/devis` · `POST …/devis/decision` · `POST …/devis/envoi` (email) · `DELETE …/devis` |
+| **Devis** | `PUT /api/dossiers/{id}/devis` · `GET …/devis/pdf` · `POST …/devis/decision` · `POST …/devis/envoi` (email avec le PDF) · `DELETE …/devis` |
+| **Factures** | `POST /api/dossiers/{id}/facture` · `GET /api/dossiers/{id}/facture` · `POST /api/ventes/{id}/facture` · `GET /api/ventes/{id}/facture` · `GET /api/factures/{id}` · `GET …/pdf` · `POST …/envoi` (email) · admin : `GET /api/factures?du=&au=`, `POST /api/factures/{id}/annulation` (note de crédit), `GET /api/factures/journal?du=&au=` (PDF) |
 | **Paiements** | `POST /api/dossiers/{id}/paiements` · admin : `DELETE …/paiements/{paiementId}`, `GET /api/caisse?du=&au=`, `GET /api/chiffre-affaires?du=&au=`, `GET /api/chiffre-affaires/export?du=&au=` (CSV) |
 | **Ventes** | `POST /api/ventes` · admin : `DELETE /api/ventes/{id}` (caisse et chiffre d'affaires les incluent) |
 | **Suivi client** (public) | `GET /api/public/suivi/{reference}?code=` (ou `?telephone=`) · `POST /api/public/suivi/{reference}/devis` |
@@ -120,6 +124,14 @@ Toutes les routes sauf `POST /api/auth/login|refresh|logout`, `GET /api/health` 
   Un appareil qui revient (même n° de série, ou même client et même modèle) affiche ses garanties en cours.
 - **Suivi client** : sans compte, avec la référence et le code de suivi (QR code du bon de dépôt, liens des
   emails) ou le numéro de téléphone. Seul le code permet de répondre au devis. Essais ratés limités.
+- **Factures** : numérotées sans trou par année (`2026-0001`, notes de crédit `NC2026-0001`). Une facture
+  recopie le client, les lignes (devis accepté, sinon le montant encaissé ; articles pour une vente) et le régime
+  de TVA : elle ne change plus. Une erreur se corrige par une note de crédit, puis une nouvelle facture. Redemander
+  la facture d'un dossier renvoie celle qui existe. Une vente facturée ne se supprime plus. La facture d'une
+  réparation sert de bon de garantie ; s'il reste à payer, elle porte une communication structurée et un QR code
+  de virement (norme EPC, lu par les applis bancaires belges).
+- **Documents imprimés** : gabarits HTML dans `backend/src/main/resources/documents`, rendus en PDF A4 avec la
+  police Inter embarquée. `mvn test -Dtest=ApercuDocumentsTest` génère des exemples dans `target/apercus`.
 - **Pièces** : `A_COMMANDER → COMMANDEE → RECUE → MONTEE` (ou `ANNULEE`). Une pièce commandée met le
   dossier en `ATTENTE_PIECE` ; quand toutes les pièces attendues sont reçues, il repasse en `REPARATION`.
 - **Clients** : retrouvés par numéro de téléphone (normalisé : `0470 12 34 56` = `0470123456`).

@@ -7,6 +7,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.nio.charset.StandardCharsets;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
@@ -27,8 +30,12 @@ class BonDepotIntegrationTest extends IntegrationTest {
 
     assertThat(new String(pdf, 0, 5, StandardCharsets.ISO_8859_1)).isEqualTo("%PDF-");
     assertThat(pdf.length).isGreaterThan(2000);
-    // Exemplaire client + exemplaire atelier
-    assertThat(new String(pdf, StandardCharsets.ISO_8859_1)).contains("/Count 2");
+    // Exemplaire client + exemplaire atelier (avec l'étiquette à coller sur l'appareil)
+    try (PDDocument document = Loader.loadPDF(pdf)) {
+      assertThat(document.getNumberOfPages()).isEqualTo(2);
+      String texte = new PDFTextStripper().getText(document);
+      assertThat(texte).contains("Exemplaire client", "Exemplaire atelier", "Martin Dübois", "Étiquette à découper");
+    }
   }
 
   @Test

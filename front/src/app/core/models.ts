@@ -339,3 +339,32 @@ export interface DossierFiltres {
   size?: number;
   sort?: string;
 }
+
+export type TypeFacture = 'FACTURE' | 'NOTE_CREDIT';
+
+/** Facture ou note de crédit (total TVAC, négatif pour une note de crédit). */
+export interface Facture {
+  id: number;
+  type: TypeFacture;
+  numero: string;
+  dateEmission: string;
+  dossierId: number | null;
+  dossierReference: string | null;
+  venteId: number | null;
+  clientNom: string;
+  clientAdresse: string | null;
+  clientTva: string | null;
+  clientEmail: string | null;
+  total: number;
+  annuleePar: string | null;
+  factureOrigine: string | null;
+  createdAt: string;
+}
+
+/** Coordonnées du client à imprimer sur la facture (vides : celles de la fiche client). */
+export interface FactureRequest {
+  clientNom?: string | null;
+  clientAdresse?: string | null;
+  clientTva?: string | null;
+  clientEmail?: string | null;
+}

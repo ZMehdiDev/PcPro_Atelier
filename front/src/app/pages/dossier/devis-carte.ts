@@ -6,6 +6,7 @@ import { DatePipe, EurosPipe } from '../../core/formats';
 import { STATUT_DEVIS, TYPE_LIGNE } from '../../core/libelles';
 import { DossierDetail, LigneDevis, TypeLigneDevis } from '../../core/models';
 import { NotificationService } from '../../core/notification.service';
+import { ouvrirPdf } from '../../core/fichiers';
 import { Dialogue } from '../../shared/dialogue';
 
 interface LigneSaisie {
@@ -110,6 +111,12 @@ export class DevisCarte {
 
   protected envoyer(): void {
     this.executer(this.api.envoyerDevis(this.dossier().id), `Devis envoyé à ${this.dossier().client.email}`);
+  }
+
+  /** Devis en PDF, à imprimer ou à remettre au client. */
+  protected pdf(): void {
+    const d = this.dossier();
+    ouvrirPdf(this.api.devisPdf(d.id), `devis-${d.reference}.pdf`, (err) => this.notifications.erreur(err));
   }
 
   protected supprimer(): void {

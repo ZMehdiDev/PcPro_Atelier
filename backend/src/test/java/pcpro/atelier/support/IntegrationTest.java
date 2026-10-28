@@ -79,7 +79,7 @@ public abstract class IntegrationTest {
   @BeforeEach
   void resetDatabase() throws Exception {
     jdbcClient.sql("""
-        TRUNCATE evenement, note, photo, piece, devis_ligne, devis, paiement, vente_ligne, vente, dossier, client, reference_compteur, session_employe, employe
+        TRUNCATE facture_ligne, facture, facture_compteur, evenement, note, photo, piece, devis_ligne, devis, paiement, vente_ligne, vente, dossier, client, reference_compteur, session_employe, employe
         RESTART IDENTITY CASCADE
         """).update();
     loginAttemptService.reinitialiser();

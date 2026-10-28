@@ -12,6 +12,7 @@ import pcpro.atelier.core.util.Libelles;
 import pcpro.atelier.features.devis.domain.Devis;
 import pcpro.atelier.features.devis.domain.DevisLigne;
 import pcpro.atelier.features.dossier.domain.Dossier;
+import pcpro.atelier.features.facture.domain.Facture;
 
 /**
  * Contenu des emails envoyés aux clients. Sobre : quelques paragraphes, un lien de suivi, les coordonnées.
@@ -68,7 +69,8 @@ public class EmailTemplates {
     if (devis.getCommentaire() != null) {
       paragraphes.add(devis.getCommentaire());
     }
-    paragraphes.add("Total TTC : " + Libelles.montant(devis.total()) + ".");
+    paragraphes.add("Total" + (atelier.assujettiTva() ? " TVAC" : "") + " : " + Libelles.montant(devis.total())
+        + ". Le devis détaillé est joint en PDF.");
     paragraphes.add(lienSuivi(dossier) != null
         ? "Vous pouvez l'accepter ou le refuser en ligne avec le lien ci-dessous, ou nous répondre par téléphone."
         : "Merci de nous donner votre réponse par téléphone ou par retour d'email.");
@@ -82,6 +84,31 @@ public class EmailTemplates {
       });
     }
     return email(dossier, "Devis pour votre " + appareil(dossier), paragraphes, tableau);
+  }
+
+  /** Facture ou note de crédit en pièce jointe. */
+  public Email facture(Facture facture, String destinataire) {
+    String type = facture.estNoteCredit() ? "note de crédit" : "facture";
+    List<String> paragraphes = new ArrayList<>();
+    paragraphes.add("Veuillez trouver en pièce jointe votre " + type + " n° " + facture.getNumero()
+        + " du " + Libelles.DATE.format(facture.getDateEmission()) + " (" + Libelles.montant(facture.getTotal().abs()) + ").");
+    if (facture.getDossier() != null && !facture.estNoteCredit() && facture.getDossier().getFinGarantie() != null) {
+      paragraphes.add("Votre réparation est garantie jusqu'au "
+          + Libelles.DATE.format(facture.getDossier().getFinGarantie()) + " : conservez cette facture.");
+    }
+    paragraphes.add("Merci pour votre confiance.");
+    String salutation = "Bonjour " + facture.getClientNom() + ",";
+    String sujet = (facture.estNoteCredit() ? "Note de crédit " : "Facture ") + facture.getNumero() + " - " + atelier.nom();
+
+    StringBuilder texte = new StringBuilder(salutation).append("\n\n");
+    paragraphes.forEach(p -> texte.append(p).append("\n\n"));
+    texte.append("À bientôt,\n").append(signatureTexte());
+    StringBuilder html = new StringBuilder()
+        .append("<div style=\"font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#222;max-width:560px\">")
+        .append("<p>").append(e(salutation)).append("</p>");
+    paragraphes.forEach(p -> html.append("<p>").append(e(p)).append("</p>"));
+    html.append("<p>À bientôt,<br>").append(e(signatureTexte()).replace("\n", "<br>")).append("</p></div>");
+    return new Email(destinataire, sujet, texte.toString(), html.toString());
   }
 
   // ---------- Mise en forme ----------
