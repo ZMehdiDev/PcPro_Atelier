@@ -1,5 +1,21 @@
-# Reverse proxy HTTPS (certificat Let's Encrypt automatique pour APP_DOMAIN).
-{$APP_DOMAIN} {
+# Reverse proxy de l'appli : sert le front (Angular) et passe /api au backend.
+#
+# Deux façons de l'exposer (voir docker-compose.prod.yml et docker-compose.tunnel.yml) :
+# - ports 80/443 ouverts : CADDY_SITE = le domaine, Caddy obtient le certificat HTTPS tout seul ;
+# - Cloudflare Tunnel : CADDY_SITE = :80, Cloudflare fait le HTTPS et cloudflared parle à Caddy en http
+#   sur le réseau Docker. Aucun port n'est ouvert sur la box.
+{
+	servers {
+		# Vraie adresse du client : sans ça, derrière Cloudflare Tunnel, toutes les requêtes viendraient de
+		# cloudflared et le blocage anti brute-force bloquerait tout le monde d'un coup.
+		# Les en-têtes ne sont crus que venant d'un réseau privé (cloudflared dans Docker) : un client sur
+		# Internet qui les envoie lui-même est ignoré.
+		trusted_proxies static private_ranges
+		client_ip_headers CF-Connecting-IP X-Forwarded-For
+	}
+}
+
+{$CADDY_SITE} {
 	encode zstd gzip
 
 	header {
@@ -8,7 +24,13 @@
 		X-Frame-Options "DENY"
 		Referrer-Policy "same-origin"
 		# Caméra autorisée pour prendre les photos des appareils depuis le téléphone
-		Permissions-Policy "camera=(self), microphone=(), geolocation=()"
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=(), usb=()"
+		# Seuls les scripts, styles, polices et images du site lui-même. Les photos et PDF sont affichés
+		# via des blob: (téléchargés avec le token). 'unsafe-inline' pour les styles seulement (Angular).
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'self' blob:; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+		X-Robots-Tag "noindex, nofollow"
 		-Server
 	}
 
@@ -18,16 +40,20 @@
 	}
 
 	handle /api/* {
-		reverse_proxy backend:8080
+		reverse_proxy backend:8080 {
+			# Le backend lit l'adresse du client ici (un seul niveau, déjà vérifié par Caddy)
+			header_up X-Forwarded-For {client_ip}
+		}
 	}
 
 	# Front (application Angular) : toute autre URL renvoie index.html.
-	# Les fichiers JS/CSS ont un nom qui change à chaque version : gardés en cache, sauf index.html.
+	# Les fichiers JS/CSS dont le nom contient une empreinte (main-AB12CD34.js) changent de nom à chaque
+	# version : gardés en cache un an. Les autres (index.html, theme-init.js...) sont revérifiés à chaque fois.
 	handle {
-		@index not path_regexp \.(js|css|svg|ico|webmanifest)$
-		header @index Cache-Control "no-cache"
-		header /*.js Cache-Control "public, max-age=31536000, immutable"
-		header /*.css Cache-Control "public, max-age=31536000, immutable"
+		@empreinte path_regexp -[A-Z0-9]{8}\.(js|css|woff2)$
+		header @empreinte Cache-Control "public, max-age=31536000, immutable"
+		@autres not path_regexp -[A-Z0-9]{8}\.(js|css|woff2)$
+		header @autres Cache-Control "no-cache"
 		root * /srv/front
 		try_files {path} /index.html
 		file_server
