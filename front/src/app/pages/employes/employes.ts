@@ -6,6 +6,7 @@ import { AuthService } from '../../core/auth.service';
 import { Employe, Role } from '../../core/models';
 import { NotificationService } from '../../core/notification.service';
 import { Dialogue } from '../../shared/dialogue';
+import { teinte } from '../../core/libelles';
 
 /** Comptes des employés (admin). Un admin voit la caisse, annule un paiement, rouvre un dossier. */
 @Component({
@@ -15,13 +16,18 @@ import { Dialogue } from '../../shared/dialogue';
     <div class="page page-etroite">
       <div class="entete-page">
         <h1>Employés</h1>
-        <button class="btn btn-principal" (click)="nouveau()">+ Ajouter</button>
+        <button class="btn btn-principal" (click)="nouveau()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          Ajouter
+        </button>
       </div>
-      <div class="carte" style="padding: 0 1rem">
+      <div class="carte" style="padding: 0 1.25rem">
         <ul class="liste">
           @for (e of employes(); track e.id) {
             <li class="ligne ligne-espace">
-              <span [class.doux]="!e.actif">
+              <span class="ligne qui" [class.inactif]="!e.actif">
+                <span class="avatar-initiales" [style.--teinte]="teinte(e.prenom)" aria-hidden="true">{{ e.prenom.charAt(0) }}</span>
+                <span>
                 <strong>{{ e.prenom }}</strong>
                 <span class="doux"> · {{ e.login }}</span><br />
                 <span class="badge" [class.badge-ok]="e.role === 'ADMIN'">{{ e.role === 'ADMIN' ? 'Admin' : 'Technicien' }}</span>
@@ -31,6 +37,7 @@ import { Dialogue } from '../../shared/dialogue';
                 @if (!e.motDePasseDefini) {
                   <span class="badge badge-alerte">Sans mot de passe</span>
                 }
+                </span>
               </span>
               <span class="ligne">
                 <button class="btn btn-petit" (click)="modifier(e)">Modifier</button>
@@ -93,11 +100,25 @@ import { Dialogue } from '../../shared/dialogue';
       </div>
     </app-dialogue>
   `,
+  styles: `
+    .qui {
+      gap: 0.9rem;
+      flex-wrap: nowrap;
+    }
+    .qui .badge {
+      margin-top: 0.3rem;
+      margin-right: 0.25rem;
+    }
+    .inactif {
+      opacity: 0.55;
+    }
+  `,
 })
 export class Employes {
   private readonly api = inject(ApiService);
   private readonly notifications = inject(NotificationService);
   protected readonly auth = inject(AuthService);
+  protected readonly teinte = teinte;
 
   protected readonly employes = signal<Employe[]>([]);
   protected readonly dialogue = signal<'fiche' | 'mdp' | null>(null);

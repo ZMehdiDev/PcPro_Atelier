@@ -1,52 +1,127 @@
-.bonjour {
-  margin-bottom: 1.25rem;
+.salut {
+  margin-bottom: 1.4rem;
 }
 
-/* Le grand chiffre et les actions rondes, comme le solde dans Revolut */
+.salut .surtitre {
+  margin-bottom: 0.3rem;
+}
+
+.salut h1 {
+  margin: 0;
+  font-size: 2.6rem;
+}
+
+/* La carte « solde » : pleine couleur, comme la carte bancaire dans Belfius ou Revolut */
 .solde {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem 2rem;
-  padding: 1.75rem 2rem;
+  gap: 1.75rem 2rem;
+  margin-bottom: 1.25rem;
+  padding: 2rem 2.25rem;
+  border-radius: 24px;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(120, 170, 255, 0.35) 0%, transparent 55%),
+    radial-gradient(90% 120% at 0% 100%, rgba(8, 20, 45, 0.55) 0%, transparent 60%),
+    linear-gradient(135deg, #12346b 0%, #1d5fc9 100%);
+  box-shadow: 0 14px 36px rgba(18, 52, 107, 0.22);
+}
+
+/* Fines courbes en filigrane */
+.solde::after {
+  content: '';
+  position: absolute;
+  inset: auto -80px -160px auto;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 0 50px rgba(255, 255, 255, 0.03),
+    0 0 0 100px rgba(255, 255, 255, 0.025);
+  pointer-events: none;
+}
+
+:root[data-theme='dark'] .solde {
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(110, 160, 255, 0.22) 0%, transparent 55%),
+    linear-gradient(135deg, #0e2550 0%, #1a4fa6 100%);
+  box-shadow: none;
 }
 
 .chiffre {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  color: var(--texte);
+  gap: 0.2rem;
+  color: inherit;
   text-decoration: none;
 }
 
-.chiffre .montant {
-  font-size: 3rem;
+.chiffre .libelle {
+  font-size: 0.95rem;
+  font-weight: 550;
+  color: rgba(255, 255, 255, 0.78);
 }
 
-.chiffre:hover .doux {
-  color: var(--accent);
+.chiffre .montant {
+  font-size: 3.6rem;
+  letter-spacing: -0.045em;
+}
+
+.chiffre .resume {
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 500;
+}
+
+.chiffre .resume::after {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 0.5rem;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.25s var(--ressort);
+}
+
+.chiffre:hover .resume::after {
+  transform: translateX(4px) rotate(45deg) translateY(-2px);
+}
+
+.chargement-chiffre {
+  width: 110px;
+  height: 58px;
+  margin: 0.2rem 0 0.3rem;
+  opacity: 0.25;
 }
 
 .actions {
+  position: relative;
+  z-index: 1;
   display: flex;
-  gap: 1.75rem;
+  gap: 1.6rem;
 }
 
 .action {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
   min-width: 76px;
-  color: var(--texte);
+  color: #fff;
   font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
 }
 
 .rond {
-  transition: background 0.15s, transform 0.25s var(--ressort), box-shadow 0.2s;
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -54,23 +129,44 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: var(--champ);
-  color: var(--texte);
-  transition: background 0.12s, transform 0.08s;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  color: #fff;
+  transition:
+    background 0.15s,
+    transform 0.25s var(--ressort),
+    box-shadow 0.2s;
 }
 
 .action:hover .rond {
-  background: var(--survol);
+  background: rgba(255, 255, 255, 0.24);
   transform: translateY(-3px);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
 }
 
 .action:active .rond {
   transform: scale(0.94);
 }
 
+.rond-principal {
+  background: #fff;
+  color: #1d5fc9;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.action:hover .rond-principal {
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
 /* Chaque action a sa petite animation au survol */
 .rond svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   transition: transform 0.35s var(--ressort);
 }
 
@@ -122,33 +218,21 @@
   }
 }
 
-/* Les cartes arrivent l'une après l'autre */
-.page > * {
-  animation: entree 0.4s var(--ressort) both;
-}
-
-.page > :nth-child(2) {
-  animation-delay: 0.04s;
-}
-
-.page > :nth-child(3) {
-  animation-delay: 0.08s;
-}
-
-.page > :nth-child(4) {
-  animation-delay: 0.12s;
-}
-
-.page > :nth-child(5) {
-  animation-delay: 0.16s;
-}
-
-.rond-principal {
-  background: var(--accent);
-  color: #fff;
-}
-
 .bulle {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 0.4rem;
+  border: 2px solid #1a55b5;
+  border-radius: 999px;
+  background: #e5484d;
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
   animation: bulle 0.5s 0.3s var(--ressort) both;
 }
 
@@ -158,35 +242,25 @@
   }
 }
 
-.action:hover .rond-principal {
-  background: var(--accent-fonce);
+/* Les cartes arrivent l'une après l'autre */
+.page > * {
+  animation: entree 0.42s var(--ressort) both;
 }
 
-.rond svg {
-  width: 26px;
-  height: 26px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.page > :nth-child(2) {
+  animation-delay: 0.05s;
 }
 
-.bulle {
-  position: absolute;
-  top: -4px;
-  right: -6px;
-  min-width: 24px;
-  height: 24px;
-  padding: 0 0.4rem;
-  border: 2px solid var(--surface);
-  border-radius: 999px;
-  background: var(--danger);
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 700;
-  line-height: 20px;
-  text-align: center;
+.page > :nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.page > :nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+.page > :nth-child(5) {
+  animation-delay: 0.2s;
 }
 
 .recherche {
@@ -196,29 +270,40 @@
 }
 
 .recherche input {
-  min-height: 54px;
-  background: var(--surface);
+  min-height: 56px;
+  border-radius: 16px;
   font-size: 1.05rem;
 }
 
 .recherche .btn {
-  min-height: 54px;
-  padding: 0 1.6rem;
+  min-height: 56px;
+  padding: 0 1.75rem;
+}
+
+.compteur-alerte {
+  background: var(--alerte-clair);
+  color: var(--alerte);
 }
 
 @media (max-width: 720px) {
+  .salut h1 {
+    font-size: 2.1rem;
+  }
+
   .solde {
-    padding: 1.25rem;
+    padding: 1.4rem 1.25rem 1.25rem;
+    border-radius: 22px;
+    gap: 1.4rem;
   }
 
   .chiffre .montant {
-    font-size: 2.4rem;
+    font-size: 3rem;
   }
 
   .actions {
     width: 100%;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.25rem;
   }
 
   .action {

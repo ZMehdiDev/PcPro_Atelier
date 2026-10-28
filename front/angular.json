@@ -52,6 +52,7 @@
             ],
             "styles": [
               "@fontsource-variable/inter/index.css",
+              "@fontsource-variable/newsreader/opsz.css",
               "src/styles.css"
             ]
           },
@@ -65,7 +66,7 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "8kB",
+                  "maximumWarning": "12kB",
                   "maximumError": "16kB"
                 }
               ],

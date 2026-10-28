@@ -87,14 +87,16 @@ Au premier démarrage, le compte `APP_BOOTSTRAP_ADMIN_LOGIN` reçoit le mot de p
 
 | Écran | Rôle |
 |---|---|
-| **Cadre** | Plein écran, menu fixe à gauche sur ordinateur ; barres en haut et en bas sur téléphone. Tout ce qui est cliquable a l'air d'un bouton. |
+| **Cadre** | Plein écran, menu fixe à gauche sur ordinateur ; barres en haut et en bas sur téléphone. Tout ce qui est cliquable a un contour ou une flèche. Mode clair et sombre. |
+| **Recherche rapide** | `Ctrl+K` (ou `/`, ou la loupe sur téléphone) depuis n'importe quel écran : réparations, clients, pages, derniers dossiers ouverts. Flèches et Entrée au clavier. |
 | **Accueil** | 4 gros boutons (Nouveau dépôt, Rendre un appareil, Mes réparations, Tout l'atelier) avec leurs compteurs, recherche, remises en retard (si il y en a), mes réparations. |
-| **Nouveau dépôt** | Client retrouvé par téléphone ou nom, appareil, problème, accessoires, date promise. Alerte si une garantie est en cours. Puis le bon de dépôt à imprimer. |
+| **Nouveau dépôt** | Client retrouvé par téléphone ou nom, appareil, problème, accessoires, date promise. Alerte si une garantie est en cours. Récapitulatif toujours visible à droite avec le bouton d'enregistrement. Puis le bon de dépôt à imprimer. |
 | **Fiche dossier** | Avancement en 5 étapes, encadré « Que faire maintenant ? » avec l'étape suivante en un clic (« Commencer le diagnostic », « C'est prêt », « Rendre au client » avec encaissement et garantie). Le reste en onglets : Résumé (infos, technicien, priorité, suivi en ligne), Devis et paiement, Pièces, Notes et photos (notes sensibles masquées, photos réduites avant l'envoi), Historique. |
 | **Réparations**, **Clients** | Listes avec filtres et recherche ; onglets avec compteurs et étapes cliquables. |
-| **Vente au comptoir** | Articles (raccourcis : protection d'écran, écouteurs, chargeur…), quantité, prix, prix d'achat facultatif, moyen de paiement. Compté dans la caisse et le chiffre d'affaires. |
-| **Caisse**, **Chiffre d'affaires**, **Employés** | Réservés aux admins. Chiffre d'affaires : par réparation rendue sur la période, encaissé, coût des pièces et marge, export CSV pour Excel. |
+| **Vente au comptoir** | Articles (raccourcis : protection d'écran, écouteurs, chargeur…), quantité, prix, prix d'achat facultatif ; ticket à droite avec le total et le moyen de paiement. Compté dans la caisse et le chiffre d'affaires. |
+| **Caisse**, **Chiffre d'affaires**, **Employés** | Réservés aux admins. Chiffre d'affaires : graphique de l'encaissé par jour, semaine ou mois, puis par réparation rendue sur la période, encaissé, coût des pièces et marge, export CSV pour Excel. |
 | **Factures** | Réservé aux admins : factures et notes de crédit de la période (PDF, annulation par note de crédit) et journal des recettes en PDF pour le comptable. Une facture se fait depuis la fiche (onglet Devis et paiement) ou après une vente. |
+| **Connexion** | Panneau aux couleurs de Pc Pro sur ordinateur, mot de passe affichable. |
 | **/suivi** | Page publique du client (QR code du bon de dépôt) : avancement, devis à accepter ou refuser, coordonnées de l'atelier. |
 
 Le token d'accès reste en mémoire ; le cookie de session (30 jours) le renouvelle au chargement et quand l'API répond 401.

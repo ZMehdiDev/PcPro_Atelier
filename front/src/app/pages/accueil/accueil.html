@@ -1,10 +1,28 @@
 <div class="page">
-  <h1 class="bonjour">Bonjour {{ auth.employe()?.prenom }}</h1>
+  <header class="salut">
+    <p class="surtitre">{{ dateDuJour }}</p>
+    <h1>Bonjour {{ auth.employe()?.prenom }}</h1>
+  </header>
 
-  <section class="carte solde">
+  <!-- Carte « solde » en bleu Pc Pro : le nombre de réparations et les 4 actions de tous les jours -->
+  <section class="solde">
     <a routerLink="/dossiers" [queryParams]="{ vue: 'actifs' }" class="chiffre">
-      <span class="montant">{{ stats() ? compteur() : '…' }}</span>
-      <span class="doux">réparations en cours à l'atelier ›</span>
+      <span class="libelle">Réparations en cours</span>
+      @if (stats(); as s) {
+        <span class="montant">{{ compteur() }}</span>
+        <span class="resume">
+          @if (s.parStatut.PRET) {
+            {{ s.parStatut.PRET }} prête{{ s.parStatut.PRET > 1 ? 's' : '' }} à rendre
+          } @else {
+            Rien à rendre pour l'instant
+          }
+          @if (s.enRetard) {
+            · {{ s.enRetard }} en retard
+          }
+        </span>
+      } @else {
+        <span class="squelette chargement-chiffre"></span>
+      }
     </a>
 
     <nav class="actions" aria-label="Actions">
@@ -45,6 +63,7 @@
     <input
       name="q"
       type="search"
+      class="avec-loupe"
       [(ngModel)]="recherche"
       placeholder="Chercher un client, un téléphone, une référence…"
       enterkeyhint="search"
@@ -55,11 +74,15 @@
   @if (aSurveiller().length > 0) {
     <section class="carte">
       <h2>
-        <span>À régler <span class="badge badge-alerte">{{ aSurveiller().length }}</span></span>
+        <span class="ligne">À régler <span class="compteur compteur-alerte">{{ aSurveiller().length }}</span></span>
         @if (stats(); as s) {
           <span class="ligne masquer-mobile">
-            <a routerLink="/dossiers" [queryParams]="{ vue: 'nonrecuperes' }" class="btn btn-petit">{{ s.nonRecuperes }} pas récupérés</a>
-            <a routerLink="/dossiers" [queryParams]="{ vue: 'retard' }" class="btn btn-petit">{{ s.enRetard }} en retard</a>
+            @if (s.nonRecuperes) {
+              <a routerLink="/dossiers" [queryParams]="{ vue: 'nonrecuperes' }" class="btn btn-petit">{{ s.nonRecuperes }} pas récupéré{{ s.nonRecuperes > 1 ? 's' : '' }}</a>
+            }
+            @if (s.enRetard) {
+              <a routerLink="/dossiers" [queryParams]="{ vue: 'retard' }" class="btn btn-petit">{{ s.enRetard }} en retard</a>
+            }
           </span>
         }
       </h2>
@@ -72,6 +95,10 @@
       Mes réparations
       <a routerLink="/dossiers" [queryParams]="{ vue: 'mes' }" class="btn btn-petit">Tout voir</a>
     </h2>
-    <app-liste-dossiers [dossiers]="mesDossiers()" vide="Aucune réparation ne vous est assignée pour l'instant." />
+    <app-liste-dossiers
+      [dossiers]="mesDossiers()"
+      [chargement]="!stats()"
+      vide="Aucune réparation ne vous est assignée pour l'instant."
+    />
   </section>
 </div>
