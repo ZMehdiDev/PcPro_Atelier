@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.0.8</version>
+    <version>4.1.2</version>
     <relativePath/>
   </parent>
 
@@ -22,7 +22,7 @@
 
   <properties>
     <java.version>21</java.version>
-    <springdoc.version>3.0.3</springdoc.version>
+    <springdoc.version>3.2.0</springdoc.version>
   </properties>
 
   <dependencies>
@@ -42,7 +42,7 @@
     <dependency>
       <groupId>io.github.openhtmltopdf</groupId>
       <artifactId>openhtmltopdf-pdfbox</artifactId>
-      <version>1.1.80</version>
+      <version>1.1.100</version>
     </dependency>
     <dependency>
       <groupId>org.thymeleaf</groupId>
@@ -51,7 +51,7 @@
     <dependency>
       <groupId>com.google.zxing</groupId>
       <artifactId>core</artifactId>
-      <version>3.5.3</version>
+      <version>3.5.4</version>
     </dependency>
 
     <!-- Validation for DTOs -->
