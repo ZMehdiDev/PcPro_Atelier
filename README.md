@@ -38,18 +38,28 @@ cd backend && ./mvnw test
 ## Déployer
 
 L'appli est faite pour être accessible depuis l'atelier, la maison ou un téléphone, en HTTPS.
-Il faut une machine allumée en permanence (serveur à l'atelier ou petit VPS), un nom de domaine
-(ex : `atelier.pcpro-services.be`) qui pointe vers elle, et les ports 80/443 ouverts.
+Il faut une machine allumée en permanence (serveur à l'atelier ou petit VPS) et un nom de domaine
+(ex : `atelier.pcpro-services.be`). La check-list complète de mise en ligne est dans
+[docs/SECURITE.md](docs/SECURITE.md).
+
+Avec **Cloudflare Tunnel** (recommandé pour un serveur à l'atelier : aucun port à ouvrir sur la box) :
 
 ```bash
-cp .env.example .env    # APP_DOMAIN, POSTGRES_PASSWORD, APP_JWT_SECRET et APP_BOOTSTRAP_ADMIN_PASSWORD
+cp .env.example .env    # APP_DOMAIN, POSTGRES_PASSWORD, APP_JWT_SECRET, APP_BOOTSTRAP_ADMIN_PASSWORD, CLOUDFLARE_TUNNEL_TOKEN
+cd infra && docker compose --env-file ../.env -f docker-compose.prod.yml -f docker-compose.tunnel.yml up -d --build
+```
+
+Sans tunnel (le domaine pointe vers la machine, ports 80/443 ouverts) :
+
+```bash
 cd infra && docker compose --env-file ../.env -f docker-compose.prod.yml up -d --build
 ```
 
-- **Caddy** obtient le certificat HTTPS tout seul et sert le front (construit dans son image depuis `front/`) et l'API
-  (`/api`) sur le même domaine. Le backend et PostgreSQL ne sont pas exposés.
-- **Sauvegarde** de la base chaque nuit dans `infra/backups` (14 jours gardés). À copier ailleurs
-  régulièrement, comme le volume `photos_data`.
+- **Caddy** sert le front (construit dans son image depuis `front/`) et l'API (`/api`) sur le même domaine,
+  avec les en-têtes de sécurité (CSP...). Sans tunnel, il obtient le certificat HTTPS tout seul.
+  Le backend et PostgreSQL ne sont pas exposés.
+- **Sauvegarde** chaque nuit dans `infra/backups` : la base (14 jours gardés) et une copie des photos.
+  À copier aussi hors de l'atelier (voir docs/SECURITE.md).
 - `docker-compose.dev.yml` lance la même chose en local, sans HTTPS.
 
 Au premier démarrage, le compte `APP_BOOTSTRAP_ADMIN_LOGIN` reçoit le mot de passe
@@ -59,6 +69,7 @@ Au premier démarrage, le compte `APP_BOOTSTRAP_ADMIN_LOGIN` reçoit le mot de p
 | Variable | Rôle |
 |---|---|
 | `APP_DOMAIN` | Domaine public (compose de prod). |
+| `CLOUDFLARE_TUNNEL_TOKEN` | Token du tunnel Cloudflare (avec `docker-compose.tunnel.yml`). |
 | `APP_JWT_SECRET` | Clé de signature des tokens (32 caractères minimum). **Obligatoire**, l'appli refuse de démarrer sans. |
 | `APP_BOOTSTRAP_ADMIN_LOGIN` / `_PASSWORD` | Premier compte admin (n'écrase jamais un mot de passe existant). |
 | `APP_CORS_ALLOWED_ORIGINS` | URL(s) du front si elles diffèrent de l'API (inutile en prod derrière Caddy). |

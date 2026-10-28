@@ -77,8 +77,10 @@ app:
     refresh-ttl: 30d
     # Cookie de session envoyé uniquement en HTTPS (désactivé en dev, où tout est en http)
     cookie-secure: ${APP_COOKIE_SECURE:true}
+    # Anti brute-force : échecs tolérés sur un login depuis une IP, depuis une IP, et sur un login au total
     login-max-echecs: 5
     login-max-echecs-par-ip: 20
+    login-max-echecs-par-compte: 50
     login-blocage: 15m
     # Origines du front autorisées, séparées par des virgules (ex : http://localhost:4200)
     cors-allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:}

@@ -1,0 +1,21 @@
+# Propose les mises à jour des dépendances une fois par mois (failles de sécurité corrigées en amont).
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /backend
+    schedule:
+      interval: monthly
+    groups:
+      backend:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /front
+    schedule:
+      interval: monthly
+    groups:
+      front:
+        patterns: ["*"]
+  - package-ecosystem: docker
+    directories: ["/backend", "/front"]
+    schedule:
+      interval: monthly

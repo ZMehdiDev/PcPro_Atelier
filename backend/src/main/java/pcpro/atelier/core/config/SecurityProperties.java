@@ -14,8 +14,11 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * @param jwtTtl               durée de validité d'un token d'accès (court : il est renouvelé via le refresh token)
  * @param refreshTtl           durée d'une session "rester connecté" sans utilisation (prolongée à chaque usage)
  * @param cookieSecure         cookie de session envoyé uniquement en HTTPS (désactiver seulement en dev sur http)
- * @param loginMaxEchecs       nombre d'échecs de connexion avant blocage temporaire du login
+ * @param loginMaxEchecs       nombre d'échecs sur un login depuis une même adresse IP avant blocage temporaire
  * @param loginMaxEchecsParIp  nombre d'échecs depuis une même adresse IP (tous logins confondus) avant blocage
+ * @param loginMaxEchecsParCompte nombre d'échecs sur un login, toutes adresses IP confondues, avant blocage
+ *                             (attaque répartie sur beaucoup d'adresses ; plus haut pour qu'un inconnu ne puisse
+ *                             pas facilement bloquer le compte de quelqu'un)
  * @param loginBlocage         durée du blocage après trop d'échecs
  * @param corsAllowedOrigins   origines autorisées pour le front (ex : http://localhost:4200)
  */
@@ -27,6 +30,7 @@ public record SecurityProperties(
     @DefaultValue("true") boolean cookieSecure,
     @DefaultValue("5") int loginMaxEchecs,
     @DefaultValue("20") int loginMaxEchecsParIp,
+    @DefaultValue("50") int loginMaxEchecsParCompte,
     @DefaultValue("15m") Duration loginBlocage,
     @DefaultValue List<String> corsAllowedOrigins
 ) {

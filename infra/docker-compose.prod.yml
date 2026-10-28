@@ -1,13 +1,26 @@
 # Production : l'appli accessible depuis l'atelier, la maison ou un téléphone, en HTTPS.
 #
-# Lancer depuis le dossier infra :  docker compose --env-file ../.env -f docker-compose.prod.yml up -d --build
+# Avec Cloudflare Tunnel (recommandé : aucun port à ouvrir sur la box), voir docker-compose.tunnel.yml :
+#   docker compose --env-file ../.env -f docker-compose.prod.yml -f docker-compose.tunnel.yml up -d --build
 #
-# Prérequis : un nom de domaine (APP_DOMAIN, ex : atelier.pcpro-services.be) qui pointe vers la machine,
-# et les ports 80 et 443 ouverts vers elle. Caddy obtient et renouvelle le certificat HTTPS tout seul.
+# Sans tunnel (ports 80 et 443 de la box redirigés vers la machine, APP_DOMAIN pointe vers elle) :
+#   docker compose --env-file ../.env -f docker-compose.prod.yml up -d --build
+# Caddy obtient et renouvelle alors le certificat HTTPS tout seul.
 #
-# Seul Caddy est exposé sur Internet. Le backend et PostgreSQL restent sur le réseau Docker interne.
+# Seul Caddy est exposé. Le backend et PostgreSQL restent sur le réseau Docker interne.
+# Check-list de mise en ligne : docs/SECURITE.md
+
+# Journaux limités en taille : sinon ils finissent par remplir le disque du serveur
+x-journaux: &journaux
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
 services:
   caddy:
+    <<: *journaux
     # Caddy avec le front (application Angular) construit dedans
     build:
       context: ../front
@@ -20,17 +33,24 @@ services:
       - "443:443"
       - "443:443/udp"
     environment:
-      APP_DOMAIN: ${APP_DOMAIN:?APP_DOMAIN doit être défini dans .env}
+      CADDY_SITE: ${APP_DOMAIN:?APP_DOMAIN doit être défini dans .env}
+    security_opt:
+      - no-new-privileges:true
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
 
   backend:
+    <<: *journaux
     build:
       context: ../backend
     container_name: atelier-backend
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     depends_on:
       postgres:
         condition: service_healthy
@@ -61,9 +81,12 @@ services:
       - photos_data:/app/uploads
 
   postgres:
+    <<: *journaux
     image: postgres:16
     container_name: atelier-postgres
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -76,12 +99,16 @@ services:
       timeout: 5s
       retries: 5
 
-  # Sauvegarde de la base chaque nuit dans infra/backups (14 jours gardés).
-  # Penser à copier ce dossier ailleurs (disque externe, cloud) de temps en temps.
+  # Sauvegarde chaque nuit dans infra/backups : la base (14 jours gardés) et une copie des photos.
+  # Les fichiers contiennent les données des clients : lisibles seulement par root sur le serveur.
+  # Ce dossier doit aussi être copié hors de l'atelier (vol, incendie, disque mort) : voir docs/SECURITE.md.
   backup:
+    <<: *journaux
     image: postgres:16
     container_name: atelier-backup
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       postgres:
         condition: service_healthy
@@ -92,13 +119,18 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./backups:/backups
+      - photos_data:/photos:ro
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
+        umask 077
+        chmod 700 /backups
         while true; do
           fichier=/backups/atelier-$$(date +%F).dump
           pg_dump --format=custom --file="$$fichier.tmp" && mv "$$fichier.tmp" "$$fichier" && echo "Sauvegarde OK : $$fichier"
           find /backups -name 'atelier-*.dump' -mtime +14 -delete
+          # Photos : copie des nouvelles seulement (une photo supprimée dans l'appli reste dans la copie)
+          mkdir -p /backups/photos && cp -R -u /photos/. /backups/photos/ && echo "Photos copiées"
           sleep 86400
         done
 

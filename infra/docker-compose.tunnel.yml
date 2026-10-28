@@ -1,0 +1,34 @@
+# Mise en ligne par Cloudflare Tunnel : à ajouter à docker-compose.prod.yml.
+#
+#   docker compose --env-file ../.env -f docker-compose.prod.yml -f docker-compose.tunnel.yml up -d --build
+#
+# Le serveur de l'atelier ouvre lui-même une connexion sortante vers Cloudflare : aucun port à ouvrir
+# sur la box, l'adresse IP de l'atelier reste cachée, et Cloudflare fournit le certificat HTTPS.
+#
+# Côté Cloudflare (Zero Trust > Networks > Tunnels) : créer un tunnel, copier son token dans .env
+# (CLOUDFLARE_TUNNEL_TOKEN), puis ajouter un "Public hostname" : APP_DOMAIN -> HTTP -> caddy:80.
+# Réglages conseillés côté Cloudflare : docs/SECURITE.md.
+services:
+  caddy:
+    # Plus aucun port publié : seul cloudflared parle à Caddy, sur le réseau Docker
+    ports: !reset []
+    environment:
+      # Caddy en http simple : le HTTPS est fait par Cloudflare
+      CADDY_SITE: ":80"
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: atelier-cloudflared
+    restart: unless-stopped
+    depends_on:
+      - caddy
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?CLOUDFLARE_TUNNEL_TOKEN doit être défini dans .env}
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

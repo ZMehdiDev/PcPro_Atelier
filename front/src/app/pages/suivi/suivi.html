@@ -39,6 +39,12 @@
           <dd>{{ s.finGarantie | date }}</dd>
         }
       </dl>
+      @if (s.montantsMasques) {
+        <p class="doux petit">
+          Pour voir le devis et le montant à payer, ouvrez le lien de votre email ou scannez le QR code de
+          votre bon de dépôt.
+        </p>
+      }
     </section>
 
     @if (s.devis; as d) {

@@ -1,5 +1,10 @@
 package pcpro.atelier.features.auth.app;
 
+import java.time.Clock;
+import java.time.OffsetDateTime;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +25,8 @@ import pcpro.atelier.features.employe.infra.EmployeRepository;
 @Transactional
 public class AuthService {
 
+  private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
   /**
    * Résultat d'une connexion : le token d'accès (renvoyé en JSON) et le refresh token
    * (posé en cookie HttpOnly par le contrôleur, jamais exposé au JavaScript).
@@ -34,6 +41,7 @@ public class AuthService {
   private final SessionService sessionService;
   private final LoginAttemptService loginAttemptService;
   private final CurrentEmploye currentEmploye;
+  private final Clock clock;
 
   // Hash factice : un login inconnu coûte le même temps qu'un mauvais mot de passe (pas d'énumération)
   private final String hashFactice;
@@ -45,7 +53,8 @@ public class AuthService {
       JwtService jwtService,
       SessionService sessionService,
       LoginAttemptService loginAttemptService,
-      CurrentEmploye currentEmploye
+      CurrentEmploye currentEmploye,
+      Clock clock
   ) {
     this.employeRepository = employeRepository;
     this.employeService = employeService;
@@ -54,12 +63,14 @@ public class AuthService {
     this.sessionService = sessionService;
     this.loginAttemptService = loginAttemptService;
     this.currentEmploye = currentEmploye;
+    this.clock = clock;
     this.hashFactice = passwordEncoder.encode("mot-de-passe-factice");
   }
 
   public Connexion login(String loginSaisi, String motDePasse, String ip, String userAgent) {
     String login = EmployeService.normaliserLogin(loginSaisi);
     if (loginAttemptService.estBloque(login, ip)) {
+      log.warn("Connexion refusée (bloquée) : login={} ip={}", LoginAttemptService.nettoyer(login), ip);
       throw new TooManyRequestsException("Trop de tentatives échouées, réessayez dans quelques minutes");
     }
 
@@ -73,10 +84,12 @@ public class AuthService {
 
     if (!ok || !employe.isActif()) {
       loginAttemptService.echec(login, ip);
+      log.warn("Échec de connexion : login={} ip={}", LoginAttemptService.nettoyer(login), ip);
       throw new BadCredentialsException("Login ou mot de passe incorrect");
     }
 
-    loginAttemptService.succes(login);
+    loginAttemptService.succes(login, ip);
+    log.info("Connexion : employé {} ({}) depuis {}", employe.getId(), employe.getLogin(), ip);
     return connexion(employe, userAgent);
   }
 
@@ -102,13 +115,32 @@ public class AuthService {
    * Change son propre mot de passe. Tous les appareils sont déconnectés, sauf celui-ci qui reçoit
    * une nouvelle session.
    */
-  public Connexion changerMotDePasse(String ancien, String nouveau, String userAgent) {
+  public Connexion changerMotDePasse(String ancien, String nouveau, String ip, String userAgent) {
     Employe employe = currentEmploye.get();
+    // Quelqu'un qui a pris un téléphone resté connecté ne doit pas pouvoir deviner le mot de passe ici
+    if (loginAttemptService.estBloque(employe.getLogin(), ip)) {
+      throw new TooManyRequestsException("Trop de tentatives échouées, réessayez dans quelques minutes");
+    }
     if (!verifier(ancien, employe.getPasswordHash())) {
+      loginAttemptService.echec(employe.getLogin(), ip);
       throw new BadRequestException("L'ancien mot de passe est incorrect");
     }
     employeService.definirMotDePasse(employe, nouveau);
     employeRepository.flush();
+    log.info("Mot de passe changé par l'employé {}", employe.getId());
+    return connexion(employe, userAgent);
+  }
+
+  /**
+   * Déconnecte tous ses autres appareils (téléphone perdu, ordinateur prêté...) : leurs sessions et
+   * leurs tokens d'accès ne marchent plus. Cet appareil-ci reçoit une nouvelle session.
+   */
+  public Connexion deconnecterAutresAppareils(String userAgent) {
+    Employe employe = currentEmploye.get();
+    employe.setCredentialsChangedAt(OffsetDateTime.now(clock));
+    sessionService.fermerToutes(employe);
+    employeRepository.flush();
+    log.info("Employé {} : tous ses autres appareils ont été déconnectés", employe.getId());
     return connexion(employe, userAgent);
   }
 

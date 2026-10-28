@@ -57,4 +57,12 @@ public class EmployeController {
   public void reinitialiserMotDePasse(@PathVariable Long id, @Valid @RequestBody ResetMotDePasseRequest request) {
     employeService.reinitialiserMotDePasse(id, request.motDePasse());
   }
+
+  /** Déconnecte l'employé de tous ses appareils (téléphone perdu ou volé), sans changer son mot de passe. */
+  @PostMapping("/{id}/deconnecter")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PreAuthorize("hasRole('ADMIN')")
+  public void deconnecterPartout(@PathVariable Long id) {
+    employeService.deconnecterPartout(id);
+  }
 }
