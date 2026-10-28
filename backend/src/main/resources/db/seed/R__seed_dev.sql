@@ -16,6 +16,9 @@ BEGIN
     RETURN;
   END IF;
 
+    -- Code de suivi en ligne (obligatoire depuis V9) pour les dossiers insérés ci-dessous
+    ALTER TABLE dossier ALTER COLUMN code_suivi SET DEFAULT upper(substr(md5(random()::text), 1, 8));
+
     -- ============================================
     -- CLIENTS (15 clients réalistes)
     -- ============================================
@@ -400,5 +403,12 @@ BEGIN
     FROM dossier
     GROUP BY substring(reference FROM 5 FOR 4)
     ON CONFLICT (annee) DO UPDATE SET dernier = GREATEST(reference_compteur.dernier, EXCLUDED.dernier);
+
+    ALTER TABLE dossier ALTER COLUMN code_suivi DROP DEFAULT;
+
+    -- Prêts depuis 0 à 11 jours (certains apparaissent donc dans les « non récupérés »),
+    -- garantie de 3 mois sur les dossiers clôturés
+    UPDATE dossier SET pret_at = NOW() - (id % 12) * INTERVAL '1 day' WHERE statut = 'PRET';
+    UPDATE dossier SET fin_garantie = (closed_at + INTERVAL '3 months')::date WHERE statut = 'CLOTURE' AND closed_at IS NOT NULL;
 END
 $seed$;

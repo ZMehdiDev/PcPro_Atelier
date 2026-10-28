@@ -6,11 +6,11 @@ avec ses pièces, notes, photos et l'historique de qui a fait quoi.
 
 - `backend/` : API REST Spring Boot 4 (Java 21) + PostgreSQL 16 (migrations Flyway)
 - `infra/` : Docker Compose pour PostgreSQL et le backend
-- Front Angular : à venir
+- `front/` : application web Angular (ordinateur et téléphone) et page de suivi publique des clients
 
 ## Démarrer en local (développement)
 
-Prérequis : Java 21, Docker.
+Prérequis : Java 21, Docker, Node 22.
 
 ```bash
 cp .env.example .env               # puis renseigner APP_JWT_SECRET (openssl rand -base64 48)
@@ -22,6 +22,12 @@ Le profil `dev` charge des données de démo (15 clients, 50 dossiers) et active
 http://localhost:8080/swagger-ui
 
 Comptes de démo (mot de passe `atelier123`) : `zak` (admin), `pere`, `frere` (techniciens).
+
+Front (dans un autre terminal), sur http://localhost:4200 ; les appels `/api` sont relayés vers le backend :
+
+```bash
+cd front && npm ci && npm start
+```
 
 Tests (Docker requis, ils tournent sur un vrai PostgreSQL via Testcontainers) :
 
@@ -40,7 +46,7 @@ cp .env.example .env    # APP_DOMAIN, POSTGRES_PASSWORD, APP_JWT_SECRET et APP_B
 cd infra && docker compose --env-file ../.env -f docker-compose.prod.yml up -d --build
 ```
 
-- **Caddy** obtient le certificat HTTPS tout seul et sert le front (dossier `infra/front`) et l'API
+- **Caddy** obtient le certificat HTTPS tout seul et sert le front (construit dans son image depuis `front/`) et l'API
   (`/api`) sur le même domaine. Le backend et PostgreSQL ne sont pas exposés.
 - **Sauvegarde** de la base chaque nuit dans `infra/backups` (14 jours gardés). À copier ailleurs
   régulièrement, comme le volume `photos_data`.
@@ -64,6 +70,22 @@ Au premier démarrage, le compte `APP_BOOTSTRAP_ADMIN_LOGIN` reçoit le mot de p
 | `APP_GARANTIE_MOIS` | Garantie par défaut d'une réparation (3 mois). `APP_CONDITIONS_DEPOT` : texte en bas du bon de dépôt. |
 | `SPRING_MAIL_HOST` / `_USERNAME` / `_PASSWORD`, `APP_MAIL_EXPEDITEUR` | Envoi des emails (SMTP, ex : Brevo `smtp-relay.brevo.com`). Vide = aucun email. |
 
+## Front
+
+| Écran | Rôle |
+|---|---|
+| **Cadre** | Plein écran, menu fixe à gauche sur ordinateur ; barres en haut et en bas sur téléphone. Tout ce qui est cliquable a l'air d'un bouton. |
+| **Accueil** | 4 gros boutons (Nouveau dépôt, Rendre un appareil, Mes réparations, Tout l'atelier) avec leurs compteurs, recherche, remises en retard (si il y en a), mes réparations. |
+| **Nouveau dépôt** | Client retrouvé par téléphone ou nom, appareil, problème, accessoires, date promise. Alerte si une garantie est en cours. Puis le bon de dépôt à imprimer. |
+| **Fiche dossier** | Avancement en 5 étapes, encadré « Que faire maintenant ? » avec l'étape suivante en un clic (« Commencer le diagnostic », « C'est prêt », « Rendre au client » avec encaissement et garantie). Le reste en onglets : Résumé (infos, technicien, priorité, suivi en ligne), Devis et paiement, Pièces, Notes et photos (notes sensibles masquées, photos réduites avant l'envoi), Historique. |
+| **Réparations**, **Clients** | Listes avec filtres et recherche ; onglets avec compteurs et étapes cliquables. |
+| **Vente au comptoir** | Articles (raccourcis : protection d'écran, écouteurs, chargeur…), quantité, prix, prix d'achat facultatif, moyen de paiement. Compté dans la caisse et le chiffre d'affaires. |
+| **Caisse**, **Chiffre d'affaires**, **Employés** | Réservés aux admins. Chiffre d'affaires : par réparation rendue sur la période, encaissé, coût des pièces et marge, export CSV pour Excel. |
+| **/suivi** | Page publique du client (QR code du bon de dépôt) : avancement, devis à accepter ou refuser, coordonnées de l'atelier. |
+
+Le token d'accès reste en mémoire ; le cookie de session (30 jours) le renouvelle au chargement et quand l'API répond 401.
+Pour que les liens de suivi pointent vers le front en local : `APP_URL_PUBLIQUE=http://localhost:4200`.
+
 ## API
 
 Toutes les routes sauf `POST /api/auth/login|refresh|logout`, `GET /api/health` et `/api/public/**` demandent un header
@@ -75,7 +97,8 @@ Toutes les routes sauf `POST /api/auth/login|refresh|logout`, `GET /api/health` 
 | **Connexion** | `POST /api/auth/login` → token (15 min) + cookie de session · `POST /api/auth/refresh` · `POST /api/auth/logout` · `GET /api/auth/moi` · `POST /api/auth/mot-de-passe` |
 | **Dossiers** | `POST /api/dossiers` · `GET /api/dossiers?q=&statut=&actifs=&priorite=&technicienId=&mesDossiers=&enRetard=&nonRecuperes=` · `GET /api/dossiers/stats` · `GET /api/dossiers/garanties?clientId=&numeroSerie=` · `GET/PUT /api/dossiers/{id}` · `PATCH /api/dossiers/{id}/statut` · `…/technicien` · `…/priorite` · `POST …/relance` · `GET …/bon-depot` (PDF, exemplaires client et atelier) |
 | **Devis** | `PUT /api/dossiers/{id}/devis` · `POST …/devis/decision` · `POST …/devis/envoi` (email) · `DELETE …/devis` |
-| **Paiements** | `POST /api/dossiers/{id}/paiements` · admin : `DELETE …/paiements/{paiementId}`, `GET /api/caisse?du=&au=` |
+| **Paiements** | `POST /api/dossiers/{id}/paiements` · admin : `DELETE …/paiements/{paiementId}`, `GET /api/caisse?du=&au=`, `GET /api/chiffre-affaires?du=&au=`, `GET /api/chiffre-affaires/export?du=&au=` (CSV) |
+| **Ventes** | `POST /api/ventes` · admin : `DELETE /api/ventes/{id}` (caisse et chiffre d'affaires les incluent) |
 | **Suivi client** (public) | `GET /api/public/suivi/{reference}?code=` (ou `?telephone=`) · `POST /api/public/suivi/{reference}/devis` |
 | **Pièces** | `POST /api/dossiers/{id}/pieces` · `PUT …/pieces/{pieceId}` · `PATCH …/pieces/{pieceId}/etat` |
 | **Notes** | `POST /api/dossiers/{id}/notes` |

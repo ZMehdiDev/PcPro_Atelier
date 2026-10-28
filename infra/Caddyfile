@@ -21,8 +21,13 @@
 		reverse_proxy backend:8080
 	}
 
-	# Front (application Angular) : toute autre URL renvoie index.html
+	# Front (application Angular) : toute autre URL renvoie index.html.
+	# Les fichiers JS/CSS ont un nom qui change à chaque version : gardés en cache, sauf index.html.
 	handle {
+		@index not path_regexp \.(js|css|svg|ico|webmanifest)$
+		header @index Cache-Control "no-cache"
+		header /*.js Cache-Control "public, max-age=31536000, immutable"
+		header /*.css Cache-Control "public, max-age=31536000, immutable"
 		root * /srv/front
 		try_files {path} /index.html
 		file_server

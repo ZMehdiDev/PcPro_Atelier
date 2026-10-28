@@ -81,4 +81,13 @@ public interface DossierRepository extends JpaRepository<Dossier, Long>, JpaSpec
       and d.statut not in (pcpro.atelier.core.enums.StatutDossier.PRET, pcpro.atelier.core.enums.StatutDossier.CLOTURE)
     """)
   long compterEnRetard(@Param("aujourdhui") LocalDate aujourdhui);
+
+  @Query("""
+    select d from Dossier d
+    join fetch d.client
+    left join fetch d.technicienAssigne
+    where d.statut = pcpro.atelier.core.enums.StatutDossier.CLOTURE and d.closedAt >= :debut and d.closedAt < :fin
+    order by d.closedAt, d.id
+    """)
+  List<Dossier> findRendusEntre(@Param("debut") OffsetDateTime debut, @Param("fin") OffsetDateTime fin);
 }

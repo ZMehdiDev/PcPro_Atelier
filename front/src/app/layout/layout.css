@@ -1,0 +1,479 @@
+:host {
+  --largeur: var(--largeur-menu);
+  display: block;
+  min-height: 100dvh;
+}
+
+:host(.replie) {
+  --largeur: 76px;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: -0.03em;
+  color: var(--texte);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.logo span {
+  color: var(--accent);
+}
+
+/* Le logo passe de « Pc Pro Atelier » à « PC » en fondu */
+.menu > .logo {
+  position: relative;
+  display: block;
+  height: 2.4rem;
+}
+
+.logo-long,
+.logo-court {
+  position: absolute;
+  left: 0.7rem;
+  transition: opacity 0.2s, transform 0.32s var(--ressort);
+}
+
+.logo-court {
+  opacity: 0;
+  transform: translateX(-6px);
+}
+
+:host(.replie) .logo-long {
+  opacity: 0;
+  transform: translateX(-12px);
+}
+
+:host(.replie) .logo-court {
+  opacity: 1;
+  transform: none;
+  left: 0.85rem;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--noir);
+  color: var(--sur-noir);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Menu de gauche (ordinateur), clair comme l'appli Revolut */
+
+.menu {
+  transition: width 0.34s var(--ressort);
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--largeur);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.4rem 0.9rem 1rem;
+  background: var(--surface);
+  border-right: 1px solid var(--bordure);
+}
+
+
+/* Flèches « » sur le bord du menu pour le replier */
+.menu-bord {
+  position: absolute;
+  top: 1.3rem;
+  right: -17px;
+  z-index: 51;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--bordure-forte);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--texte);
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(25, 28, 31, 0.12);
+}
+
+.menu-bord {
+  transition: background 0.15s, color 0.15s, transform 0.2s var(--ressort);
+}
+
+.menu-bord:hover {
+  background: var(--noir);
+  border-color: var(--noir);
+  color: var(--sur-noir);
+  transform: scale(1.08);
+}
+
+.chevrons {
+  display: inline-block;
+  transition: transform 0.34s var(--ressort);
+}
+
+:host(.replie) .chevrons {
+  transform: rotate(180deg);
+}
+
+/* Libellés qui se replient en glissant au lieu de disparaître d'un coup */
+.texte {
+  display: inline-block;
+  max-width: 190px;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: middle;
+  transition: max-width 0.34s var(--ressort), opacity 0.2s;
+}
+
+:host(.replie) .texte {
+  max-width: 0;
+  opacity: 0;
+}
+
+.menu-depot,
+.menu-vente {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 48px;
+  padding: 0.6rem 0.78rem;
+  border-radius: 999px;
+  font-weight: 650;
+  text-decoration: none;
+  overflow: hidden;
+  transition: background 0.15s, transform 0.15s var(--ressort);
+}
+
+.menu-depot:hover,
+.menu-vente:hover {
+  transform: translateY(-1px);
+}
+
+/* « + » qui tourne, « € » qui fait pile ou face */
+.menu-depot .plus {
+  transition: transform 0.3s var(--ressort);
+}
+
+.menu-depot:hover .plus {
+  transform: rotate(90deg);
+}
+
+.menu-vente:hover .piece {
+  animation: piece 0.7s var(--ressort);
+}
+
+@keyframes piece {
+  50% {
+    transform: rotateY(180deg) scale(1.2);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+.menu-depot {
+  background: var(--accent);
+  color: #fff;
+}
+
+.menu-depot:hover,
+.menu-depot.actif {
+  background: var(--accent-fonce);
+}
+
+.menu-vente {
+  margin-bottom: 1rem;
+  background: var(--champ);
+  color: var(--texte);
+}
+
+.menu-vente:hover,
+.menu-vente.actif {
+  background: var(--survol);
+}
+
+.plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+/* Croix dessinée plutôt que le caractère « + », qui n'est jamais pile au centre */
+.plus .croix {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+}
+
+.menu nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.menu nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 46px;
+  padding: 0.5rem 0.78rem;
+  border-radius: 14px;
+  color: var(--texte-doux);
+  text-decoration: none;
+  font-weight: 550;
+  overflow: hidden;
+  transition: background 0.15s, color 0.15s;
+}
+
+.menu nav a svg {
+  transition: transform 0.25s var(--ressort);
+}
+
+.menu nav a:hover svg {
+  transform: scale(1.12);
+}
+
+.menu nav a:hover {
+  background: var(--surface-douce);
+  color: var(--texte);
+}
+
+.menu nav a.actif {
+  background: var(--champ);
+  color: var(--texte);
+  font-weight: 700;
+}
+
+.menu-titre {
+  white-space: nowrap;
+  overflow: hidden;
+  transition: margin 0.34s var(--ressort);
+  margin: 1rem 0.78rem 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9aa1aa;
+}
+
+.menu-theme {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 46px;
+  margin-bottom: 0.3rem;
+  padding: 0.5rem 0.78rem;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--texte-doux);
+  font: inherit;
+  font-weight: 550;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.menu-theme:hover {
+  background: var(--surface-douce);
+  color: var(--texte);
+}
+
+.menu-theme > .texte:not(.interrupteur) {
+  flex: 1;
+}
+
+.icone-theme {
+  display: inline-flex;
+  transition: transform 0.5s var(--ressort);
+}
+
+.menu-theme:hover .icone-theme {
+  transform: rotate(-25deg) scale(1.1);
+}
+
+/* Interrupteur façon iOS */
+.interrupteur {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--bordure-forte);
+  transition: background 0.25s, max-width 0.34s var(--ressort), opacity 0.2s;
+}
+
+.interrupteur span {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s var(--ressort);
+}
+
+.interrupteur.allume {
+  background: var(--accent);
+}
+
+.interrupteur.allume span {
+  transform: translateX(16px);
+}
+
+.menu-compte {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  overflow: hidden;
+  padding: 0.6rem 0.3rem;
+  border-radius: 16px;
+  color: var(--texte);
+  text-decoration: none;
+}
+
+.menu-compte:hover,
+.menu-compte.actif {
+  background: var(--surface-douce);
+}
+
+.menu-compte small {
+  display: block;
+  color: var(--texte-doux);
+}
+
+/* Menu replié : seulement les icônes (les libellés glissent, voir .texte) */
+:host(.replie) .menu-titre {
+  margin: 0.6rem 0.3rem;
+  border-top: 1px solid var(--bordure);
+  height: 1px;
+}
+
+@media (min-width: 721px) {
+  main {
+    margin-left: var(--largeur);
+    transition: margin-left 0.34s var(--ressort);
+  }
+}
+
+/* Barres du téléphone */
+
+.barre {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 58px;
+  padding: 0.4rem 0.9rem;
+  background: var(--verre);
+  backdrop-filter: blur(10px);
+}
+
+.nav-bas {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: var(--verre-surface);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--bordure);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-bas a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 62px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--texte-doux);
+  text-decoration: none;
+}
+
+.nav-bas a svg {
+  transition: transform 0.25s var(--ressort);
+}
+
+.nav-bas a:active svg {
+  transform: scale(0.88);
+}
+
+.theme-mobile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--texte);
+  cursor: pointer;
+}
+
+.compte {
+  display: inline-flex;
+}
+
+.nav-bas a.actif {
+  color: var(--texte);
+  font-weight: 700;
+}
+
+.nav-bas svg {
+  width: 24px;
+  height: 24px;
+}
+
+.nav-bas .plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+}
+
+.nav-bas .plus .croix {
+  width: 20px;
+  height: 20px;
+}

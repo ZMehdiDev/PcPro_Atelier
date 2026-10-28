@@ -1,6 +1,8 @@
 package pcpro.atelier.features.paiement.infra;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,4 +28,13 @@ public interface PaiementRepository extends JpaRepository<Paiement, Long> {
     order by p.createdAt, p.id
     """)
   List<Paiement> findEntre(@Param("debut") OffsetDateTime debut, @Param("fin") OffsetDateTime fin);
+
+  interface TotalParDossier {
+    Long getDossierId();
+
+    BigDecimal getTotal();
+  }
+
+  @Query("select p.dossier.id as dossierId, sum(p.montant) as total from Paiement p where p.dossier.id in :ids group by p.dossier.id")
+  List<TotalParDossier> totalParDossier(@Param("ids") Collection<Long> ids);
 }

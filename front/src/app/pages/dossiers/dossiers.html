@@ -1,0 +1,63 @@
+<div class="page">
+  <div class="entete-page">
+    <h1>Réparations</h1>
+    <a routerLink="/depot" class="btn btn-principal masquer-mobile">+ Nouveau dépôt</a>
+  </div>
+
+  <div class="onglets" role="tablist">
+    @for (v of vues; track v.cle) {
+      <button
+        type="button"
+        role="tab"
+        class="btn btn-petit onglet"
+        [class.btn-principal]="vue() === v.cle && !statut"
+        [attr.aria-selected]="vue() === v.cle"
+        (click)="statut = ''; appliquer(v.cle)"
+      >
+        {{ v.libelle }}
+        @if (v.nombre && stats(); as s) {
+          <span class="compteur">{{ v.nombre(s) }}</span>
+        }
+      </button>
+    }
+  </div>
+
+  <div class="filtres">
+    <input
+      type="search"
+      [(ngModel)]="q"
+      (input)="tape()"
+      placeholder="Nom, téléphone, référence, marque, n° de série…"
+      enterkeyhint="search"
+      aria-label="Chercher"
+    />
+    <select [(ngModel)]="statut" (change)="appliquer()" aria-label="Étape">
+      <option value="">Toutes les étapes</option>
+      @for (s of statuts; track s) {
+        <option [value]="s">{{ libellesStatut[s] }}</option>
+      }
+    </select>
+    <select [(ngModel)]="technicienId" (change)="appliquer()" aria-label="Technicien">
+      <option value="">Tous les techniciens</option>
+      @for (t of techniciens(); track t.id) {
+        <option [ngValue]="t.id">{{ t.prenom }}</option>
+      }
+    </select>
+  </div>
+
+  <p class="doux petit">
+    @if (chargement() && dossiers().length === 0) {
+      Chargement…
+    } @else {
+      {{ total() }} réparation{{ total() > 1 ? 's' : '' }}
+    }
+  </p>
+
+  <app-liste-dossiers [dossiers]="dossiers()" [vide]="chargement() ? '' : 'Aucune réparation ne correspond.'" />
+
+  @if (dossiers().length < total()) {
+    <div class="ligne" style="justify-content: center; margin-top: 1rem">
+      <button class="btn btn-blanc" (click)="plus()" [disabled]="chargement()">Afficher plus</button>
+    </div>
+  }
+</div>

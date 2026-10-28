@@ -1,0 +1,330 @@
+.retour {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.retour:hover {
+  text-decoration: underline;
+}
+
+.nouveau {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* En-tête */
+
+.entete-dossier {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem 1rem;
+  align-items: start;
+}
+
+.entete-dossier h1 {
+  margin: 0;
+  font-size: 2.1rem;
+}
+
+.nom-client {
+  color: inherit;
+  text-decoration: none;
+}
+
+.nom-client:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.appareil {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0.15rem 0;
+}
+
+.parcours {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  counter-reset: none;
+}
+
+.parcours li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  text-align: center;
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+
+/* trait entre deux étapes */
+.parcours li + li::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  right: 50%;
+  width: 100%;
+  height: 3px;
+  background: var(--bordure);
+  z-index: 0;
+}
+
+.parcours li.fait::before,
+.parcours li.actuelle::before {
+  background: var(--accent);
+}
+
+.pastille {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--bordure-forte);
+  background: var(--surface);
+  font-weight: 700;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s var(--ressort);
+}
+
+.parcours .fait .pastille {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.parcours .actuelle .pastille {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-clair);
+}
+
+.parcours .actuelle {
+  color: var(--texte);
+  font-weight: 700;
+}
+
+.parcours small {
+  display: block;
+  font-weight: 500;
+  color: var(--alerte);
+}
+
+/* Que faire maintenant ? */
+
+.maintenant {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+}
+
+.consigne h2 {
+  margin-bottom: 0.25rem;
+}
+
+.consigne p {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.boutons .btn {
+  min-width: 220px;
+}
+
+.autres {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--bordure);
+  padding-top: 0.5rem;
+}
+
+.autres summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+  padding: 0.3rem 0;
+}
+
+.autres .ligne {
+  margin-top: 0.4rem;
+}
+
+/* Onglets : pilules, la choisie en noir */
+
+.onglets-dossier {
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.onglet-dossier {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 42px;
+  padding: 0.4rem 1.1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--texte);
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.onglet-dossier {
+  transition: background 0.15s, color 0.15s;
+}
+
+.onglet-dossier:hover {
+  background: var(--survol);
+}
+
+.onglet-dossier.actif {
+  background: var(--noir);
+  color: var(--sur-noir);
+}
+
+.onglet-dossier .compteur {
+  display: inline-block;
+  min-width: 1.4rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--champ);
+  color: var(--texte);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.onglet-dossier.actif .compteur {
+  background: color-mix(in srgb, currentColor 22%, transparent);
+  color: inherit;
+}
+
+/* L'étape en cours respire doucement */
+.parcours .actuelle .pastille {
+  animation: pouls 2.4s ease-in-out infinite;
+}
+
+@keyframes pouls {
+  50% {
+    box-shadow: 0 0 0 8px var(--accent-clair);
+  }
+}
+
+/* Contenu */
+
+.colonnes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0 1rem;
+  align-items: start;
+}
+
+.resume-argent {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.infos {
+  display: grid;
+  grid-template-columns: 8rem 1fr;
+  gap: 0.45rem 0.75rem;
+  margin: 0;
+}
+
+.infos dt {
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+}
+
+.infos dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.reglages {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--bordure);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.code {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 1000px) {
+  .colonnes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .maintenant {
+    grid-template-columns: 1fr;
+  }
+
+  .boutons {
+    justify-content: stretch;
+  }
+
+  .boutons .btn {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .entete-dossier {
+    grid-template-columns: 1fr;
+  }
+
+  .parcours li {
+    font-size: 0.72rem;
+  }
+
+  .pastille {
+    width: 26px;
+    height: 26px;
+    font-size: 0.8rem;
+  }
+
+  .parcours li + li::before {
+    top: 12px;
+  }
+
+  .infos {
+    grid-template-columns: 6.5rem 1fr;
+  }
+
+  .onglet-dossier {
+    padding: 0.5rem 0.8rem;
+  }
+}
