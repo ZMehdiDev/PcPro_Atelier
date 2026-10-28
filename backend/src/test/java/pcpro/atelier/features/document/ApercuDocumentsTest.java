@@ -55,7 +55,7 @@ class ApercuDocumentsTest {
   static AtelierProperties atelier(AtelierProperties.RegimeTva regime) {
     return new AtelierProperties("PC PRO", "Réparation informatique", "Brahim Mehdi", "0895968808",
         new AtelierProperties.Tva(regime, new BigDecimal("21")), "BE68 5390 0754 7034", "", "Rue Wayez 24, 1070 Anderlecht",
-        "+32 485 64 44 61", "contact@pcpro-services.be", "pcpro-services.be", "Lun-Sam 10h-18h30", "",
+        "+32 485 64 44 61", "pcpro@gmail.com", "pcpro-services.be", "Mar-jeu 10h-13h et 14h-18h30 · Ven 10h-13h30 et 15h-18h · Sam 10h-16h", "",
         "https://atelier.pcpro-services.be", 3, Duration.ofDays(7), 30, "", "");
   }
 

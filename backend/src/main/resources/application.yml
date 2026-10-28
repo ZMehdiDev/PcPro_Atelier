@@ -71,7 +71,7 @@ app:
     telephone: ${APP_ATELIER_TELEPHONE:+32 485 64 44 61}
     email: ${APP_ATELIER_EMAIL:pcpro@gmail.com}
     site-web: ${APP_ATELIER_SITE_WEB:pcpro-services.be}
-    horaires: ${APP_ATELIER_HORAIRES:}
+    horaires: "${APP_ATELIER_HORAIRES:Mar-jeu 10h-13h et 14h-18h30 · Ven 10h-13h30 et 15h-18h · Sam 10h-16h}"
     # Chemin d'une image (PNG ou JPG) qui remplace le logo dessiné en haut des documents
     logo: ${APP_ATELIER_LOGO:}
     # Durée pendant laquelle le prix d'un devis est garanti

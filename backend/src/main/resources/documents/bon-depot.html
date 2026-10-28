@@ -126,7 +126,8 @@
         </td>
         <td class="droite" style="width: 70mm" th:unless="${fmt.vide(atelier.horaires())}">
           <div class="etiquette" style="margin-bottom: 3pt">Horaires</div>
-          <p th:text="${atelier.horaires()}">Lun-Sam 10h-18h</p>
+          <!--/* Une ligne par plage, séparées par « · » dans la configuration */-->
+          <p th:each="plage : ${#strings.arraySplit(atelier.horaires(), '·')}" th:text="${#strings.trim(plage)}">Lun-Sam 10h-18h</p>
         </td>
       </tr>
     </table>
