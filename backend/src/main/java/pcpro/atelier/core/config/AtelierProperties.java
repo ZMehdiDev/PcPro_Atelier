@@ -2,6 +2,8 @@ package pcpro.atelier.core.config;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
@@ -99,5 +101,25 @@ public record AtelierProperties(
 
   public boolean assujettiTva() {
     return tva.regime() == RegimeTva.ASSUJETTI;
+  }
+
+  /** Une ligne du tableau des horaires : « Vendredi » → « 10h – 13h30 et 15h – 18h ». */
+  public record Horaire(String jours, String heures) {}
+
+  /**
+   * Horaires découpés pour un tableau : les lignes sont séparées par « · » et les jours des heures par « : »
+   * (ex. « Mardi au jeudi : 10h – 13h · Samedi : 10h – 16h »). Une ligne sans « : » garde tout son texte côté jours.
+   */
+  public List<Horaire> tableauHoraires() {
+    return Arrays.stream(horaires.split("·"))
+        .map(String::strip)
+        .filter(ligne -> !ligne.isEmpty())
+        .map(ligne -> {
+          int separateur = ligne.indexOf(':');
+          return separateur < 0
+              ? new Horaire(ligne, "")
+              : new Horaire(ligne.substring(0, separateur).strip(), ligne.substring(separateur + 1).strip());
+        })
+        .toList();
   }
 }

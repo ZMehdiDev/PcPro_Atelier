@@ -11,6 +11,10 @@
   <title th:text="${titre}">Bon de dépôt</title>
   <style th:replace="~{commun :: style}"></style>
   <style>
+    .horaires td { padding: 1.5pt 0; font-size: 8.5pt; vertical-align: top; }
+    .horaires td.jours { font-weight: 600; padding-right: 8pt; white-space: nowrap; }
+    .horaires td.heures { text-align: right; font-family: 'Inter Chiffres'; }
+    .horaires tr.ferme td { color: #9c988f; font-weight: 400; }
     .code-suivi { font-size: 13pt; font-weight: 700; letter-spacing: 2pt; }
     .decoupe {
       margin-top: 7mm;
@@ -124,10 +128,14 @@
             <span th:if="${fmt.vide(atelier.telephone())}">Passez nous voir avec ce bon.</span>
           </p>
         </td>
-        <td class="droite" style="width: 70mm" th:unless="${fmt.vide(atelier.horaires())}">
-          <div class="etiquette" style="margin-bottom: 3pt">Horaires</div>
-          <!--/* Une ligne par plage, séparées par « · » dans la configuration */-->
-          <p th:each="plage : ${#strings.arraySplit(atelier.horaires(), '·')}" th:text="${#strings.trim(plage)}">Lun-Sam 10h-18h</p>
+        <td style="width: 82mm" th:unless="${fmt.vide(atelier.horaires())}">
+          <div class="etiquette" style="margin-bottom: 4pt">Heures d'ouverture</div>
+          <table class="horaires">
+            <tr th:each="h : ${atelier.tableauHoraires()}" th:classappend="${#strings.equalsIgnoreCase(h.heures(), 'fermé')} ? 'ferme'">
+              <td class="jours" th:text="${h.jours()}">Mardi au jeudi</td>
+              <td class="heures" th:text="${h.heures()}">10h – 13h et 14h – 18h30</td>
+            </tr>
+          </table>
         </td>
       </tr>
     </table>

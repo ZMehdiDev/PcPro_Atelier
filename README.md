@@ -65,7 +65,7 @@ Au premier démarrage, le compte `APP_BOOTSTRAP_ADMIN_LOGIN` reçoit le mot de p
 | `APP_COOKIE_SECURE` | `false` seulement en local sans HTTPS (`true` par défaut). |
 | `APP_SWAGGER_ENABLED` | `true` pour exposer Swagger (désactivé par défaut). |
 | `APP_STORAGE_PHOTOS_DIRECTORY` | Dossier de stockage des photos. |
-| `APP_ATELIER_*` | Identité imprimée sur les documents et dans les emails : `_NOM`, `_SLOGAN`, `_RAISON_SOCIALE` (nom légal du titulaire), `_BCE` (0895968808 par défaut), `_ADRESSE`, `_TELEPHONE`, `_EMAIL`, `_SITE_WEB`, `_HORAIRES` (plages séparées par « · », une ligne chacune sur le bon de dépôt), `_IBAN` / `_BIC` (virement et QR code de paiement sur les factures), `_LOGO` (chemin d'un PNG/JPG, sinon logo dessiné). |
+| `APP_ATELIER_*` | Identité imprimée sur les documents et dans les emails : `_NOM`, `_SLOGAN`, `_RAISON_SOCIALE` (nom légal du titulaire), `_BCE` (0895968808 par défaut), `_ADRESSE`, `_TELEPHONE`, `_EMAIL`, `_SITE_WEB`, `_HORAIRES` (lignes séparées par « · », jours et heures par « : », ex. `Samedi : 10h – 16h · Dimanche et lundi : Fermé`), `_IBAN` / `_BIC` (virement et QR code de paiement sur les factures), `_LOGO` (chemin d'un PNG/JPG, sinon logo dessiné). |
 | `APP_ATELIER_TVA_REGIME` | `FRANCHISE` (par défaut : petite entreprise, pas de TVA, mention légale sur les factures) ou `ASSUJETTI` (prix saisis TVAC, factures en HTVA / TVA / TVAC). Taux : `APP_ATELIER_TVA_TAUX` (21). |
 | `APP_DEVIS_VALIDITE_JOURS` | Durée de validité imprimée sur les devis (30). `APP_MENTION_FACTURE` : texte libre en bas des factures. |
 | `APP_URL_PUBLIQUE` | Adresse de l'appli pour les liens de suivi et le QR code (mise automatiquement en prod). |

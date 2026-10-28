@@ -3,6 +3,7 @@ package pcpro.atelier.features.notification;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.HtmlUtils;
@@ -41,7 +42,8 @@ public class EmailTemplates {
   public Email pret(Dossier dossier, BigDecimal resteAPayer) {
     List<String> paragraphes = new ArrayList<>();
     paragraphes.add("Bonne nouvelle : votre " + appareil(dossier) + " (dossier " + dossier.getReference()
-        + ") est prêt. Vous pouvez venir le récupérer" + horaires() + ".");
+        + ") est prêt. Vous pouvez venir le récupérer aux heures d'ouverture.");
+    ajouterHoraires(paragraphes);
     if (resteAPayer != null && resteAPayer.signum() > 0) {
       paragraphes.add("Montant à régler : " + Libelles.montant(resteAPayer) + ".");
     }
@@ -53,11 +55,12 @@ public class EmailTemplates {
     String depuis = dossier.getPretAt() != null
         ? " depuis le " + Libelles.DATE.format(dossier.getPretAt().toLocalDate())
         : "";
-    List<String> paragraphes = List.of(
+    List<String> paragraphes = new ArrayList<>(List.of(
         "Votre " + appareil(dossier) + " (dossier " + dossier.getReference() + ") est prêt" + depuis
             + " et vous attend à l'atelier.",
-        "Vous pouvez venir le récupérer" + horaires() + ". Si vous avez un empêchement, n'hésitez pas à nous appeler."
-    );
+        "Vous pouvez venir le récupérer aux heures d'ouverture. Si vous avez un empêchement, n'hésitez pas à nous appeler."
+    ));
+    ajouterHoraires(paragraphes);
     return email(dossier, "Votre " + appareil(dossier) + " vous attend", paragraphes, List.of());
   }
 
@@ -158,8 +161,14 @@ public class EmailTemplates {
     return signature.toString();
   }
 
-  private String horaires() {
-    return atelier.horaires().isBlank() ? " aux heures d'ouverture" : " (" + atelier.horaires() + ")";
+  /** « Heures d'ouverture : Mardi au jeudi 10h – 13h · Samedi 10h – 16h », si elles sont configurées. */
+  private void ajouterHoraires(List<String> paragraphes) {
+    List<AtelierProperties.Horaire> horaires = atelier.tableauHoraires();
+    if (!horaires.isEmpty()) {
+      paragraphes.add("Heures d'ouverture : " + horaires.stream()
+          .map(h -> (h.jours() + " " + h.heures()).strip())
+          .collect(Collectors.joining(" · ")) + ".");
+    }
   }
 
   private String lienSuivi(Dossier dossier) {

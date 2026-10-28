@@ -114,8 +114,15 @@
       @if (s.atelier.telephone) {
         <p><a [href]="'tel:' + s.atelier.telephone">{{ s.atelier.telephone }}</a></p>
       }
-      @if (s.atelier.horaires) {
-        <p class="doux">{{ s.atelier.horaires }}</p>
+      @if (horaires().length) {
+        <table class="horaires">
+          @for (h of horaires(); track h.jours) {
+            <tr [class.ferme]="h.heures.toLowerCase() === 'fermé'">
+              <th>{{ h.jours }}</th>
+              <td>{{ h.heures }}</td>
+            </tr>
+          }
+        </table>
       }
     </section>
     }
