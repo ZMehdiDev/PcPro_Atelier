@@ -21,6 +21,7 @@ public enum TypeActionEvenement {
   PAIEMENT,
   ANNULATION_PAIEMENT,
   EMAIL_CLIENT,
+  FACTURE,
   /** Conservé pour l'historique existant (remplacé par les types CHANGEMENT_*). */
   ACTION_SENSIBLE
 }

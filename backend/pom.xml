@@ -38,11 +38,15 @@
       <artifactId>spring-boot-starter-mail</artifactId>
     </dependency>
 
-    <!-- Bon de dépôt : PDF et QR code -->
+    <!-- Documents imprimés (bon de dépôt, devis, factures) : gabarits HTML rendus en PDF, QR codes -->
     <dependency>
-      <groupId>com.github.librepdf</groupId>
-      <artifactId>openpdf</artifactId>
-      <version>2.0.3</version>
+      <groupId>io.github.openhtmltopdf</groupId>
+      <artifactId>openhtmltopdf-pdfbox</artifactId>
+      <version>1.1.80</version>
+    </dependency>
+    <dependency>
+      <groupId>org.thymeleaf</groupId>
+      <artifactId>thymeleaf</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.zxing</groupId>

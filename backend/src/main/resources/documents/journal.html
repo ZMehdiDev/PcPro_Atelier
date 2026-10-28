@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!--/*
+  Journal des recettes d'une période, pour le comptable : encaissements par jour et par moyen de paiement,
+  puis les factures et notes de crédit émises.
+*/-->
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title th:text="${titre}">Journal des recettes</title>
+  <style th:replace="~{commun :: style}"></style>
+  <style>
+    /* Tableaux sur plusieurs pages : en-tête répété, colonnes identiques, lignes jamais coupées */
+    .lignes { -fs-table-paginate: paginate; }
+    .lignes tr { page-break-inside: avoid; }
+    .lignes td, .lignes th { font-size: 8pt; }
+    .lignes td { padding: 5pt 0; }
+    .lignes tr.total-ligne td { border-top: 0.75pt solid #1c1b18; border-bottom: none; font-weight: 700; padding-top: 7pt; }
+    .stat { font-family: 'Inter Chiffres'; font-size: 12pt; font-weight: 600; }
+    .titre-tableau { font-family: 'Newsreader'; font-size: 14pt; font-weight: 500; margin: 2mm 0 3mm 0; }
+  </style>
+</head>
+<body>
+<div th:replace="~{commun :: pied}"></div>
+
+<table th:replace="~{commun :: entete('Journal des recettes', ${j.periode()}, 'Du ' + ${fmt.date(j.du())} + ' au ' + ${fmt.date(j.au())})}"></table>
+
+<div class="hero">
+  <table>
+    <tr>
+      <td>
+        <div class="etiquette">Total encaissé</div>
+        <div class="hero-montant" th:text="${fmt.montant(j.total().total())}">4 250,00 €</div>
+        <div class="hero-texte" th:text="${j.total().operations()} + (${j.total().operations() > 1} ? ' encaissements' : ' encaissement') + ' sur ' + ${j.jours().size()} + (${j.jours().size() > 1} ? ' jours' : ' jour')">52 encaissements</div>
+      </td>
+      <td class="droite" style="width: 40mm">
+        <div class="etiquette">Réparations</div>
+        <div class="stat" th:text="${fmt.montant(j.total().reparations())}">3 600,00 €</div>
+      </td>
+      <td class="droite" style="width: 36mm">
+        <div class="etiquette">Ventes</div>
+        <div class="stat" th:text="${fmt.montant(j.total().ventes())}">650,00 €</div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div class="titre-tableau">Encaissements par jour</div>
+<p class="doux" th:if="${j.jours().isEmpty()}" style="margin-bottom: 6mm">Aucun encaissement sur la période.</p>
+<table class="lignes" th:unless="${j.jours().isEmpty()}">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th class="num">Réparations</th>
+      <th class="num">Ventes</th>
+      <th class="num">Espèces</th>
+      <th class="num">Bancontact</th>
+      <th class="num">Virement</th>
+      <th class="num">Autre</th>
+      <th class="num">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr th:each="jour : ${j.jours()}">
+      <td class="chiffres" th:text="${fmt.date(jour.date())}">01/10/2026</td>
+      <td class="num" th:text="${fmt.montantOuTiret(jour.reparations())}">120,00 €</td>
+      <td class="num" th:text="${fmt.montantOuTiret(jour.ventes())}">15,00 €</td>
+      <td class="num" th:text="${fmt.montantOuTiret(jour.moyen('ESPECES'))}">50,00 €</td>
+      <td class="num" th:text="${fmt.montantOuTiret(jour.moyen('BANCONTACT'))}">85,00 €</td>
+      <td class="num" th:text="${fmt.montantOuTiret(jour.moyen('VIREMENT'))}">0,00 €</td>
+      <td class="num" th:text="${fmt.montantOuTiret(jour.moyen('AUTRE'))}">0,00 €</td>
+      <td class="num medium" th:text="${fmt.montant(jour.total())}">135,00 €</td>
+    </tr>
+    <tr class="total-ligne">
+      <td>Total</td>
+      <td class="num" th:text="${fmt.montant(j.total().reparations())}">3 600,00 €</td>
+      <td class="num" th:text="${fmt.montant(j.total().ventes())}">650,00 €</td>
+      <td class="num" th:text="${fmt.montant(j.total().moyen('ESPECES'))}">0</td>
+      <td class="num" th:text="${fmt.montant(j.total().moyen('BANCONTACT'))}">0</td>
+      <td class="num" th:text="${fmt.montant(j.total().moyen('VIREMENT'))}">0</td>
+      <td class="num" th:text="${fmt.montant(j.total().moyen('AUTRE'))}">0</td>
+      <td class="num" th:text="${fmt.montant(j.total().total())}">4 250,00 €</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="titre-tableau" style="margin-top: 8mm">Factures et notes de crédit émises</div>
+<p class="doux" th:if="${j.factures().isEmpty()}">Aucune facture émise sur la période.</p>
+<table class="lignes" th:unless="${j.factures().isEmpty()}">
+  <thead>
+    <tr>
+      <th style="width: 26mm">Numéro</th>
+      <th style="width: 22mm">Date</th>
+      <th>Client</th>
+      <th>Objet</th>
+      <th class="num">Montant</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr th:each="f : ${j.factures()}">
+      <td class="chiffres medium" th:text="${f.numero()}">2026-0001</td>
+      <td class="chiffres" th:text="${fmt.date(f.dateEmission())}">01/10/2026</td>
+      <td th:text="${f.clientNom()}">Martin Dubois</td>
+      <td>
+        <span th:text="${f.dossierReference() != null} ? 'Réparation ' + ${f.dossierReference()} : 'Vente au comptoir'">Réparation</span>
+        <div class="sous-ligne" th:if="${f.annuleePar() != null}" th:text="'Annulée par ' + ${f.annuleePar()}">Annulée</div>
+        <div class="sous-ligne" th:if="${f.factureOrigine() != null}" th:text="'Annule ' + ${f.factureOrigine()}">Annule</div>
+      </td>
+      <td class="num" th:text="${fmt.montant(f.total())}">146,00 €</td>
+    </tr>
+    <tr class="total-ligne">
+      <td colspan="4">Total facturé (notes de crédit déduites)</td>
+      <td class="num" th:text="${fmt.montant(j.totalFactures())}">146,00 €</td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>

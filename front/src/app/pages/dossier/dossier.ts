@@ -20,6 +20,7 @@ import { Dialogue } from '../../shared/dialogue';
 import { DevisCarte } from './devis-carte';
 import { Historique } from './historique';
 import { NotesCarte } from './notes-carte';
+import { FactureCarte } from './facture-carte';
 import { PaiementsCarte } from './paiements-carte';
 import { PhotosCarte } from './photos-carte';
 import { PiecesCarte } from './pieces-carte';
@@ -39,6 +40,7 @@ type Onglet = 'resume' | 'argent' | 'pieces' | 'notes' | 'historique';
     LowerCasePipe,
     DevisCarte,
     PaiementsCarte,
+    FactureCarte,
     PiecesCarte,
     NotesCarte,
     PhotosCarte,

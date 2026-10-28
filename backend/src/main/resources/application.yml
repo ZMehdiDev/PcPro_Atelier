@@ -38,6 +38,9 @@ spring:
 logging:
   level:
     root: INFO
+    # PDFBox parcourt les polices du système au premier PDF et se plaint de celles qu'il ne sait pas lire :
+    # les documents n'utilisent que la police Inter embarquée
+    org.apache.pdfbox.pdmodel.font: ERROR
 
 # Swagger désactivé par défaut (activé en dev ou via APP_SWAGGER_ENABLED=true)
 springdoc:
@@ -50,20 +53,38 @@ springdoc:
 
 app:
   timezone: Europe/Brussels
-  # Informations imprimées sur le bon de dépôt et dans les emails, et règles de l'atelier
+  # Informations imprimées sur les documents (bon de dépôt, devis, factures) et dans les emails, et règles de l'atelier
   atelier:
-    nom: ${APP_ATELIER_NOM:Pc Pro}
-    adresse: ${APP_ATELIER_ADRESSE:}
-    telephone: ${APP_ATELIER_TELEPHONE:}
-    email: ${APP_ATELIER_EMAIL:}
-    horaires: ${APP_ATELIER_HORAIRES:}
+    nom: ${APP_ATELIER_NOM:PC PRO}
+    slogan: ${APP_ATELIER_SLOGAN:Réparation informatique}
+    # Nom légal (le titulaire de l'entreprise) et numéro BCE, obligatoires sur les factures
+    raison-sociale: ${APP_ATELIER_RAISON_SOCIALE:Brahim Mehdi}
+    bce: ${APP_ATELIER_BCE:0895968808}
+    tva:
+      # FRANCHISE (petite entreprise, pas de TVA sur les factures) ou ASSUJETTI (prix TVAC, TVA détaillée)
+      regime: ${APP_ATELIER_TVA_REGIME:FRANCHISE}
+      taux: ${APP_ATELIER_TVA_TAUX:21}
+    # Compte pour les virements : imprimé sur les factures avec un QR code à scanner dans l'appli bancaire
+    iban: ${APP_ATELIER_IBAN:}
+    bic: ${APP_ATELIER_BIC:}
+    adresse: ${APP_ATELIER_ADRESSE:Rue Wayez 24, 1070 Anderlecht}
+    telephone: ${APP_ATELIER_TELEPHONE:+32 485 64 44 61}
+    email: ${APP_ATELIER_EMAIL:pcpro@gmail.com}
+    site-web: ${APP_ATELIER_SITE_WEB:pcpro-services.be}
+    horaires: "${APP_ATELIER_HORAIRES:Mardi au jeudi : 10h – 13h et 14h – 18h30 · Vendredi : 10h – 13h30 et 15h – 18h · Samedi : 10h – 16h · Dimanche et lundi : Fermé}"
+    # Chemin d'une image (PNG ou JPG) qui remplace le logo dessiné en haut des documents
+    logo: ${APP_ATELIER_LOGO:}
+    # Durée pendant laquelle le prix d'un devis est garanti
+    devis-validite-jours: ${APP_DEVIS_VALIDITE_JOURS:30}
+    # Texte libre imprimé en bas des factures (ex : "Payable au comptant")
+    mention-facture: ${APP_MENTION_FACTURE:}
     # Adresse de l'appli vue par les clients (liens de suivi, QR code), ex : https://atelier.pcpro-services.be
     url-publique: ${APP_URL_PUBLIQUE:}
     # Garantie par défaut d'une réparation (modifiable à la clôture, 0 = aucune)
     garantie-mois: ${APP_GARANTIE_MOIS:3}
     # Au-delà, un appareil prêt et pas récupéré apparaît dans les "non récupérés"
     delai-recuperation: ${APP_DELAI_RECUPERATION:7d}
-    # Texte libre imprimé en bas du bon de dépôt (conditions de l'atelier)
+    # Conditions imprimées sur le bon de dépôt, séparées par des retours à la ligne (vide : conditions par défaut)
     conditions-depot: ${APP_CONDITIONS_DEPOT:}
   mail:
     # Adresse d'envoi, sur un domaine validé chez le fournisseur : "Pc Pro <atelier@pcpro-services.be>"

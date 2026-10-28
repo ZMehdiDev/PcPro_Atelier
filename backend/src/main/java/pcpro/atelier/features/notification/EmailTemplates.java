@@ -3,6 +3,7 @@ package pcpro.atelier.features.notification;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.HtmlUtils;
@@ -12,6 +13,7 @@ import pcpro.atelier.core.util.Libelles;
 import pcpro.atelier.features.devis.domain.Devis;
 import pcpro.atelier.features.devis.domain.DevisLigne;
 import pcpro.atelier.features.dossier.domain.Dossier;
+import pcpro.atelier.features.facture.domain.Facture;
 
 /**
  * Contenu des emails envoyés aux clients. Sobre : quelques paragraphes, un lien de suivi, les coordonnées.
@@ -40,7 +42,8 @@ public class EmailTemplates {
   public Email pret(Dossier dossier, BigDecimal resteAPayer) {
     List<String> paragraphes = new ArrayList<>();
     paragraphes.add("Bonne nouvelle : votre " + appareil(dossier) + " (dossier " + dossier.getReference()
-        + ") est prêt. Vous pouvez venir le récupérer" + horaires() + ".");
+        + ") est prêt. Vous pouvez venir le récupérer aux heures d'ouverture.");
+    ajouterHoraires(paragraphes);
     if (resteAPayer != null && resteAPayer.signum() > 0) {
       paragraphes.add("Montant à régler : " + Libelles.montant(resteAPayer) + ".");
     }
@@ -52,11 +55,12 @@ public class EmailTemplates {
     String depuis = dossier.getPretAt() != null
         ? " depuis le " + Libelles.DATE.format(dossier.getPretAt().toLocalDate())
         : "";
-    List<String> paragraphes = List.of(
+    List<String> paragraphes = new ArrayList<>(List.of(
         "Votre " + appareil(dossier) + " (dossier " + dossier.getReference() + ") est prêt" + depuis
             + " et vous attend à l'atelier.",
-        "Vous pouvez venir le récupérer" + horaires() + ". Si vous avez un empêchement, n'hésitez pas à nous appeler."
-    );
+        "Vous pouvez venir le récupérer aux heures d'ouverture. Si vous avez un empêchement, n'hésitez pas à nous appeler."
+    ));
+    ajouterHoraires(paragraphes);
     return email(dossier, "Votre " + appareil(dossier) + " vous attend", paragraphes, List.of());
   }
 
@@ -68,7 +72,8 @@ public class EmailTemplates {
     if (devis.getCommentaire() != null) {
       paragraphes.add(devis.getCommentaire());
     }
-    paragraphes.add("Total TTC : " + Libelles.montant(devis.total()) + ".");
+    paragraphes.add("Total" + (atelier.assujettiTva() ? " TVAC" : "") + " : " + Libelles.montant(devis.total())
+        + ". Le devis détaillé est joint en PDF.");
     paragraphes.add(lienSuivi(dossier) != null
         ? "Vous pouvez l'accepter ou le refuser en ligne avec le lien ci-dessous, ou nous répondre par téléphone."
         : "Merci de nous donner votre réponse par téléphone ou par retour d'email.");
@@ -82,6 +87,31 @@ public class EmailTemplates {
       });
     }
     return email(dossier, "Devis pour votre " + appareil(dossier), paragraphes, tableau);
+  }
+
+  /** Facture ou note de crédit en pièce jointe. */
+  public Email facture(Facture facture, String destinataire) {
+    String type = facture.estNoteCredit() ? "note de crédit" : "facture";
+    List<String> paragraphes = new ArrayList<>();
+    paragraphes.add("Veuillez trouver en pièce jointe votre " + type + " n° " + facture.getNumero()
+        + " du " + Libelles.DATE.format(facture.getDateEmission()) + " (" + Libelles.montant(facture.getTotal().abs()) + ").");
+    if (facture.getDossier() != null && !facture.estNoteCredit() && facture.getDossier().getFinGarantie() != null) {
+      paragraphes.add("Votre réparation est garantie jusqu'au "
+          + Libelles.DATE.format(facture.getDossier().getFinGarantie()) + " : conservez cette facture.");
+    }
+    paragraphes.add("Merci pour votre confiance.");
+    String salutation = "Bonjour " + facture.getClientNom() + ",";
+    String sujet = (facture.estNoteCredit() ? "Note de crédit " : "Facture ") + facture.getNumero() + " - " + atelier.nom();
+
+    StringBuilder texte = new StringBuilder(salutation).append("\n\n");
+    paragraphes.forEach(p -> texte.append(p).append("\n\n"));
+    texte.append("À bientôt,\n").append(signatureTexte());
+    StringBuilder html = new StringBuilder()
+        .append("<div style=\"font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5;color:#222;max-width:560px\">")
+        .append("<p>").append(e(salutation)).append("</p>");
+    paragraphes.forEach(p -> html.append("<p>").append(e(p)).append("</p>"));
+    html.append("<p>À bientôt,<br>").append(e(signatureTexte()).replace("\n", "<br>")).append("</p></div>");
+    return new Email(destinataire, sujet, texte.toString(), html.toString());
   }
 
   // ---------- Mise en forme ----------
@@ -131,8 +161,14 @@ public class EmailTemplates {
     return signature.toString();
   }
 
-  private String horaires() {
-    return atelier.horaires().isBlank() ? " aux heures d'ouverture" : " (" + atelier.horaires() + ")";
+  /** « Heures d'ouverture : Mardi au jeudi 10h – 13h · Samedi 10h – 16h », si elles sont configurées. */
+  private void ajouterHoraires(List<String> paragraphes) {
+    List<AtelierProperties.Horaire> horaires = atelier.tableauHoraires();
+    if (!horaires.isEmpty()) {
+      paragraphes.add("Heures d'ouverture : " + horaires.stream()
+          .map(h -> (h.jours() + " " + h.heures()).strip())
+          .collect(Collectors.joining(" · ")) + ".");
+    }
   }
 
   private String lienSuivi(Dossier dossier) {

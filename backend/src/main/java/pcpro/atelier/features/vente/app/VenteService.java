@@ -3,8 +3,10 @@ package pcpro.atelier.features.vente.app;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import pcpro.atelier.core.exception.ConflictException;
 import pcpro.atelier.core.exception.ResourceNotFoundException;
 import pcpro.atelier.core.security.CurrentEmploye;
+import pcpro.atelier.features.facture.infra.FactureRepository;
 import pcpro.atelier.features.vente.api.dto.VenteDto;
 import pcpro.atelier.features.vente.api.dto.VenteRequest;
 import pcpro.atelier.features.vente.domain.Vente;
@@ -17,10 +19,12 @@ import pcpro.atelier.features.vente.infra.VenteRepository;
 public class VenteService {
 
   private final VenteRepository venteRepository;
+  private final FactureRepository factureRepository;
   private final CurrentEmploye currentEmploye;
 
-  public VenteService(VenteRepository venteRepository, CurrentEmploye currentEmploye) {
+  public VenteService(VenteRepository venteRepository, FactureRepository factureRepository, CurrentEmploye currentEmploye) {
     this.venteRepository = venteRepository;
+    this.factureRepository = factureRepository;
     this.currentEmploye = currentEmploye;
   }
 
@@ -36,6 +40,9 @@ public class VenteService {
   /** Correction d'une erreur de saisie (réservé aux administrateurs, contrôlé par le contrôleur). */
   public void annuler(Long id) {
     Vente vente = venteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Vente", id));
+    if (!factureRepository.findByVenteId(id).isEmpty()) {
+      throw new ConflictException("Cette vente a été facturée : elle ne peut plus être supprimée (annulez la facture par une note de crédit)");
+    }
     venteRepository.delete(vente);
   }
 }

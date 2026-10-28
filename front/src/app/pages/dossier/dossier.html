@@ -257,6 +257,7 @@
         <div class="colonnes">
           <app-devis-carte [dossier]="d" (modifie)="charger()" />
           <app-paiements-carte [dossier]="d" (modifie)="charger()" />
+          <app-facture-carte [dossier]="d" (modifie)="charger()" />
         </div>
       }
       @case ('pieces') {
