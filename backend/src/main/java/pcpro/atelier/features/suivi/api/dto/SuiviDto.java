@@ -11,6 +11,7 @@ import pcpro.atelier.features.devis.api.dto.DevisDto;
  * Ce que le client voit de son dossier : pas de notes internes, pas d'historique détaillé.
  *
  * @param peutRepondreDevis le client peut accepter ou refuser le devis en ligne (accès par code de suivi)
+ * @param montantsMasques   accès par téléphone : devis et reste à payer cachés (seul le code les montre)
  */
 public record SuiviDto(
     String reference,
@@ -24,6 +25,7 @@ public record SuiviDto(
     DevisDto devis,
     boolean peutRepondreDevis,
     BigDecimal resteAPayer,
+    boolean montantsMasques,
     Atelier atelier
 ) {
 

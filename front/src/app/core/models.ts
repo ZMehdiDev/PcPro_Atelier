@@ -323,6 +323,7 @@ export interface Suivi {
   devis: Devis | null;
   peutRepondreDevis: boolean;
   resteAPayer: number | null;
+  montantsMasques: boolean;
   atelier: { nom: string; adresse: string; telephone: string; horaires: string };
 }
 

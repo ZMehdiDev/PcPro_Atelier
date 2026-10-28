@@ -59,7 +59,11 @@ class SuiviIntegrationTest extends IntegrationTest {
     for (String telephone : new String[] {"0470123456", "+32 470 12 34 56", "0032470/12.34.56"}) {
       mvc.perform(get("/api/public/suivi/" + reference.toLowerCase()).param("telephone", telephone))
           .andExpect(status().isOk())
-          // Le téléphone peut être connu d'autres personnes : pas de réponse au devis par ce biais
+          .andExpect(jsonPath("$.statut").value("ATTENTE_CLIENT"))
+          // Le téléphone peut être connu d'autres personnes : ni montants, ni réponse au devis par ce biais
+          .andExpect(jsonPath("$.devis").doesNotExist())
+          .andExpect(jsonPath("$.resteAPayer").doesNotExist())
+          .andExpect(jsonPath("$.montantsMasques").value(true))
           .andExpect(jsonPath("$.peutRepondreDevis").value(false));
     }
   }

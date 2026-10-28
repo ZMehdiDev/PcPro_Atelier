@@ -33,6 +33,7 @@ check-list à suivre le jour de l'installation.
 | **Moyenne** | Pas de moyen de couper un téléphone perdu ou volé (sessions de 30 jours) sans changer le mot de passe. | « Déconnecter mes autres appareils » dans Mon compte, et pour un admin « Déconnecter de tous ses appareils » sur la fiche d'un employé. |
 | Moyenne | Pas de Content-Security-Policy : en cas de faille XSS, un script étranger pouvait s'exécuter et lire les données. | CSP stricte dans Caddy (seuls les scripts du site), plus COOP, CORP, X-Robots-Tag. Le script du thème est sorti de `index.html` et l'inlining CSS d'Angular (qui utilisait un `onload`) est coupé, pour ne pas devoir autoriser de script en ligne. Testé dans Chromium : aucune violation (connexion, fiche, photos, bon de dépôt, suivi). |
 | Moyenne | Les photos n'étaient pas sauvegardées (seulement la base), et les sauvegardes étaient lisibles par tous les utilisateurs du serveur. | Copie quotidienne des photos dans `infra/backups/photos`, fichiers en `700/600`. |
+| Basse | Avec la référence (qui se suit) et le numéro de téléphone d'un client, n'importe qui voyait son devis et le reste à payer. | Par téléphone : seulement l'avancement. Montants et devis par le code. |
 | Basse | Le changement de mot de passe permettait d'essayer l'ancien sans limite (quelqu'un qui récupère un téléphone resté connecté). | Même limite d'essais que la connexion. |
 | Basse | Aucune trace des connexions réussies ou ratées. | Journal : connexions, échecs (login nettoyé + adresse), blocages, changements de mot de passe, déconnexions à distance. |
 | Basse | Journaux Docker sans limite de taille (finissent par remplir le disque). | 5 x 10 Mo par conteneur. Conteneurs en `no-new-privileges`, backend sans aucune capacité Linux. |
@@ -43,8 +44,9 @@ check-list à suivre le jour de l'installation.
 ## Risques restants (choix assumés ou à décider)
 
 - **Suivi par téléphone** : la référence (`PCP-2026-000123`, qui se suit) et le numéro de téléphone
-  suffisent pour voir l'appareil, l'état, le devis et le reste à payer. C'est une fonction voulue ;
-  si ça gêne, on peut l'enlever et ne garder que le code du QR (à décider, je n'y ai pas touché).
+  suffisent pour voir l'appareil et où en est la réparation. Le devis et le reste à payer ne
+  s'affichent plus que par le code (QR du bon de dépôt ou lien de l'email) ; par téléphone, la page
+  explique comment les voir.
 - **Pas de double authentification**. Les sessions de 30 jours sur téléphone rendent un téléphone
   déverrouillé dangereux : verrouillage du téléphone obligatoire, et « Déconnecter » en cas de perte.
   Option plus tard : Cloudflare Access devant la partie employés (code par email), au prix d'une

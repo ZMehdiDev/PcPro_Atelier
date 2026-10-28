@@ -27,7 +27,8 @@ import pcpro.atelier.features.suivi.api.dto.SuiviDto;
  * Suivi en ligne par le client, sans compte : référence du dossier + code de suivi (QR code du bon de dépôt,
  * lien des emails) ou numéro de téléphone. Les essais ratés sont limités comme les connexions.
  *
- * Seul l'accès par code permet de répondre au devis (le téléphone d'un client peut être connu d'un tiers).
+ * Le téléphone d'un client peut être connu d'un tiers et les références se suivent : par téléphone, on ne
+ * montre que l'avancement. Le devis, les montants et la réponse au devis demandent le code.
  */
 @Service
 @Transactional
@@ -98,9 +99,10 @@ public class SuiviService {
         dossier.getDateEstimee(),
         dossier.getPretAt(),
         dossier.getFinGarantie(),
-        DevisDto.of(devis),
+        parCode ? DevisDto.of(devis) : null,
         parCode && devis != null && devis.getStatut() == StatutDevis.EN_ATTENTE && !dossier.estCloture(),
-        soldeService.resteAPayer(dossier),
+        parCode ? soldeService.resteAPayer(dossier) : null,
+        !parCode,
         new SuiviDto.Atelier(atelier.nom(), atelier.adresse(), atelier.telephone(), atelier.horaires())
     );
   }
