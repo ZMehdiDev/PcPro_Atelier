@@ -36,6 +36,18 @@ export class SuiviPage {
   /** Code de suivi utilisé (seul le code permet de répondre au devis). */
   private codeUtilise: string | null = null;
 
+  /** Horaires en tableau : lignes séparées par « · », jours et heures par « : » (comme sur le bon de dépôt). */
+  protected readonly horaires = computed(() =>
+    (this.suivi()?.atelier.horaires ?? '')
+      .split('·')
+      .map((ligne) => ligne.trim())
+      .filter((ligne) => ligne)
+      .map((ligne) => {
+        const i = ligne.indexOf(':');
+        return i < 0 ? { jours: ligne, heures: '' } : { jours: ligne.slice(0, i).trim(), heures: ligne.slice(i + 1).trim() };
+      }),
+  );
+
   protected readonly etape = computed(() => {
     switch (this.suivi()?.statut) {
       case 'RECU':

@@ -7,6 +7,7 @@ import { EurosPipe } from '../../core/formats';
 import { MOYEN_PAIEMENT } from '../../core/libelles';
 import { MoyenPaiement, Vente } from '../../core/models';
 import { NotificationService } from '../../core/notification.service';
+import { FactureVente } from './facture-vente';
 
 const ARTICLES_COURANTS = [
   'Protection d’écran',
@@ -31,7 +32,7 @@ const nouvelleLigne = (article = ''): Ligne => ({ article, quantite: 1, prix: nu
 /** Vente au comptoir (accessoires, PC...) : les articles, le moyen de paiement, et c'est encaissé. */
 @Component({
   selector: 'app-vente',
-  imports: [FormsModule, RouterLink, EurosPipe],
+  imports: [FormsModule, RouterLink, EurosPipe, FactureVente],
   template: `
     <div class="page page-etroite">
       <div class="entete-page">
@@ -44,7 +45,10 @@ const nouvelleLigne = (article = ''): Ligne => ({ article, quantite: 1, prix: nu
       @if (derniere(); as v) {
         <div class="bandeau bandeau-ok ligne ligne-espace">
           <span><strong>Vente enregistrée :</strong> {{ v.total | euros }} en {{ libellesMoyen[v.moyen].toLowerCase() }}.</span>
-          <button class="btn btn-petit btn-lien" (click)="derniere.set(null)">Fermer</button>
+          <span class="ligne">
+            <app-facture-vente [venteId]="v.id" />
+            <button class="btn btn-petit btn-lien" (click)="derniere.set(null)">Fermer</button>
+          </span>
         </div>
       }
 

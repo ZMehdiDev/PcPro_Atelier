@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<!--/*
+  Éléments communs à tous les documents imprimés : feuille de style, en-tête et pied de page légal.
+
+  Rendu par openhtmltopdf (CSS 2.1 + border-radius, pas de flexbox ni de variables CSS) : la mise en page
+  utilise des tableaux. Le document doit rester lisible imprimé en noir et blanc : la couleur n'est jamais
+  la seule information (les statuts sont écrits en toutes lettres).
+*/-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<style th:fragment="style">
+  @page {
+    size: A4;
+    margin: 14mm 15mm 24mm 15mm;
+    @bottom-left {
+      content: element(pied);
+      vertical-align: top;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Inter';
+    font-size: 9pt;
+    line-height: 1.45;
+    color: #1c1b18;
+  }
+
+  p { margin: 0; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { padding: 0; vertical-align: top; text-align: left; }
+
+  /* Couleurs de l'appli : encre chaude presque noire, gris chauds, filets fins, panneaux ivoire, bleu Pc Pro en accent */
+  .doux { color: #6b6860; }
+  .tres-doux { color: #9c988f; }
+  .accent { color: #1d5fc9; }
+  .droite { text-align: right; }
+  .centre { text-align: center; }
+  .gras { font-weight: 600; }
+  .medium { font-weight: 500; }
+  .petit { font-size: 7.5pt; }
+  .nowrap { white-space: nowrap; }
+  /* Chiffres à largeur fixe : les montants s'alignent en colonne */
+  .chiffres, .lignes td.num, .totaux td.num { font-family: 'Inter Chiffres'; }
+
+  .etiquette {
+    font-size: 6.8pt;
+    font-weight: 600;
+    letter-spacing: 0.9pt;
+    text-transform: uppercase;
+    color: #9c988f;
+  }
+
+  /* En-tête : marque à gauche, type et numéro du document à droite */
+  .entete { margin-bottom: 7mm; }
+  .entete td { vertical-align: middle; }
+  .marque-carre {
+    width: 30pt;
+    height: 30pt;
+    border-radius: 8pt;
+    background: #1d5fc9;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 11pt;
+    letter-spacing: -0.2pt;
+    text-align: center;
+    line-height: 30pt;
+  }
+  .marque-nom { font-size: 14pt; font-weight: 700; letter-spacing: -0.3pt; line-height: 1.1; }
+  .marque-slogan { font-size: 8pt; color: #6b6860; }
+  .logo-image { max-height: 34pt; max-width: 60mm; }
+  /* Titres en serif, comme l'appli (inspiration Claude) */
+  .serif { font-family: 'Newsreader'; font-weight: 500; }
+  .doc-type { font-family: 'Newsreader'; font-size: 21pt; font-weight: 500; letter-spacing: -0.3pt; line-height: 1.1; }
+  .doc-numero { font-size: 10pt; font-weight: 600; margin-top: 2pt; }
+  .doc-date { font-size: 8.5pt; color: #6b6860; }
+
+  /* Bloc principal : un grand chiffre, comme le solde d'une appli bancaire */
+  .hero {
+    background: #f5f4ef;
+    border-radius: 14pt;
+    padding: 13pt 16pt;
+    margin-bottom: 5mm;
+  }
+  .hero td { vertical-align: middle; }
+  .hero-montant { font-family: 'Inter Chiffres'; font-size: 28pt; font-weight: 700; letter-spacing: -0.8pt; line-height: 1.1; }
+  .hero-ref { font-size: 22pt; font-weight: 700; letter-spacing: -0.5pt; line-height: 1.1; }
+  .hero-texte { font-size: 9pt; color: #4a4842; margin-top: 3pt; }
+
+  .pastille {
+    display: inline-block;
+    border-radius: 20pt;
+    padding: 3pt 9pt;
+    font-size: 7.8pt;
+    font-weight: 600;
+    background: #ffffff;
+    border: 0.75pt solid #d8d4ca;
+    color: #1c1b18;
+  }
+  .pastille-ok { background: #e5f3ec; border-color: #a7d8c0; color: #0b6646; }
+  .pastille-attente { background: #fbf1e0; border-color: #ecc98a; color: #7d4904; }
+  .pastille-info { background: #ebf1fb; border-color: #c3d4f1; color: #164ca3; }
+  .pastille-annule { background: #fbece8; border-color: #efb3a6; color: #9c2714; }
+
+  /* Cartes d'informations côte à côte */
+  /* Cartes = cellules d'un même tableau, pour qu'elles aient la même hauteur */
+  .cartes { margin-bottom: 5mm; border-collapse: separate; border-spacing: 0; }
+  td.moitie { width: 48%; }
+  td.espace { width: 4%; }
+  .carte {
+    border: 0.75pt solid #e8e5dd;
+    border-radius: 12pt;
+    padding: 10pt 12pt;
+  }
+  .carte .etiquette { margin-bottom: 4pt; }
+  .carte-titre { font-size: 10.5pt; font-weight: 600; margin-bottom: 1pt; }
+  .champs td { padding: 1.5pt 0; }
+  .champs td.libelle { color: #6b6860; width: 34%; padding-right: 6pt; }
+
+  /* Lignes chiffrées */
+  .lignes { margin-bottom: 4mm; }
+  .lignes th {
+    font-size: 6.8pt;
+    font-weight: 600;
+    letter-spacing: 0.9pt;
+    text-transform: uppercase;
+    color: #9c988f;
+    padding: 0 0 5pt 0;
+    border-bottom: 0.75pt solid #1c1b18;
+  }
+  .lignes td { padding: 6pt 0; border-bottom: 0.5pt solid #e8e5dd; }
+  .lignes td.num, .lignes th.num { text-align: right; padding-left: 8pt; white-space: nowrap; }
+  .lignes .sous-ligne { font-size: 7.5pt; color: #9c988f; }
+
+  .totaux { width: 48%; margin-left: 52%; margin-bottom: 5mm; }
+  .totaux td { padding: 3pt 0; }
+  .totaux td.num { text-align: right; white-space: nowrap; }
+  .totaux tr.total td {
+    border-top: 0.75pt solid #1c1b18;
+    padding-top: 6pt;
+    font-size: 12pt;
+    font-weight: 700;
+  }
+  .totaux tr.reste td { font-weight: 600; }
+
+  .encadre {
+    border: 0.75pt solid #e8e5dd;
+    border-radius: 12pt;
+    padding: 10pt 12pt;
+    margin-bottom: 4mm;
+  }
+  .encadre-plein { background: #f5f4ef; border-color: #f5f4ef; }
+  .titre-section { font-family: 'Newsreader'; font-size: 13pt; font-weight: 500; margin-bottom: 3pt; }
+
+  .qr { width: 26mm; height: 26mm; }
+  .qr-petit { width: 20mm; height: 20mm; }
+
+  .conditions { font-size: 7pt; color: #6b6860; line-height: 1.5; }
+  .conditions p { margin-bottom: 2pt; }
+
+  .zone-signature {
+    border: 0.75pt solid #d8d4ca;
+    border-radius: 10pt;
+    height: 24mm;
+    padding: 7pt 10pt;
+  }
+
+  /* Pied de page légal, répété sur chaque page */
+  #pied {
+    position: running(pied);
+    width: 180mm;
+    border-top: 0.5pt solid #e8e5dd;
+    padding-top: 6pt;
+    font-size: 6.8pt;
+    line-height: 1.5;
+    color: #9c988f;
+  }
+  #pied td { width: 33%; }
+  #pied .page:after { content: counter(page) " / " counter(pages); }
+  .gras-pied { color: #4a4842; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!--/* En-tête : marque (logo dessiné ou image configurée) et type de document */-->
+<table class="entete" th:fragment="entete(type, numero, date)">
+  <tr>
+    <td>
+      <img th:if="${logo != null}" class="logo-image" th:src="${logo}" alt="Logo" />
+      <table th:if="${logo == null}" style="width: auto">
+        <tr>
+          <td style="width: 30pt"><div class="marque-carre">PC</div></td>
+          <td style="padding-left: 8pt">
+            <div class="marque-nom" th:text="${atelier.nom()}">PC PRO</div>
+            <div class="marque-slogan" th:unless="${fmt.vide(atelier.slogan())}" th:text="${atelier.slogan()}">Réparation informatique</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+    <td class="droite">
+      <div class="doc-type" th:text="${type}">Facture</div>
+      <div class="doc-numero" th:text="${numero}">2026-0001</div>
+      <div class="doc-date" th:unless="${fmt.vide(date)}" th:text="${date}">28 octobre 2026</div>
+    </td>
+  </tr>
+</table>
+
+<!--/* Lignes chiffrées d'un devis ou d'une facture (Montants.Ligne) */-->
+<table class="lignes" th:fragment="lignes(lignes, totaux)">
+  <thead>
+    <tr>
+      <th>Désignation</th>
+      <th class="num" style="width: 14mm">Qté</th>
+      <th class="num" style="width: 30mm" th:text="${totaux.assujetti()} ? 'Prix unit. TVAC' : 'Prix unitaire'">Prix unitaire</th>
+      <th class="num" style="width: 30mm" th:text="${totaux.assujetti()} ? 'Total TVAC' : 'Total'">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr th:each="l : ${lignes}">
+      <td>
+        <div class="medium" th:text="${l.libelle()}">Remplacement de l'écran</div>
+        <div class="sous-ligne" th:unless="${fmt.vide(l.detail())}" th:text="${l.detail()}">Pièce</div>
+      </td>
+      <td class="num" th:text="${fmt.quantite(l.quantite())}">1</td>
+      <td class="num" th:text="${fmt.montant(l.prixUnitaire())}">89,00 €</td>
+      <td class="num medium" th:text="${fmt.montant(l.total())}">89,00 €</td>
+    </tr>
+  </tbody>
+</table>
+
+<!--/* Totaux (Montants.Totaux) : HTVA, TVA et TVAC si assujetti, sinon un seul total */-->
+<table class="totaux" th:fragment="totaux(totaux, libelleTotal)">
+  <th:block th:if="${totaux.assujetti()}">
+    <tr><td class="doux">Total HTVA</td><td class="num" th:text="${fmt.montant(totaux.htva())}">120,66 €</td></tr>
+    <tr><td class="doux" th:text="'TVA ' + ${fmt.taux(totaux.taux())} + ' %'">TVA 21 %</td><td class="num" th:text="${fmt.montant(totaux.tva())}">25,34 €</td></tr>
+  </th:block>
+  <tr class="total">
+    <td th:text="${libelleTotal} + (${totaux.assujetti()} ? ' TVAC' : '')">Total</td>
+    <td class="num" th:text="${fmt.montant(totaux.tvac())}">146,00 €</td>
+  </tr>
+</table>
+
+<!--/* Pied de page : identité légale, contact, banque, numéro de page */-->
+<div id="pied" th:fragment="pied">
+  <table>
+    <tr>
+      <td>
+        <span class="gras-pied" th:text="${fmt.vide(atelier.raisonSociale()) ? atelier.nom() : atelier.raisonSociale()}">PC PRO</span>
+        <span th:if="${!fmt.vide(atelier.raisonSociale())}" th:text="' · ' + ${atelier.nom()}"></span><br />
+        <span th:unless="${fmt.vide(atelier.adresse())}" th:text="${atelier.adresse()}">Rue Wayez 24, 1070 Anderlecht</span><br />
+        <span th:unless="${fmt.vide(atelier.bce())}" th:text="${atelier.assujettiTva() ? 'TVA ' + atelier.numeroTva() : 'BCE ' + atelier.bceFormate()}">BCE 0895.968.808</span>
+      </td>
+      <td>
+        <span th:unless="${fmt.vide(atelier.telephone())}" th:text="${atelier.telephone()}">+32 485 64 44 61</span><br th:unless="${fmt.vide(atelier.telephone())}" />
+        <span th:unless="${fmt.vide(atelier.email())}" th:text="${atelier.email()}">contact@pcpro-services.be</span><br th:unless="${fmt.vide(atelier.email())}" />
+        <span th:unless="${fmt.vide(atelier.siteWeb())}" th:text="${atelier.siteWeb()}">pcpro-services.be</span>
+      </td>
+      <td class="droite">
+        <th:block th:unless="${fmt.vide(atelier.iban())}">
+          <span th:text="'IBAN ' + ${fmt.iban(atelier.iban())}">IBAN BE00 0000 0000 0000</span><br />
+          <span th:unless="${fmt.vide(atelier.bic())}" th:text="'BIC ' + ${atelier.bic()}">BIC</span><br th:unless="${fmt.vide(atelier.bic())}" />
+        </th:block>
+        <span>Page <span class="page"></span></span>
+      </td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>

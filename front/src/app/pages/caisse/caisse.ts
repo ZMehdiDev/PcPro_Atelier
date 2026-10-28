@@ -5,6 +5,7 @@ import { ApiService } from '../../core/api.service';
 import { DatePipe, EurosPipe, aujourdhui } from '../../core/formats';
 import { MOYEN_PAIEMENT } from '../../core/libelles';
 import { Caisse, MoyenPaiement } from '../../core/models';
+import { FactureVente } from '../vente/facture-vente';
 import { NotificationService } from '../../core/notification.service';
 
 function debutSemaine(): string {
@@ -31,7 +32,7 @@ interface Mouvement {
 /** Caisse (admin) : réparations et ventes encaissées sur une journée ou une période, par moyen de paiement. */
 @Component({
   selector: 'app-caisse',
-  imports: [FormsModule, RouterLink, DatePipe, EurosPipe],
+  imports: [FormsModule, RouterLink, DatePipe, EurosPipe, FactureVente],
   template: `
     <div class="page">
       <div class="entete-page">
@@ -102,6 +103,7 @@ interface Mouvement {
                     <td class="droite gras">{{ m.montant | euros }}</td>
                     <td class="droite no-print">
                       @if (m.venteId) {
+                        <app-facture-vente [venteId]="m.venteId" [discret]="true" />
                         <button class="btn btn-petit btn-lien" (click)="annulerVente(m.venteId)">Annuler</button>
                       }
                     </td>

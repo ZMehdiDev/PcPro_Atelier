@@ -16,11 +16,15 @@ import pcpro.atelier.core.exception.BadRequestException;
 import pcpro.atelier.core.exception.ConflictException;
 import pcpro.atelier.core.exception.ServiceIndisponibleException;
 import pcpro.atelier.features.bondepot.BonDepotService;
+import pcpro.atelier.features.devis.app.DevisPdfService;
 import pcpro.atelier.features.devis.domain.Devis;
 import pcpro.atelier.features.dossier.domain.Dossier;
 import pcpro.atelier.features.dossier.infra.DossierRepository;
 import pcpro.atelier.features.employe.infra.EmployeRepository;
 import pcpro.atelier.features.evenement.app.EvenementService;
+import pcpro.atelier.features.facture.app.FacturePdfService;
+import pcpro.atelier.features.facture.app.FactureService;
+import pcpro.atelier.features.facture.domain.Facture;
 import pcpro.atelier.features.paiement.app.SoldeService;
 
 /**
@@ -34,6 +38,9 @@ public class NotificationClientService {
 
   private final EmailService emailService;
   private final BonDepotService bonDepotService;
+  private final DevisPdfService devisPdfService;
+  private final FactureService factureService;
+  private final FacturePdfService facturePdfService;
   private final EmailTemplates templates;
   private final SoldeService soldeService;
   private final DossierRepository dossierRepository;
@@ -43,6 +50,9 @@ public class NotificationClientService {
   public NotificationClientService(
       EmailService emailService,
       BonDepotService bonDepotService,
+      DevisPdfService devisPdfService,
+      FactureService factureService,
+      FacturePdfService facturePdfService,
       EmailTemplates templates,
       SoldeService soldeService,
       DossierRepository dossierRepository,
@@ -51,6 +61,9 @@ public class NotificationClientService {
   ) {
     this.emailService = emailService;
     this.bonDepotService = bonDepotService;
+    this.devisPdfService = devisPdfService;
+    this.factureService = factureService;
+    this.facturePdfService = facturePdfService;
     this.templates = templates;
     this.soldeService = soldeService;
     this.dossierRepository = dossierRepository;
@@ -114,7 +127,24 @@ public class NotificationClientService {
 
   @Transactional
   public void envoyerDevis(Dossier dossier, Devis devis) {
-    envoyer(dossier, templates.devis(dossier, devis), "Email : devis envoyé");
+    DevisPdfService.DevisPdf pdf = devisPdfService.generer(dossier, devis);
+    envoyer(dossier, templates.devis(dossier, devis).avecPieceJointe(pdf.nomFichier(), pdf.pdf()), "Email : devis envoyé");
+  }
+
+  /** Facture (ou note de crédit) en PDF, à l'email donné ou à celui noté sur la facture. */
+  @Transactional
+  public void envoyerFacture(Long factureId, String email) {
+    Facture facture = factureService.getOrThrow(factureId);
+    String destinataire = email != null && !email.isBlank() ? email.trim() : facture.getClientEmail();
+    if (destinataire == null || destinataire.isBlank()) {
+      throw new BadRequestException("Indiquez l'adresse email du client");
+    }
+    FacturePdfService.FacturePdf pdf = facturePdfService.generer(facture);
+    emailService.envoyer(templates.facture(facture, destinataire).avecPieceJointe(pdf.nomFichier(), pdf.pdf()));
+    if (facture.getDossier() != null) {
+      evenementService.journaliser(facture.getDossier(), TypeActionEvenement.EMAIL_CLIENT, null,
+          "Email : " + (facture.estNoteCredit() ? "note de crédit " : "facture ") + facture.getNumero(), null);
+    }
   }
 
   private void envoyer(Dossier dossier, Email email, String libelle) {

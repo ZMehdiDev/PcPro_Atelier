@@ -132,6 +132,7 @@ export const EVENEMENT: Record<string, string | undefined> = {
   PAIEMENT: 'Paiement',
   ANNULATION_PAIEMENT: 'Paiement annulé',
   EMAIL_CLIENT: 'Email au client',
+  FACTURE: 'Facture',
   ACTION_SENSIBLE: 'Action',
 };
 

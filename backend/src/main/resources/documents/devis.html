@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<!--/*
+  Devis d'une réparation : lignes chiffrées, validité, QR code pour l'accepter en ligne et zone « bon pour accord ».
+*/-->
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title th:text="${titre}">Devis</title>
+  <style th:replace="~{commun :: style}"></style>
+</head>
+<body>
+<div th:replace="~{commun :: pied}"></div>
+
+<table th:replace="~{commun :: entete('Devis', ${d.reference()}, 'Établi le ' + ${fmt.dateLongue(d.date())})}"></table>
+
+<div class="hero">
+  <table>
+    <tr>
+      <td>
+        <div class="etiquette" th:text="${d.totaux().assujetti()} ? 'Total du devis TVAC' : 'Total du devis'">Total du devis</div>
+        <div class="hero-montant" th:text="${fmt.montant(d.totaux().tvac())}">146,00 €</div>
+        <div style="margin-top: 7pt">
+          <span th:switch="${d.statut().name()}">
+            <span th:case="'ACCEPTE'" class="pastille pastille-ok" th:text="'Accepté le ' + ${fmt.date(d.decideLe())}">Accepté</span>
+            <span th:case="'REFUSE'" class="pastille pastille-annule">Refusé</span>
+            <span th:case="*" class="pastille pastille-attente" th:text="'Valable jusqu\'au ' + ${fmt.date(d.valableJusquau())}">Valable jusqu'au</span>
+          </span>
+        </div>
+      </td>
+      <td class="droite" style="width: 62mm" th:if="${d.qrAccord() != null}">
+        <table style="width: auto; margin-left: auto">
+          <tr>
+            <td style="vertical-align: middle; padding-right: 8pt" class="droite">
+              <div class="gras">Répondre en ligne</div>
+              <div class="petit doux">Scannez pour accepter<br />ou refuser ce devis</div>
+            </td>
+            <td style="width: 24mm"><img class="qr-petit" th:src="${d.qrAccord()}" alt="QR code pour répondre au devis" /></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<table class="cartes">
+  <tr>
+    <td class="moitie carte">
+      <div class="etiquette">Client</div>
+      <div class="carte-titre" th:text="${d.clientNom()}">Martin Dubois</div>
+      <table class="champs">
+        <tr><td class="libelle">Téléphone</td><td th:text="${d.clientTelephone()}">0470 12 34 56</td></tr>
+        <tr th:unless="${fmt.vide(d.clientEmail())}"><td class="libelle">Email</td><td th:text="${d.clientEmail()}">martin@example.be</td></tr>
+      </table>
+    </td>
+    <td class="espace"></td>
+    <td class="moitie carte">
+      <div class="etiquette">Appareil</div>
+      <div class="carte-titre" th:text="${d.appareil()}">Ordinateur portable Lenovo T14</div>
+      <table class="champs">
+        <tr><td class="libelle">Dossier</td><td th:text="${d.reference()}">PCP-2026-0042</td></tr>
+        <tr th:unless="${fmt.vide(d.numeroSerie())}"><td class="libelle">N° de série</td><td th:text="${d.numeroSerie()}">PF3XYZ</td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<table th:replace="~{commun :: lignes(${d.lignes()}, ${d.totaux()})}"></table>
+<table th:replace="~{commun :: totaux(${d.totaux()}, 'Total')}"></table>
+
+<div class="encadre encadre-plein" th:unless="${fmt.vide(d.commentaire())}">
+  <div class="etiquette" style="margin-bottom: 3pt">Remarque</div>
+  <p th:text="${d.commentaire()}">Le disque est endommagé : nous conseillons de le remplacer par un SSD.</p>
+</div>
+
+<table class="signatures" th:if="${d.statut().name() == 'EN_ATTENTE'}" style="page-break-inside: avoid">
+  <tr>
+    <td class="moitie">
+      <div class="titre-section">Votre accord</div>
+      <p class="doux">
+        Pour accepter ce devis, signez-le en écrivant « bon pour accord »,
+        <th:block th:if="${d.qrAccord() != null}">scannez le QR code, </th:block>
+        ou appelez-nous<th:block th:unless="${fmt.vide(atelier.telephone())}" th:text="' au ' + ${atelier.telephone()}"></th:block>.
+        La réparation commence dès votre accord.
+      </p>
+    </td>
+    <td class="espace"></td>
+    <td class="moitie">
+      <div class="zone-signature">
+        <div class="etiquette">Date et signature</div>
+        <div class="petit tres-doux">Précédées de « bon pour accord »</div>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<div class="conditions" style="margin-top: 5mm">
+  <p th:if="${d.statut().name() == 'EN_ATTENTE'}" th:text="'Ce devis est valable ' + ${d.validiteJours()} + ' jours. Le devis est gratuit et ne vous engage qu\'après votre accord.'">Validité</p>
+  <p th:if="${d.totaux().assujetti()}" th:text="'Prix TVA comprise (' + ${fmt.taux(d.totaux().taux())} + ' %).'">Prix TVAC</p>
+  <p th:unless="${d.totaux().assujetti()}" th:text="${mentionFranchise}">Régime particulier de franchise des petites entreprises</p>
+  <p th:if="${d.statut().name() != 'REFUSE'}">Des pièces ou travaux supplémentaires découverts pendant la réparation feront l'objet d'un nouveau devis.</p>
+</div>
+
+</body>
+</html>

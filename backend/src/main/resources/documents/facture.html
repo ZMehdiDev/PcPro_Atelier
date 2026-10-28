@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<!--/*
+  Facture ou note de crédit. Mentions légales belges : numéro continu, date, identité et BCE/TVA de l'entreprise,
+  client, détail des prestations, régime de TVA. Pour une réparation, la facture sert aussi de bon de garantie.
+  Reste à payer : communication structurée et QR code de virement (scannable dans les applis bancaires).
+*/-->
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title th:text="${titre}">Facture</title>
+  <style th:replace="~{commun :: style}"></style>
+  <style>
+    .communication { font-size: 11pt; font-weight: 600; letter-spacing: 0.3pt; }
+    .garantie td { vertical-align: middle; }
+    .garantie-date { font-family: 'Newsreader'; font-size: 15pt; font-weight: 500; }
+  </style>
+</head>
+<body>
+<div th:replace="~{commun :: pied}"></div>
+
+<table th:replace="~{commun :: entete(${f.noteCredit()} ? 'Note de crédit' : 'Facture', 'N° ' + ${f.numero()}, 'Émise le ' + ${fmt.dateLongue(f.dateEmission())})}"></table>
+
+<!--/* Montant et statut */-->
+<div class="hero">
+  <table>
+    <tr>
+      <td>
+        <div class="etiquette" th:text="${f.noteCredit()} ? 'Montant crédité' : (${f.totaux().assujetti()} ? 'Montant total TVAC' : 'Montant total')">Montant total</div>
+        <div class="hero-montant" th:text="${fmt.montant(f.totaux().tvac())}">146,00 €</div>
+        <div style="margin-top: 7pt" th:switch="${f.statut().name()}">
+          <span th:case="'PAYEE'" class="pastille pastille-ok">Payée</span>
+          <span th:case="'A_PAYER'" class="pastille pastille-attente" th:text="'Reste à payer ' + ${fmt.montant(f.reste())}">Reste à payer</span>
+          <span th:case="'ANNULEE'" class="pastille pastille-annule" th:text="'Annulée par la note de crédit ' + ${f.annuleePar()}">Annulée</span>
+          <span th:case="'NOTE_CREDIT'" class="pastille pastille-info" th:text="'Annule la facture ' + ${f.factureOrigine()}">Note de crédit</span>
+        </div>
+      </td>
+      <td class="droite" style="width: 72mm" th:if="${f.qrVirement() != null}">
+        <table style="width: auto; margin-left: auto">
+          <tr>
+            <td style="vertical-align: middle; padding-right: 8pt" class="droite">
+              <div class="gras">Payer par virement</div>
+              <div class="petit doux">Scannez avec votre appli<br />bancaire : tout est prérempli</div>
+            </td>
+            <td style="width: 24mm"><img class="qr-petit" th:src="${f.qrVirement()}" alt="QR code de paiement" /></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!--/* Client et détails */-->
+<table class="cartes">
+  <tr>
+    <td class="moitie carte">
+      <div class="etiquette" th:text="${f.noteCredit()} ? 'Client' : 'Facturé à'">Facturé à</div>
+      <div class="carte-titre" th:text="${f.clientNom()}">Martin Dubois</div>
+      <p th:unless="${fmt.vide(f.clientAdresse())}" th:text="${f.clientAdresse()}">Rue de la Loi 16, 1000 Bruxelles</p>
+      <table class="champs" style="margin-top: 2pt">
+        <tr th:unless="${fmt.vide(f.clientTva())}"><td class="libelle">N° TVA</td><td th:text="${f.clientTva()}">BE 0123.456.789</td></tr>
+        <tr th:unless="${fmt.vide(f.clientTelephone())}"><td class="libelle">Téléphone</td><td th:text="${f.clientTelephone()}">0470 12 34 56</td></tr>
+        <tr th:unless="${fmt.vide(f.clientEmail())}"><td class="libelle">Email</td><td th:text="${f.clientEmail()}">martin@example.be</td></tr>
+      </table>
+    </td>
+    <td class="espace"></td>
+    <td class="moitie carte">
+      <div class="etiquette">Détails</div>
+      <div class="carte-titre" th:text="${f.objet()}">Réparation</div>
+      <table class="champs">
+        <tr th:if="${f.reference() != null}"><td class="libelle">Dossier</td><td th:text="${f.reference()}">PCP-2026-0042</td></tr>
+        <tr th:if="${f.appareil() != null}"><td class="libelle">Appareil</td><td th:text="${f.appareil()}">Ordinateur portable</td></tr>
+        <tr th:if="${f.datePrestation() != null}"><td class="libelle" th:text="${f.reference() != null} ? 'Réparé le' : 'Vendu le'">Réparé le</td><td th:text="${fmt.date(f.datePrestation())}">27/10/2026</td></tr>
+        <tr th:if="${f.factureOrigine() != null}"><td class="libelle">Facture</td><td th:text="${f.factureOrigine()} + ' du ' + ${fmt.date(f.factureOrigineDate())}">2026-0001</td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<table th:replace="~{commun :: lignes(${f.lignes()}, ${f.totaux()})}"></table>
+
+<!--/* Totaux, paiements reçus et reste à payer */-->
+<table class="totaux">
+  <th:block th:if="${f.totaux().assujetti()}">
+    <tr><td class="doux">Total HTVA</td><td class="num" th:text="${fmt.montant(f.totaux().htva())}">120,66 €</td></tr>
+    <tr><td class="doux" th:text="'TVA ' + ${fmt.taux(f.totaux().taux())} + ' %'">TVA 21 %</td><td class="num" th:text="${fmt.montant(f.totaux().tva())}">25,34 €</td></tr>
+  </th:block>
+  <tr class="total">
+    <td th:text="'Total' + (${f.totaux().assujetti()} ? ' TVAC' : '')">Total</td>
+    <td class="num" th:text="${fmt.montant(f.totaux().tvac())}">146,00 €</td>
+  </tr>
+  <th:block th:unless="${f.noteCredit() or f.paiements().isEmpty()}">
+    <tr th:each="p : ${f.paiements()}">
+      <td class="doux" th:text="'Payé le ' + ${fmt.date(p.date())} + ' · ' + ${p.moyen()}">Payé le 28/10/2026 · Espèces</td>
+      <td class="num doux" th:text="${fmt.montant(p.montant().negate())}">−50,00 €</td>
+    </tr>
+    <tr class="reste"><td>Reste à payer</td><td class="num" th:text="${fmt.montant(f.reste())}">0,00 €</td></tr>
+  </th:block>
+</table>
+
+<!--/* Virement à faire : coordonnées et communication structurée */-->
+<div class="encadre encadre-plein" style="page-break-inside: avoid" th:if="${f.communication() != null and !fmt.vide(atelier.iban())}">
+  <table>
+    <tr>
+      <td>
+        <div class="etiquette" style="margin-bottom: 2pt">IBAN</div>
+        <div class="chiffres medium" th:text="${fmt.iban(atelier.iban())}">BE68 5390 0754 7034</div>
+      </td>
+      <td th:unless="${fmt.vide(atelier.bic())}">
+        <div class="etiquette" style="margin-bottom: 2pt">BIC</div>
+        <div class="medium" th:text="${atelier.bic()}">GKCCBEBB</div>
+      </td>
+      <td>
+        <div class="etiquette" style="margin-bottom: 2pt">Communication</div>
+        <div class="communication chiffres" th:text="${f.communication()}">+++202/6000/00197+++</div>
+      </td>
+      <td class="droite">
+        <div class="etiquette" style="margin-bottom: 2pt">Montant</div>
+        <div class="chiffres gras" th:text="${fmt.montant(f.reste())}">193,90 €</div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!--/* Garantie de la réparation : la facture sert de bon de garantie */-->
+<div class="encadre garantie" style="page-break-inside: avoid" th:if="${f.finGarantie() != null and f.statut().name() != 'ANNULEE'}">
+  <table>
+    <tr>
+      <td style="width: 70mm">
+        <div class="etiquette" style="margin-bottom: 1pt">Garantie</div>
+        <div class="garantie-date" th:text="'Jusqu\'au ' + ${fmt.dateLongue(f.finGarantie())}">Jusqu'au 30 janvier 2027</div>
+      </td>
+      <td class="petit doux">Pièces et main-d'œuvre, hors casse, oxydation, mauvaise utilisation ou intervention d'un tiers.
+        Conservez cette facture : elle sert de bon de garantie.</td>
+    </tr>
+  </table>
+</div>
+
+<div class="conditions" style="margin-top: 2mm" th:if="${f.noteCredit() or !f.totaux().assujetti() or !fmt.vide(atelier.mentionFacture())}">
+  <p th:if="${f.noteCredit()}" th:text="'Cette note de crédit annule la facture ' + ${f.factureOrigine()} + ' du ' + ${fmt.date(f.factureOrigineDate())} + '.'">Annule</p>
+  <p th:unless="${f.totaux().assujetti()}" th:text="${mentionFranchise}">Régime particulier de franchise des petites entreprises</p>
+  <p th:unless="${fmt.vide(atelier.mentionFacture())}" th:text="${atelier.mentionFacture()}">Payable au comptant.</p>
+</div>
+
+</body>
+</html>

@@ -71,6 +71,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/chiffre-affaires/chiffre-affaires').then((m) => m.ChiffreAffairesPage),
       },
       {
+        path: 'factures',
+        title: 'Factures · Pc Pro Atelier',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./pages/factures/factures').then((m) => m.FacturesPage),
+      },
+      {
         path: 'employes',
         title: 'Employés · Pc Pro Atelier',
         canActivate: [adminGuard],

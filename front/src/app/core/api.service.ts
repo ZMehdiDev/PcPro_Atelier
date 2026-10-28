@@ -17,6 +17,8 @@ import {
   DossierResume,
   Employe,
   EtatPiece,
+  Facture,
+  FactureRequest,
   Garantie,
   LigneDevis,
   Note,
@@ -103,6 +105,10 @@ export class ApiService {
 
   // Devis
 
+  devisPdf(id: number): Observable<Blob> {
+    return this.http.get(`/api/dossiers/${id}/devis/pdf`, { responseType: 'blob' });
+  }
+
   enregistrerDevis(id: number, lignes: LigneDevis[], commentaire: string | null): Observable<Devis> {
     return this.http.put<Devis>(`/api/dossiers/${id}/devis`, { lignes, commentaire });
   }
@@ -139,6 +145,47 @@ export class ApiService {
 
   annulerVente(id: number): Observable<void> {
     return this.http.delete<void>(`/api/ventes/${id}`);
+  }
+
+  // Factures
+
+  /** Facture du dossier, ou null s'il n'en a pas encore (réponse 204). */
+  factureDuDossier(id: number): Observable<Facture | null> {
+    return this.http.get<Facture | null>(`/api/dossiers/${id}/facture`);
+  }
+
+  /** Émet la facture du dossier (ou renvoie celle qui existe). */
+  facturerDossier(id: number, req: FactureRequest): Observable<Facture> {
+    return this.http.post<Facture>(`/api/dossiers/${id}/facture`, req);
+  }
+
+  factureDeLaVente(id: number): Observable<Facture | null> {
+    return this.http.get<Facture | null>(`/api/ventes/${id}/facture`);
+  }
+
+  facturerVente(id: number, req: FactureRequest): Observable<Facture> {
+    return this.http.post<Facture>(`/api/ventes/${id}/facture`, req);
+  }
+
+  factures(du: string, au: string): Observable<Facture[]> {
+    return this.http.get<Facture[]>('/api/factures', { params: params({ du, au }) });
+  }
+
+  facturePdf(id: number): Observable<Blob> {
+    return this.http.get(`/api/factures/${id}/pdf`, { responseType: 'blob' });
+  }
+
+  envoyerFacture(id: number, email: string | null): Observable<void> {
+    return this.http.post<void>(`/api/factures/${id}/envoi`, { email });
+  }
+
+  /** Annule la facture par une note de crédit (admin). */
+  annulerFacture(id: number): Observable<Facture> {
+    return this.http.post<Facture>(`/api/factures/${id}/annulation`, {});
+  }
+
+  journalRecettes(du: string, au: string): Observable<Blob> {
+    return this.http.get('/api/factures/journal', { params: params({ du, au }), responseType: 'blob' });
   }
 
   chiffreAffaires(du: string, au: string): Observable<ChiffreAffaires> {

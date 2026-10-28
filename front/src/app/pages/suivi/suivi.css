@@ -120,6 +120,32 @@ dd {
   margin-bottom: 0.25rem;
 }
 
+.horaires {
+  width: 100%;
+  margin-top: 0.75rem;
+  border-collapse: collapse;
+}
+.horaires th,
+.horaires td {
+  padding: 0.3rem 0;
+  border-top: 1px solid var(--bordure);
+  font-size: 0.9rem;
+}
+.horaires th {
+  text-align: left;
+  font-weight: 600;
+  padding-right: 1rem;
+}
+.horaires td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.horaires tr.ferme th,
+.horaires tr.ferme td {
+  color: var(--texte-doux);
+  font-weight: 400;
+}
+
 .centre {
   text-align: center;
 }

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<!--/*
+  Bon de dépôt. Une page par exemplaire :
+  - client : référence, code et QR code de suivi, récapitulatif, conditions ;
+  - atelier : même récapitulatif signé par le client, et une étiquette à découper et coller sur l'appareil
+    (son QR code ouvre la fiche du dossier dans l'appli).
+*/-->
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title th:text="${titre}">Bon de dépôt</title>
+  <style th:replace="~{commun :: style}"></style>
+  <style>
+    .horaires td { padding: 1.5pt 0; font-size: 8.5pt; vertical-align: top; }
+    .horaires td.jours { font-weight: 600; padding-right: 8pt; white-space: nowrap; }
+    .horaires td.heures { text-align: right; font-family: 'Inter Chiffres'; }
+    .horaires tr.ferme td { color: #9c988f; font-weight: 400; }
+    .code-suivi { font-size: 13pt; font-weight: 700; letter-spacing: 2pt; }
+    .decoupe {
+      margin-top: 7mm;
+      border-top: 1pt dashed #c9c4b8;
+      padding-top: 2pt;
+      text-align: center;
+      font-size: 6.8pt;
+      color: #9c988f;
+    }
+    .etiquette-appareil {
+      margin-top: 4mm;
+      border: 1.25pt solid #1c1b18;
+      border-radius: 12pt;
+      padding: 10pt 12pt;
+    }
+    .etiquette-appareil td { vertical-align: middle; }
+    .etiquette-ref { font-size: 20pt; font-weight: 700; letter-spacing: -0.4pt; line-height: 1.1; }
+    .page-suivante { page-break-before: always; }
+  </style>
+</head>
+<body>
+<div th:replace="~{commun :: pied}"></div>
+
+<th:block th:each="ex, iter : ${exemplaires}">
+<div th:class="${iter.first} ? '' : 'page-suivante'">
+
+  <table th:replace="~{commun :: entete('Bon de dépôt', ${d.reference()}, 'Déposé le ' + ${fmt.dateLongue(d.dateDepot())})}"></table>
+
+  <!--/* Bloc principal : référence et suivi */-->
+  <div class="hero">
+    <table>
+      <tr>
+        <td>
+          <div class="etiquette" th:text="${ex.name() == 'CLIENT'} ? 'Votre référence' : 'Référence du dossier'">Votre référence</div>
+          <div class="hero-ref" th:text="${d.reference()}">PCP-2026-0042</div>
+          <div class="hero-texte">
+            Code de suivi&#160; <span class="code-suivi" th:text="${d.codeSuivi()}">4F7K2Q</span>
+          </div>
+          <div class="hero-texte" th:if="${ex.name() == 'CLIENT' and d.urlSuivi() != null}">
+            Scannez le QR code pour suivre votre réparation en ligne,<br />
+            ou rendez-vous sur <span class="medium" th:text="${d.urlSuivi()}">atelier.pcpro-services.be/suivi</span>.
+          </div>
+          <div class="hero-texte" th:if="${ex.name() == 'CLIENT' and d.urlSuivi() == null}">
+            Donnez votre référence et ce code à l'atelier pour connaître l'avancement.
+          </div>
+          <div style="margin-top: 7pt">
+            <span th:class="${ex.name() == 'CLIENT'} ? 'pastille pastille-info' : 'pastille'"
+                  th:text="${ex.name() == 'CLIENT'} ? 'Exemplaire client' : 'Exemplaire atelier'">Exemplaire client</span>
+          </div>
+        </td>
+        <td class="droite" style="width: 30mm" th:if="${ex.name() == 'CLIENT' and d.qrSuivi() != null}">
+          <img class="qr" th:src="${d.qrSuivi()}" alt="QR code de suivi" />
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!--/* Client et appareil */-->
+  <table class="cartes">
+    <tr>
+      <td class="moitie carte">
+        <div class="etiquette">Client</div>
+        <div class="carte-titre" th:text="${d.clientNom()}">Martin Dubois</div>
+        <table class="champs">
+          <tr><td class="libelle">Téléphone</td><td th:text="${d.clientTelephone()}">0470 12 34 56</td></tr>
+          <tr th:unless="${fmt.vide(d.clientEmail())}"><td class="libelle">Email</td><td th:text="${d.clientEmail()}">martin@example.be</td></tr>
+        </table>
+      </td>
+      <td class="espace"></td>
+      <td class="moitie carte">
+        <div class="etiquette">Appareil</div>
+        <div class="carte-titre" th:text="${d.appareil()}">Ordinateur portable Lenovo T14</div>
+        <table class="champs">
+          <tr><td class="libelle">N° de série</td><td th:text="${fmt.vide(d.numeroSerie()) ? '—' : d.numeroSerie()}">PF3XYZ</td></tr>
+          <tr><td class="libelle">Accessoires</td><td th:text="${fmt.vide(d.accessoires()) ? 'Aucun' : d.accessoires()}">Chargeur</td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!--/* Problème et délai */-->
+  <div class="encadre">
+    <table>
+      <tr>
+        <td>
+          <div class="etiquette" style="margin-bottom: 3pt">Problème signalé</div>
+          <p th:text="${d.probleme()}">L'ordinateur ne s'allume plus.</p>
+        </td>
+        <td class="droite" style="width: 42mm; padding-left: 10pt">
+          <div class="etiquette" style="margin-bottom: 3pt">Date prévue</div>
+          <p class="gras" th:text="${d.datePrevue() != null} ? ${fmt.date(d.datePrevue())} : 'Après diagnostic'">30/10/2026</p>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!--/* Conditions */-->
+  <div class="conditions" style="margin-bottom: 5mm">
+    <div class="etiquette" style="margin-bottom: 3pt">Conditions de dépôt</div>
+    <p th:each="condition : ${d.conditions()}" th:text="'· ' + ${condition}">Le devis est gratuit.</p>
+  </div>
+
+  <!--/* Exemplaire client : coordonnées et horaires ; exemplaire atelier : signatures */-->
+  <div class="encadre encadre-plein" th:if="${ex.name() == 'CLIENT'}">
+    <table>
+      <tr>
+        <td>
+          <div class="titre-section">Une question ?</div>
+          <p class="doux">
+            <span th:unless="${fmt.vide(atelier.telephone())}" th:text="'Appelez-nous au ' + ${atelier.telephone()}">Appelez-nous</span><span th:unless="${fmt.vide(atelier.telephone())}"> en indiquant votre référence.</span>
+            <span th:if="${fmt.vide(atelier.telephone())}">Passez nous voir avec ce bon.</span>
+          </p>
+        </td>
+        <td style="width: 82mm" th:unless="${fmt.vide(atelier.horaires())}">
+          <div class="etiquette" style="margin-bottom: 4pt">Heures d'ouverture</div>
+          <table class="horaires">
+            <tr th:each="h : ${atelier.tableauHoraires()}" th:classappend="${#strings.equalsIgnoreCase(h.heures(), 'fermé')} ? 'ferme'">
+              <td class="jours" th:text="${h.jours()}">Mardi au jeudi</td>
+              <td class="heures" th:text="${h.heures()}">10h – 13h et 14h – 18h30</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <th:block th:if="${ex.name() == 'ATELIER'}">
+    <table class="signatures">
+      <tr>
+        <td class="moitie">
+          <div class="zone-signature">
+            <div class="etiquette">Signature du client</div>
+            <div class="petit tres-doux">Lu et approuvé, conditions acceptées</div>
+          </div>
+        </td>
+        <td class="espace"></td>
+        <td class="moitie">
+          <div class="zone-signature">
+            <div class="etiquette" th:text="'Pour ' + ${atelier.nom()}">Pour PC PRO</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <div class="decoupe">Étiquette à découper et à coller sur l'appareil</div>
+    <div class="etiquette-appareil">
+      <table>
+        <tr>
+          <td>
+            <div class="etiquette-ref" th:text="${d.reference()}">PCP-2026-0042</div>
+            <div class="gras" style="font-size: 11pt; margin-top: 2pt" th:text="${d.clientNom()} + ' · ' + ${d.clientTelephone()}">Martin Dubois · 0470 12 34 56</div>
+            <div class="doux" th:text="${d.appareil()}">Ordinateur portable Lenovo T14</div>
+            <div class="doux" th:text="'Déposé le ' + ${fmt.date(d.dateDepot())} + (${d.datePrevue() != null} ? ' · prévu le ' + ${fmt.date(d.datePrevue())} : '')">Déposé le 28/10/2026</div>
+          </td>
+          <td class="droite" style="width: 24mm" th:if="${d.qrDossier() != null}">
+            <img class="qr-petit" th:src="${d.qrDossier()}" alt="QR code du dossier" />
+          </td>
+        </tr>
+      </table>
+    </div>
+  </th:block>
+
+</div>
+</th:block>
+</body>
+</html>
