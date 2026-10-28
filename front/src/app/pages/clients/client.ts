@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { DatePipe } from '../../core/formats';
-import { initiales } from '../../core/libelles';
+import { initiales, teinte } from '../../core/libelles';
 import { ClientDetail } from '../../core/models';
 import { NotificationService } from '../../core/notification.service';
 import { Dialogue } from '../../shared/dialogue';
@@ -15,10 +15,10 @@ import { ListeDossiers } from '../../shared/liste-dossiers';
   template: `
     @if (detail(); as d) {
       <div class="page page-etroite">
-        <a routerLink="/clients" class="retour">‹ Clients</a>
+        <a routerLink="/clients" class="retour"><span class="chevron" aria-hidden="true"></span>Clients</a>
 
         <section class="carte profil">
-          <span class="avatar-initiales grand" aria-hidden="true">{{ initiales(d.client.nom) }}</span>
+          <span class="avatar-initiales grand" [style.--teinte]="teinte(d.client.nom)" aria-hidden="true">{{ initiales(d.client.nom) }}</span>
           <h1>{{ d.client.nom }}</h1>
           <p class="doux">
             {{ d.client.telephone }}{{ d.client.email ? ' · ' + d.client.email : '' }}
@@ -52,15 +52,37 @@ import { ListeDossiers } from '../../shared/liste-dossiers';
         </div>
       </app-dialogue>
     } @else {
-      <div class="page"><p class="vide">Chargement…</p></div>
+      <div class="page page-etroite">
+        <section class="carte profil">
+          <span class="squelette" style="width: 76px; height: 76px; border-radius: 50%"></span>
+          <span class="squelette" style="width: 40%; height: 30px; margin-top: 16px"></span>
+          <span class="squelette" style="width: 30%; height: 16px; margin-top: 10px"></span>
+        </section>
+      </div>
     }
   `,
   styles: `
     .retour {
-      display: inline-block;
-      margin-bottom: 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0 0 0.9rem -0.3rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      color: var(--texte-doux);
       font-weight: 600;
       text-decoration: none;
+    }
+    .retour:hover {
+      background: var(--surface);
+      color: var(--texte);
+    }
+    .chevron {
+      width: 8px;
+      height: 8px;
+      border-left: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      transform: rotate(45deg);
     }
     .profil {
       display: flex;
@@ -95,6 +117,7 @@ import { ListeDossiers } from '../../shared/liste-dossiers';
 })
 export class ClientPage {
   protected readonly initiales = initiales;
+  protected readonly teinte = teinte;
   private readonly api = inject(ApiService);
   private readonly notifications = inject(NotificationService);
 

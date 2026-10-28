@@ -1,12 +1,17 @@
 import { Component, ElementRef, effect, input, output, viewChild } from '@angular/core';
 
-/** Fenêtre modale (élément <dialog> natif) : Échap ou clic à côté pour fermer. */
+/** Fenêtre modale (élément <dialog> natif) : Échap, la croix ou un clic à côté pour fermer. Sur téléphone, elle monte du bas. */
 @Component({
   selector: 'app-dialogue',
   template: `
-    <dialog #dialog (close)="fermer.emit()" (click)="clicFond($event)">
-      <div class="dialogue-corps">
+    <dialog #dialog (close)="fermer.emit()" (click)="clicFond($event)" [attr.aria-label]="titre()">
+      <div class="dialogue-entete">
         <h2>{{ titre() }}</h2>
+        <button type="button" class="fermer" (click)="dialog.close()" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      </div>
+      <div class="dialogue-corps">
         <ng-content />
       </div>
     </dialog>

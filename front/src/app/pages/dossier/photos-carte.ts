@@ -2,6 +2,7 @@ import { Component, DestroyRef, effect, inject, input, output, signal } from '@a
 import { ApiService } from '../../core/api.service';
 import { DatePipe } from '../../core/formats';
 import { DossierDetail, Photo } from '../../core/models';
+import { ConfirmationService } from '../../core/confirmation.service';
 import { NotificationService } from '../../core/notification.service';
 import { Dialogue } from '../../shared/dialogue';
 
@@ -106,6 +107,7 @@ async function reduire(fichier: File): Promise<Blob> {
 export class PhotosCarte {
   private readonly api = inject(ApiService);
   private readonly notifications = inject(NotificationService);
+  private readonly confirmation = inject(ConfirmationService);
 
   readonly dossier = input.required<DossierDetail>();
   readonly modifie = output<void>();
@@ -161,8 +163,9 @@ export class PhotosCarte {
     }
   }
 
-  protected supprimer(p: Photo): void {
-    if (!confirm('Supprimer cette photo ?')) {
+  protected async supprimer(p: Photo): Promise<void> {
+    this.agrandie.set(null);
+    if (!(await this.confirmation.demander({ titre: 'Supprimer cette photo ?', bouton: 'Supprimer', danger: true }))) {
       return;
     }
     this.api.supprimerPhoto(this.dossier().id, p.id).subscribe({

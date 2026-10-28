@@ -1,6 +1,9 @@
-<div class="page page-etroite">
+<div class="page">
   <div class="entete-page">
-    <h1>Nouveau dépôt</h1>
+    <div>
+      <h1>Nouveau dépôt</h1>
+      <p class="sous-titre-page">Le client, l'appareil, le problème. Le bon de dépôt suit.</p>
+    </div>
   </div>
 
   @if (erreurs().length) {
@@ -11,9 +14,10 @@
     </div>
   }
 
-  <form (ngSubmit)="valider()" autocomplete="off">
+  <form (ngSubmit)="valider()" autocomplete="off" class="formulaire">
+    <div class="etapes-depot">
     <section class="carte">
-      <h2>Client</h2>
+      <h2><span class="ligne"><span class="numero">1</span> Client</span></h2>
       @if (clientConnu(); as c) {
         <div class="bandeau bandeau-info ligne ligne-espace">
           <span>Client déjà connu : <strong>{{ c.nom }}</strong></span>
@@ -59,7 +63,7 @@
     </section>
 
     <section class="carte">
-      <h2>Appareil</h2>
+      <h2><span class="ligne"><span class="numero">2</span> Appareil</span></h2>
       <div class="pile">
         <div class="choix" role="radiogroup" aria-label="Type d'appareil">
           @for (t of typesAppareil; track t) {
@@ -98,7 +102,7 @@
     </section>
 
     <section class="carte">
-      <h2>Dépôt</h2>
+      <h2><span class="ligne"><span class="numero">3</span> Dépôt</span></h2>
       <div class="pile">
         <label class="champ">
           <span>Problème décrit par le client *</span>
@@ -154,11 +158,40 @@
       </div>
     </section>
 
-    <div class="valider">
+    </div>
+
+    <!-- Récapitulatif qui reste visible, avec le bouton pour enregistrer -->
+    <aside class="carte recap">
+      <p class="surtitre">Récapitulatif</p>
+      <dl>
+        <dt>Client</dt>
+        <dd>
+          @if (nom.trim() || telephone.trim()) {
+            {{ nom.trim() || '—' }}
+            <span class="doux">{{ telephone }}</span>
+          } @else {
+            <span class="doux">À remplir</span>
+          }
+        </dd>
+        <dt>Appareil</dt>
+        <dd>{{ libellesType[type] }} {{ marque }} {{ modele }}</dd>
+        <dt>Problème</dt>
+        <dd class="probleme">
+          @if (probleme.trim()) {
+            {{ probleme }}
+          } @else {
+            <span class="doux">À remplir</span>
+          }
+        </dd>
+        @if (dateEstimee) {
+          <dt>Prêt prévu</dt>
+          <dd>{{ dateEstimee | date }}</dd>
+        }
+      </dl>
       <button class="btn btn-principal btn-grand btn-bloc" [disabled]="envoi()">
         {{ envoi() ? 'Enregistrement…' : 'Enregistrer le dépôt' }}
       </button>
       <p class="doux petit">Le bon de dépôt sera prêt à imprimer juste après{{ email ? ', et envoyé au client par email' : '' }}.</p>
-    </div>
+    </aside>
   </form>
 </div>

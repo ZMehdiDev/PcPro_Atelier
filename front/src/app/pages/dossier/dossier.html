@@ -1,6 +1,9 @@
 @if (dossier(); as d) {
   <div class="page">
-    <a routerLink="/dossiers" class="retour no-print">‹ Retour aux réparations</a>
+    <a routerLink="/dossiers" class="retour no-print">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+      Réparations
+    </a>
 
     @if (nouveau()) {
       <div class="bandeau bandeau-ok nouveau">
@@ -12,7 +15,10 @@
           Imprimez-le : un exemplaire pour le client, un pour l'atelier.
         </div>
         <div class="ligne">
-          <button class="btn btn-principal btn-grand" (click)="bonDepot()">Imprimer le bon de dépôt</button>
+          <button class="btn btn-principal btn-grand" (click)="bonDepot()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 17H4v-7a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v7h-3M7 14h10v7H7z" /></svg>
+            Imprimer le bon de dépôt
+          </button>
           <button class="btn btn-lien" (click)="fermerBandeauNouveau()">Fermer</button>
         </div>
       </div>
@@ -21,23 +27,44 @@
     <!-- En-tête : qui, quoi, où on en est -->
     <section class="carte entete-dossier">
       <div class="identite">
-        <div class="ligne">
-          <h1><a [routerLink]="['/clients', d.client.id]" class="nom-client">{{ d.client.nom }}</a></h1>
-          @if (d.priorite === 'HAUTE') {
-            <span class="badge badge-danger">Urgent</span>
-          }
+        <span class="avatar-initiales grand masquer-mobile" [style.--teinte]="teinte(d.client.nom)" aria-hidden="true">{{ initiales(d.client.nom) }}</span>
+        <div class="qui">
+          <div class="ligne">
+            <h1><a [routerLink]="['/clients', d.client.id]" class="nom-client" title="Voir la fiche du client">{{ d.client.nom }}</a></h1>
+            @if (d.priorite === 'HAUTE') {
+              <span class="badge badge-danger">Urgent</span>
+            }
+          </div>
+          <div class="appareil">
+            {{ libellesType[d.appareil.type] }} {{ d.appareil.marque }} {{ d.appareil.modele }}
+          </div>
+          <div class="ligne meta">
+            <button type="button" class="reference" (click)="copierReference()" title="Copier la référence">{{ d.reference }}</button>
+            <span class="doux petit">Déposé le {{ d.dateEntree | date }}</span>
+          </div>
         </div>
-        <div class="appareil">
-          {{ libellesType[d.appareil.type] }} {{ d.appareil.marque }} {{ d.appareil.modele }}
-        </div>
-        <div class="doux petit">{{ d.reference }}</div>
       </div>
-      <button class="btn no-print" (click)="bonDepot()">Bon de dépôt</button>
+      <div class="ligne outils no-print">
+        <a class="btn" [href]="'tel:' + d.client.telephone">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" /></svg>
+          Appeler
+        </a>
+        <button class="btn" (click)="bonDepot()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3h10v6M7 17H4v-7a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v7h-3M7 14h10v7H7z" /></svg>
+          Bon de dépôt
+        </button>
+      </div>
 
       <ol class="parcours" aria-label="Avancement">
         @for (e of parcours; track e.statut; let i = $index) {
           <li [class.fait]="i < etapeActuelle()" [class.actuelle]="i === etapeActuelle()">
-            <span class="pastille">{{ i + 1 }}</span>
+            <span class="pastille">
+              @if (i < etapeActuelle() || (i === 4 && etapeActuelle() === 4)) {
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4L18 8.5" /></svg>
+              } @else {
+                {{ i + 1 }}
+              }
+            </span>
             <span class="nom">
               {{ e.libelle }}
               @if (i === etapeActuelle() && (d.statut === 'ATTENTE_CLIENT' || d.statut === 'ATTENTE_PIECE')) {
@@ -75,7 +102,7 @@
     <!-- Que faire maintenant ? -->
     <section class="carte maintenant no-print">
       <div class="consigne">
-        <h2>Prochaine étape</h2>
+        <p class="surtitre">Prochaine étape</p>
         <p>
           @switch (d.statut) {
             @case ('RECU') {
@@ -113,7 +140,7 @@
       <div class="boutons">
         @if (etapes().principale; as p) {
           <button
-            class="btn btn-grand"
+            class="btn btn-grand principale"
             [class.btn-ok]="p === 'PRET' || p === 'CLOTURE'"
             [class.btn-principal]="p !== 'PRET' && p !== 'CLOTURE'"
             [disabled]="envoi()"
@@ -144,7 +171,7 @@
     </section>
 
     <!-- Le reste, rangé par onglets -->
-    <div class="onglets onglets-dossier no-print" role="tablist">
+    <div class="onglets-dossier no-print" role="tablist">
       @for (o of onglets; track o.cle) {
         <button
           type="button"
@@ -275,6 +302,21 @@
     }
   </div>
 
+  <!-- Téléphone : l'étape suivante reste à portée de pouce -->
+  @if (etapes().principale; as p) {
+    <div class="action-collante masquer-ordi no-print">
+      <button
+        class="btn btn-grand btn-bloc"
+        [class.btn-ok]="p === 'PRET' || p === 'CLOTURE'"
+        [class.btn-principal]="p !== 'PRET' && p !== 'CLOTURE'"
+        [disabled]="envoi()"
+        (click)="changerStatut(p)"
+      >
+        {{ actionStatut(p, d.statut) }}
+      </button>
+    </div>
+  }
+
   <!-- Prêt -->
   <app-dialogue titre="L'appareil est prêt" [ouvert]="dialogue() === 'pret'" (fermer)="dialogue.set(null)">
     <div class="pile">
@@ -396,5 +438,13 @@
     </div>
   </app-dialogue>
 } @else {
-  <div class="page"><p class="vide">Chargement…</p></div>
+  <div class="page" aria-label="Chargement">
+    <span class="squelette" style="width: 120px; height: 16px; margin-bottom: 1.25rem"></span>
+    <section class="carte">
+      <span class="squelette" style="width: 40%; height: 34px"></span>
+      <span class="squelette" style="width: 25%; height: 18px; margin-top: 12px"></span>
+      <span class="squelette" style="width: 100%; height: 36px; margin-top: 28px"></span>
+    </section>
+    <section class="carte"><span class="squelette" style="width: 60%; height: 50px"></span></section>
+  </div>
 }

@@ -1,39 +1,94 @@
 .suivi {
-  max-width: 560px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: 0 0.75rem 3rem;
+  padding: 0 0.9rem 3rem;
+  animation: entree 0.4s var(--ressort) both;
 }
 
-header {
+.entete {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  padding: 1rem 0.25rem;
+  align-items: center;
+  padding: 1.1rem 0.25rem 1.25rem;
 }
 
-header strong {
-  font-size: 1.15rem;
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
 }
 
-header span {
-  color: var(--texte-doux);
-  font-size: 0.9rem;
+.marque {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #2a6ee0, #163f86);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 h1 {
-  font-size: 1.35rem;
+  font-size: 2.1rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Carte d'état : un liseré de couleur en haut selon l'avancement */
+.etat {
+  position: relative;
+  overflow: hidden;
+  padding-top: 1.6rem;
+}
+
+.etat::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--accent);
+}
+
+.etat[data-statut='PRET']::before {
+  background: var(--ok);
+}
+
+.etat[data-statut='ATTENTE_CLIENT']::before,
+.etat[data-statut='ATTENTE_PIECE']::before {
+  background: var(--alerte);
+}
+
+.etat[data-statut='CLOTURE']::before {
+  background: var(--texte-pale);
+}
+
+.etat[data-statut='PRET'] h1 {
+  color: var(--ok);
 }
 
 .appareil {
   color: var(--texte-doux);
-  text-transform: capitalize;
+  font-weight: 550;
+}
+
+.appareil::first-letter {
+  text-transform: uppercase;
+}
+
+.explication {
+  margin: 0.75rem 0 0;
+  font-size: 1.05rem;
 }
 
 .etapes {
   list-style: none;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  margin: 1.25rem 0;
+  margin: 1.5rem 0;
   padding: 0;
 }
 
@@ -42,24 +97,21 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
   font-size: 0.75rem;
-  color: var(--texte-doux);
+  color: var(--texte-pale);
   text-align: center;
 }
 
-.etapes li::before {
+.etapes li + li::before {
   content: '';
   position: absolute;
-  top: 7px;
-  left: -50%;
-  width: 100%;
-  height: 3px;
+  top: 10px;
+  right: calc(50% + 14px);
+  width: calc(100% - 28px);
+  height: 2px;
+  border-radius: 2px;
   background: var(--bordure);
-}
-
-.etapes li:first-child::before {
-  display: none;
 }
 
 .etapes li.fait::before {
@@ -69,16 +121,34 @@ h1 {
 .point {
   position: relative;
   z-index: 1;
-  width: 17px;
-  height: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--surface);
-  border: 3px solid var(--bordure);
+  border: 2px solid var(--bordure-forte);
+  color: #fff;
+}
+
+.point svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .fait .point {
   background: var(--ok);
   border-color: var(--ok);
+}
+
+.fait {
+  color: var(--texte-doux);
 }
 
 .actuel {
@@ -87,29 +157,55 @@ h1 {
 }
 
 .actuel .point {
-  box-shadow: 0 0 0 4px var(--ok-clair);
+  box-shadow: 0 0 0 5px var(--ok-clair);
 }
 
 dl {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.4rem 1rem;
   margin: 0;
+  border-top: 1px solid var(--bordure);
+}
+
+dt,
+dd {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--bordure);
 }
 
 dt {
   color: var(--texte-doux);
+  padding-right: 1rem;
 }
 
 dd {
   margin: 0;
+  text-align: right;
+  font-weight: 550;
+}
+
+dl > :nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.commentaire {
+  margin-top: 0.75rem;
+}
+
+.question {
+  margin: 1.25rem 0 0.25rem;
+  font-weight: 600;
+}
+
+.confirmer {
+  margin: 1rem 0 0;
 }
 
 .reponse {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0.6rem;
 }
 
 .reponse .btn {
@@ -117,7 +213,15 @@ dd {
 }
 
 .contact p {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.3rem;
+}
+
+.contact .reponse {
+  margin-top: 1rem;
+}
+
+.recherche h1 {
+  margin-bottom: 0.5rem;
 }
 
 .horaires {
@@ -147,5 +251,10 @@ dd {
 }
 
 .centre {
+  text-align: center;
+}
+
+.pied {
+  margin-top: 1.5rem;
   text-align: center;
 }

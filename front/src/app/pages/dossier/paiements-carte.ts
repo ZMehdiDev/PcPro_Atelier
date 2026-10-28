@@ -5,6 +5,7 @@ import { AuthService } from '../../core/auth.service';
 import { DatePipe, EurosPipe } from '../../core/formats';
 import { MOYEN_PAIEMENT } from '../../core/libelles';
 import { DossierDetail, MoyenPaiement, Paiement } from '../../core/models';
+import { ConfirmationService } from '../../core/confirmation.service';
 import { NotificationService } from '../../core/notification.service';
 import { Dialogue } from '../../shared/dialogue';
 
@@ -72,6 +73,7 @@ import { Dialogue } from '../../shared/dialogue';
 export class PaiementsCarte {
   private readonly api = inject(ApiService);
   private readonly notifications = inject(NotificationService);
+  private readonly confirmation = inject(ConfirmationService);
   protected readonly auth = inject(AuthService);
 
   readonly dossier = input.required<DossierDetail>();
@@ -106,8 +108,14 @@ export class PaiementsCarte {
     });
   }
 
-  protected annuler(p: Paiement): void {
-    if (!confirm(`Annuler le paiement de ${p.montant} € ?`)) {
+  protected async annuler(p: Paiement): Promise<void> {
+    const ok = await this.confirmation.demander({
+      titre: 'Annuler ce paiement ?',
+      message: `${new EurosPipe().transform(p.montant)} en ${this.libelles[p.moyen].toLowerCase()}. Il sera retiré de la caisse.`,
+      bouton: 'Annuler le paiement',
+      danger: true,
+    });
+    if (!ok) {
       return;
     }
     this.api.annulerPaiement(this.dossier().id, p.id).subscribe({
