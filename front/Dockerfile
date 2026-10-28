@@ -1,5 +1,5 @@
 # Build du front, puis Caddy qui le sert avec l'API (voir infra/Caddyfile et infra/docker-compose.prod.yml)
-FROM node:22-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
