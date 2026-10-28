@@ -65,6 +65,13 @@ export class AuthService {
       .pipe(map((r) => this.ouvrir(r)));
   }
 
+  /** Déconnecte tous ses autres appareils ; celui-ci reçoit une nouvelle session. */
+  deconnecterAutresAppareils(): Observable<Employe> {
+    return this.http
+      .post<LoginResponse>('/api/auth/deconnecter-autres-appareils', {})
+      .pipe(map((r) => this.ouvrir(r)));
+  }
+
   logout(): void {
     this.http
       .post('/api/auth/logout', {})

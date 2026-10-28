@@ -67,6 +67,12 @@ import { Dialogue } from '../../shared/dialogue';
             <input type="checkbox" [(ngModel)]="actif" [disabled]="edite()!.id === auth.employe()?.id" />
             Compte actif (décocher pour bloquer l'accès)
           </label>
+          @if (edite()!.id !== auth.employe()?.id) {
+            <button class="btn btn-petit btn-neutre" [disabled]="envoi()" (click)="deconnecter()">
+              Déconnecter de tous ses appareils
+            </button>
+            <p class="doux petit">En cas de téléphone perdu ou volé. Le mot de passe ne change pas.</p>
+          }
         }
       </div>
       <div class="dialogue-actions">
@@ -147,6 +153,10 @@ export class Employes {
 
   protected enregistrerMotDePasse(): void {
     this.executer(this.api.reinitialiserMotDePasse(this.edite()!.id, this.mdp), 'Mot de passe changé');
+  }
+
+  protected deconnecter(): void {
+    this.executer(this.api.deconnecterEmploye(this.edite()!.id), `${this.edite()!.prenom} est déconnecté partout`);
   }
 
   private executer(appel: Observable<unknown>, message: string): void {

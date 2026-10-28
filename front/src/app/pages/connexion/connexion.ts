@@ -74,11 +74,17 @@ export class Connexion {
     this.envoi.set(true);
     this.erreur.set(null);
     this.auth.login(this.login.trim(), this.motDePasse).subscribe({
-      next: () => this.router.navigateByUrl(this.retour()?.startsWith('/') ? this.retour()! : '/'),
+      next: () => this.router.navigateByUrl(this.pageRetour()),
       error: (err) => {
         this.envoi.set(false);
         this.erreur.set(messageErreur(err));
       },
     });
+  }
+
+  /** Seulement une page de l'appli (« /dossiers/12 »), jamais une adresse externe (« //site.com »). */
+  private pageRetour(): string {
+    const page = this.retour();
+    return page && page.startsWith('/') && !page.startsWith('//') && !page.startsWith('/\\') ? page : '/';
   }
 }

@@ -224,6 +224,11 @@ export class ApiService {
     return this.http.post<void>(`/api/employes/${id}/mot-de-passe`, { motDePasse });
   }
 
+  /** Téléphone perdu ou volé : l'employé est déconnecté de tous ses appareils. */
+  deconnecterEmploye(id: number): Observable<void> {
+    return this.http.post<void>(`/api/employes/${id}/deconnecter`, {});
+  }
+
   // Suivi client (public)
 
   suivi(reference: string, acces: { code?: string; telephone?: string }): Observable<Suivi> {

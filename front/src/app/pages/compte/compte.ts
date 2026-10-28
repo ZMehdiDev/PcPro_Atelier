@@ -40,6 +40,14 @@ import { NotificationService } from '../../core/notification.service';
         <button class="btn btn-principal" [disabled]="envoi() || !ancien || nouveau.length < 8">Changer</button>
       </form>
 
+      <div class="carte pile">
+        <h2>Mes appareils</h2>
+        <p class="doux petit">Téléphone perdu, ordinateur prêté : seul cet appareil restera connecté.</p>
+        <button class="btn btn-neutre" [disabled]="envoi()" (click)="deconnecterAutres()">
+          Déconnecter mes autres appareils
+        </button>
+      </div>
+
       <button class="btn btn-danger btn-bloc" (click)="auth.logout()">Se déconnecter</button>
     </div>
   `,
@@ -73,6 +81,20 @@ export class Compte {
   protected ancien = '';
   protected nouveau = '';
   protected readonly envoi = signal(false);
+
+  protected deconnecterAutres(): void {
+    this.envoi.set(true);
+    this.auth.deconnecterAutresAppareils().subscribe({
+      next: () => {
+        this.envoi.set(false);
+        this.notifications.ok('Vos autres appareils sont déconnectés');
+      },
+      error: (err) => {
+        this.envoi.set(false);
+        this.notifications.erreur(err);
+      },
+    });
+  }
 
   protected changer(): void {
     this.envoi.set(true);

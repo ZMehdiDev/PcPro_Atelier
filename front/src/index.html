@@ -9,18 +9,9 @@
   <meta name="robots" content="noindex">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="manifest" href="manifest.webmanifest">
-  <script>
-    // Thème appliqué avant l'affichage (sinon un flash blanc en mode sombre)
-    (function () {
-      var t = null;
-      try { t = localStorage.getItem('atelier.theme'); } catch (e) {}
-      if (t !== 'dark' && t !== 'light') {
-        t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      }
-      document.documentElement.dataset.theme = t;
-      if (t === 'dark') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#08090a');
-    })();
-  </script>
+  <!-- Thème appliqué avant l'affichage (sinon un flash blanc en mode sombre). Fichier séparé et non
+       script en ligne : la politique de sécurité (CSP, infra/Caddyfile) n'autorise que les scripts du site. -->
+  <script src="theme-init.js"></script>
 </head>
 <body>
   <app-root></app-root>
