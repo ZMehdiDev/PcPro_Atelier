@@ -58,7 +58,7 @@ app:
     nom: ${APP_ATELIER_NOM:PC PRO}
     slogan: ${APP_ATELIER_SLOGAN:Réparation informatique}
     # Nom légal (le titulaire de l'entreprise) et numéro BCE, obligatoires sur les factures
-    raison-sociale: ${APP_ATELIER_RAISON_SOCIALE:}
+    raison-sociale: ${APP_ATELIER_RAISON_SOCIALE:Brahim Mehdi}
     bce: ${APP_ATELIER_BCE:0895968808}
     tva:
       # FRANCHISE (petite entreprise, pas de TVA sur les factures) ou ASSUJETTI (prix TVAC, TVA détaillée)
@@ -69,7 +69,7 @@ app:
     bic: ${APP_ATELIER_BIC:}
     adresse: ${APP_ATELIER_ADRESSE:Rue Wayez 24, 1070 Anderlecht}
     telephone: ${APP_ATELIER_TELEPHONE:+32 485 64 44 61}
-    email: ${APP_ATELIER_EMAIL:}
+    email: ${APP_ATELIER_EMAIL:pcpro@gmail.com}
     site-web: ${APP_ATELIER_SITE_WEB:pcpro-services.be}
     horaires: ${APP_ATELIER_HORAIRES:}
     # Chemin d'une image (PNG ou JPG) qui remplace le logo dessiné en haut des documents
