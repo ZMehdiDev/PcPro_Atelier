@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Subject, debounceTime, startWith, switchMap } from 'rxjs';
 import { ApiService } from '../../core/api.service';
-import { initiales } from '../../core/libelles';
+import { initiales, teinte } from '../../core/libelles';
 import { Client } from '../../core/models';
 import { NotificationService } from '../../core/notification.service';
 
@@ -15,12 +15,14 @@ import { NotificationService } from '../../core/notification.service';
   template: `
     <div class="page page-etroite">
       <div class="entete-page">
-        <h1>Clients</h1>
-        <span class="doux">{{ total() }} client{{ total() > 1 ? 's' : '' }}</span>
+        <div>
+          <h1>Clients</h1>
+          <p class="sous-titre-page">{{ total() }} client{{ total() > 1 ? 's' : '' }}</p>
+        </div>
       </div>
 
       <input
-        class="recherche"
+        class="recherche avec-loupe"
         type="search"
         [(ngModel)]="q"
         (ngModelChange)="recherche.next($event)"
@@ -33,7 +35,7 @@ import { NotificationService } from '../../core/notification.service';
         @for (c of clients(); track c.id) {
           <li>
             <a [routerLink]="['/clients', c.id]" class="contact">
-              <span class="avatar-initiales" aria-hidden="true">{{ initiales(c.nom) }}</span>
+              <span class="avatar-initiales" [style.--teinte]="teinte(c.nom)" aria-hidden="true">{{ initiales(c.nom) }}</span>
               <span class="qui">
                 <strong>{{ c.nom }}</strong>
                 <span class="doux">{{ c.telephone }}</span>
@@ -41,7 +43,7 @@ import { NotificationService } from '../../core/notification.service';
               @if (c.email) {
                 <span class="doux petit email masquer-mobile">{{ c.email }}</span>
               }
-              <span class="fleche" aria-hidden="true">›</span>
+              <span class="fleche" aria-hidden="true"></span>
             </a>
           </li>
         } @empty {
@@ -51,7 +53,7 @@ import { NotificationService } from '../../core/notification.service';
 
       @if (clients().length < total()) {
         <div class="ligne" style="justify-content: center; margin-top: 1rem">
-          <button class="btn btn-blanc" (click)="plus()">Afficher plus</button>
+          <button class="btn" (click)="plus()">Afficher plus</button>
         </div>
       }
     </div>
@@ -60,7 +62,7 @@ import { NotificationService } from '../../core/notification.service';
     .recherche {
       min-height: 54px;
       margin-bottom: 1rem;
-      background: var(--surface);
+      border-radius: 16px;
       font-size: 1.05rem;
     }
     .contacts {
@@ -68,8 +70,8 @@ import { NotificationService } from '../../core/notification.service';
       margin: 0;
       padding: 0.35rem;
       background: var(--surface);
+      border: 1px solid var(--bordure);
       border-radius: var(--rayon-carte);
-      box-shadow: var(--ombre);
     }
     .contact {
       display: flex;
@@ -100,10 +102,20 @@ import { NotificationService } from '../../core/notification.service';
       white-space: nowrap;
       max-width: 40%;
     }
+    .contact {
+      transition: background 0.12s;
+    }
     .fleche {
-      font-size: 1.6rem;
-      line-height: 1;
-      color: var(--texte-doux);
+      width: 8px;
+      height: 8px;
+      border-top: 2px solid var(--texte-pale);
+      border-right: 2px solid var(--texte-pale);
+      transform: rotate(45deg);
+      transition: transform 0.25s var(--ressort);
+    }
+    .contact:hover .fleche {
+      transform: translateX(4px) rotate(45deg);
+      border-color: var(--texte);
     }
   `,
 })
@@ -112,6 +124,7 @@ export class Clients {
   private readonly notifications = inject(NotificationService);
 
   protected readonly initiales = initiales;
+  protected readonly teinte = teinte;
   protected q = '';
   protected readonly recherche = new Subject<string>();
   protected readonly clients = signal<Client[]>([]);

@@ -11,8 +11,13 @@ import { NotificationService } from '../../core/notification.service';
   template: `
     <div class="page page-etroite">
       <div class="entete-page">
-        <h1>{{ auth.employe()?.prenom }}</h1>
-        <span class="badge">{{ auth.estAdmin() ? 'Admin' : 'Technicien' }}</span>
+        <div class="ligne profil">
+          <span class="avatar">{{ auth.employe()?.prenom?.charAt(0) }}</span>
+          <div>
+            <h1>{{ auth.employe()?.prenom }}</h1>
+            <span class="badge" [class.badge-ok]="auth.estAdmin()">{{ auth.estAdmin() ? 'Admin' : 'Technicien' }}</span>
+          </div>
+        </div>
       </div>
 
       <nav class="carte menu">
@@ -50,7 +55,7 @@ import { NotificationService } from '../../core/notification.service';
       flex-direction: column;
     }
     .menu a {
-      padding: 0.9rem 1rem;
+      padding: 1rem 1.25rem;
       border-bottom: 1px solid var(--bordure);
       color: var(--texte);
       text-decoration: none;
@@ -59,10 +64,44 @@ import { NotificationService } from '../../core/notification.service';
     .menu a:last-child {
       border-bottom: 0;
     }
+    .menu a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.12s;
+    }
+    .menu a:hover {
+      background: var(--surface-douce);
+    }
     .menu a::after {
-      content: '›';
-      float: right;
-      color: var(--texte-doux);
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-top: 2px solid var(--texte-pale);
+      border-right: 2px solid var(--texte-pale);
+      transform: rotate(45deg);
+    }
+    .menu {
+      overflow: hidden;
+    }
+    .profil {
+      gap: 1rem;
+    }
+    .profil h1 {
+      margin: 0 0 0.2rem;
+    }
+    .avatar {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--noir);
+      color: var(--sur-noir);
+      font-size: 1.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
     }
   `,
 })

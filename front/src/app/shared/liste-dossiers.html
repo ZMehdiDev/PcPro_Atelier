@@ -1,11 +1,28 @@
-@if (dossiers().length === 0) {
-  <p class="vide">{{ vide() }}</p>
+@if (chargement() && dossiers().length === 0) {
+  <ul class="rangees" aria-label="Chargement">
+    @for (i of [1, 2, 3, 4, 5]; track i) {
+      <li>
+        <span class="rangee">
+          <span class="squelette" style="width: 44px; height: 44px; border-radius: 50%"></span>
+          <span class="qui">
+            <span class="squelette" style="width: 55%; height: 15px"></span>
+            <span class="squelette" style="width: 80%; height: 12px; margin-top: 8px"></span>
+          </span>
+          <span class="squelette masquer-mobile" style="width: 90px; height: 22px; border-radius: 99px"></span>
+        </span>
+      </li>
+    }
+  </ul>
+} @else if (dossiers().length === 0) {
+  @if (vide()) {
+    <p class="vide">{{ vide() }}</p>
+  }
 } @else {
   <ul class="rangees">
     @for (d of dossiers(); track d.id) {
       <li>
         <a [routerLink]="['/dossiers', d.id]" class="rangee">
-          <span class="avatar-initiales" [class.urgent]="d.priorite === 'HAUTE'" aria-hidden="true">
+          <span class="avatar-initiales" [style.--teinte]="teinte(masquerClient() ? appareil(d) : d.clientNom)" aria-hidden="true">
             {{ initiales(masquerClient() ? appareil(d) : d.clientNom) }}
           </span>
 
@@ -42,7 +59,7 @@
             }
           </span>
 
-          <span class="fleche" aria-hidden="true">›</span>
+          <span class="fleche" aria-hidden="true"></span>
         </a>
       </li>
     }

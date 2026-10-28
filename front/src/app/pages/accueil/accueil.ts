@@ -25,6 +25,8 @@ export class Accueil {
   protected readonly aSurveiller = signal<DossierResume[]>([]);
   protected readonly mesDossiers = signal<DossierResume[]>([]);
   protected recherche = '';
+  /** « Mardi 28 octobre » */
+  protected readonly dateDuJour = new Intl.DateTimeFormat('fr-BE', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
 
   constructor() {
     forkJoin({

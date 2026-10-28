@@ -55,6 +55,32 @@ export class SuiviPage {
     }
   });
 
+  /** Une phrase simple pour le client, selon l'avancement. */
+  protected readonly explication = computed(() => {
+    switch (this.suivi()?.statut) {
+      case 'RECU':
+        return 'Un technicien va bientôt l’examiner.';
+      case 'DIAGNOSTIC':
+        return 'Un technicien cherche la panne. Si une réparation payante est nécessaire, vous recevrez un devis.';
+      case 'ATTENTE_CLIENT':
+        return 'L’atelier a besoin de votre accord pour continuer : répondez au devis ci-dessous ou appelez-nous.';
+      case 'ATTENTE_PIECE':
+        return 'La réparation reprend dès que la pièce arrive.';
+      case 'REPARATION':
+        return 'Nous vous prévenons dès que c’est prêt.';
+      case 'PRET':
+        return 'Pensez à prendre votre bon de dépôt. Les horaires sont en bas de la page.';
+      case 'CLOTURE':
+        return 'Merci de votre confiance.';
+      default:
+        return '';
+    }
+  });
+
+  protected itineraire(adresse: string): string {
+    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(adresse);
+  }
+
   constructor() {
     effect(() => {
       const reference = this.reference();

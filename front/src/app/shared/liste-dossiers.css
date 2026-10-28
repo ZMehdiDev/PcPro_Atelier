@@ -3,19 +3,21 @@
   margin: 0;
   padding: 0.35rem;
   background: var(--surface);
+  border: 1px solid var(--bordure);
   border-radius: var(--rayon-carte);
   box-shadow: var(--ombre);
 }
 
 /* Une réparation par ligne, haute et lisible, comme une opération dans Revolut */
 .rangee {
+  position: relative;
   display: grid;
   grid-template-columns: 44px minmax(0, 2.2fr) minmax(0, 1.6fr) minmax(0, 0.8fr) minmax(0, 1fr) 1rem;
   align-items: center;
   gap: 1rem;
   min-height: 76px;
   padding: 0.75rem 1rem;
-  border-radius: 16px;
+  border-radius: 14px;
   color: var(--texte);
   text-decoration: none;
   transition: background 0.12s;
@@ -23,10 +25,6 @@
 
 .rangee:hover {
   background: var(--surface-douce);
-}
-
-li + li .rangee {
-  position: relative;
 }
 
 li + li .rangee::before {
@@ -43,11 +41,6 @@ li:hover + li .rangee::before {
   border-color: transparent;
 }
 
-.urgent {
-  background: var(--danger-clair);
-  color: var(--danger);
-}
-
 .qui {
   display: flex;
   flex-direction: column;
@@ -55,7 +48,7 @@ li:hover + li .rangee::before {
 }
 
 .titre {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 650;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -64,7 +57,7 @@ li:hover + li .rangee::before {
 
 .sous-titre {
   color: var(--texte-doux);
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -73,12 +66,18 @@ li:hover + li .rangee::before {
 .etat {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  font-size: 0.875rem;
+  align-items: flex-start;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.etat .ligne {
+  gap: 0.35rem;
 }
 
 .technicien {
   font-weight: 500;
+  color: var(--texte-doux);
 }
 
 .quand {
@@ -86,19 +85,30 @@ li:hover + li .rangee::before {
   flex-direction: column;
   align-items: flex-end;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
+.quand .doux {
+  font-weight: 500;
+  font-size: 0.78rem;
+}
+
+/* Chevron dessiné, qui avance au survol */
 .fleche {
-  font-size: 1.6rem;
-  line-height: 1;
-  color: var(--texte-doux);
-  transition: transform 0.25s var(--ressort), color 0.15s;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--texte-pale);
+  border-right: 2px solid var(--texte-pale);
+  transform: rotate(45deg);
+  transition:
+    transform 0.25s var(--ressort),
+    border-color 0.15s;
 }
 
 .rangee:hover .fleche {
-  transform: translateX(4px);
-  color: var(--texte);
+  transform: translateX(4px) rotate(45deg);
+  border-color: var(--texte);
 }
 
 .avatar-initiales {
@@ -106,15 +116,17 @@ li:hover + li .rangee::before {
 }
 
 .rangee:hover .avatar-initiales {
-  transform: scale(1.08);
+  transform: scale(1.06);
 }
 
 .danger {
   color: var(--danger);
+  font-weight: 550;
 }
 
 .alerte {
   color: var(--alerte);
+  font-weight: 550;
 }
 
 @media (max-width: 720px) {
@@ -127,8 +139,8 @@ li:hover + li .rangee::before {
     grid-template-areas:
       'avatar qui quand'
       'avatar etat etat';
-    gap: 0.3rem 0.8rem;
-    padding: 0.8rem;
+    gap: 0.35rem 0.8rem;
+    padding: 0.85rem 0.8rem;
   }
 
   .avatar-initiales {
@@ -142,12 +154,16 @@ li:hover + li .rangee::before {
 
   .etat {
     grid-area: etat;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.6rem;
   }
 
   .quand {
     grid-area: quand;
     align-self: start;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
   }
 
   .fleche {
@@ -163,6 +179,7 @@ li:hover + li .rangee::before {
 /* Dans une carte : pas de deuxième carte autour */
 :host-context(.carte) .rangees {
   padding: 0;
+  border: 0;
   box-shadow: none;
   margin: 0 -0.6rem;
 }

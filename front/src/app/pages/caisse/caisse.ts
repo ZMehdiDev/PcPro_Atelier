@@ -5,6 +5,7 @@ import { ApiService } from '../../core/api.service';
 import { DatePipe, EurosPipe, aujourdhui } from '../../core/formats';
 import { MOYEN_PAIEMENT } from '../../core/libelles';
 import { Caisse, MoyenPaiement } from '../../core/models';
+import { ConfirmationService } from '../../core/confirmation.service';
 import { NotificationService } from '../../core/notification.service';
 
 function debutSemaine(): string {
@@ -37,7 +38,7 @@ interface Mouvement {
       <div class="entete-page">
         <h1>Caisse</h1>
         <div class="ligne no-print">
-          <button class="btn btn-blanc" (click)="imprimer()">Imprimer</button>
+          <button class="btn" (click)="imprimer()">Imprimer</button>
           <a routerLink="/vente" class="btn btn-principal">Nouvelle vente</a>
         </div>
       </div>
@@ -55,24 +56,23 @@ interface Mouvement {
       </div>
 
       @if (caisse(); as c) {
-        <section class="carte solde">
-          <div>
-            <span class="doux">Encaissé {{ c.du === c.au ? 'le ' + (c.du | date) : 'du ' + (c.du | date) + ' au ' + (c.au | date) }}</span>
-            <div class="montant">{{ c.total | euros }}</div>
+        <div class="tuiles">
+          <div class="tuile principale">
+            <span class="libelle">Encaissé {{ c.du === c.au ? 'le ' + (c.du | date) : 'du ' + (c.du | date) + ' au ' + (c.au | date) }}</span>
+            <span class="montant">{{ c.total | euros }}</span>
           </div>
-          <div class="moyens">
-            @for (m of moyens; track m) {
-              <div>
-                <span class="doux petit">{{ libelles[m] }}</span>
-                <strong>{{ c.parMoyen[m] | euros }}</strong>
-              </div>
-            }
-          </div>
-        </section>
+          @for (m of moyens; track m) {
+            <div class="tuile">
+              <span class="libelle">{{ libelles[m] }}</span>
+              <strong>{{ c.parMoyen[m] | euros }}</strong>
+            </div>
+          }
+        </div>
 
         <section class="carte">
           <h2>{{ mouvements(c).length }} encaissement{{ mouvements(c).length > 1 ? 's' : '' }}</h2>
           @if (mouvements(c).length) {
+            <div class="defile">
             <table class="tableau">
               <thead>
                 <tr>
@@ -109,6 +109,7 @@ interface Mouvement {
                 }
               </tbody>
             </table>
+            </div>
           } @else {
             <p class="vide">Aucun encaissement sur cette période.</p>
           }
@@ -117,34 +118,67 @@ interface Mouvement {
     </div>
   `,
   styles: `
-    .solde {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1.25rem 2rem;
-      padding: 1.75rem 2rem;
+    .tuiles {
+      display: grid;
+      grid-template-columns: 1.6fr repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
     }
-    .moyens {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem 2rem;
-    }
-    .moyens > div {
+    .tuile {
       display: flex;
       flex-direction: column;
+      justify-content: flex-end;
+      gap: 0.3rem;
+      padding: 1.1rem 1.25rem;
+      border: 1px solid var(--bordure);
+      border-radius: 18px;
+      background: var(--surface);
     }
-    .moyens strong {
-      font-size: 1.15rem;
+    .tuile .libelle {
+      font-size: 0.85rem;
+      color: var(--texte-doux);
+    }
+    .tuile strong {
+      font-size: 1.35rem;
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+    }
+    .tuile.principale {
+      border: 0;
+      color: #fff;
+      background: linear-gradient(135deg, #12346b 0%, #1d5fc9 100%);
+    }
+    .tuile.principale .libelle {
+      color: rgba(255, 255, 255, 0.78);
+    }
+    @media (max-width: 1100px) {
+      .tuiles {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .tuile.principale {
+        grid-column: 1 / -1;
+      }
+    }
+    @media print {
+      .tuile.principale {
+        color: inherit;
+        background: none;
+        border: 1px solid #ddd;
+      }
     }
     .champ {
-      flex: 1 1 140px;
+      flex: 1 1 130px;
+      max-width: 220px;
+    }
+    .defile {
+      overflow-x: auto;
     }
   `,
 })
 export class CaissePage {
   private readonly api = inject(ApiService);
   private readonly notifications = inject(NotificationService);
+  private readonly confirmation = inject(ConfirmationService);
 
   protected readonly libelles = MOYEN_PAIEMENT;
   protected readonly moyens = Object.keys(MOYEN_PAIEMENT) as MoyenPaiement[];
@@ -206,8 +240,14 @@ export class CaissePage {
     ].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   }
 
-  protected annulerVente(id: number): void {
-    if (!confirm('Annuler cette vente ? Elle sera retirée de la caisse.')) {
+  protected async annulerVente(id: number): Promise<void> {
+    const ok = await this.confirmation.demander({
+      titre: 'Annuler cette vente ?',
+      message: 'Elle sera retirée de la caisse et du chiffre d’affaires.',
+      bouton: 'Annuler la vente',
+      danger: true,
+    });
+    if (!ok) {
       return;
     }
     this.api.annulerVente(id).subscribe({

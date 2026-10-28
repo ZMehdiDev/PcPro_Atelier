@@ -36,7 +36,7 @@ export class ThemeService {
   private appliquer(theme: Theme): void {
     this.theme.set(theme);
     document.documentElement.dataset['theme'] = theme;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#08090a' : '#eef0f3');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#161513' : '#f5f4ef');
     try {
       localStorage.setItem(CLE, theme);
     } catch {

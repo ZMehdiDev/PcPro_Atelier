@@ -1,7 +1,19 @@
 <div class="page">
   <div class="entete-page">
-    <h1>Réparations</h1>
-    <a routerLink="/depot" class="btn btn-principal masquer-mobile">+ Nouveau dépôt</a>
+    <div>
+      <h1>Réparations</h1>
+      <p class="sous-titre-page">
+        @if (chargement() && dossiers().length === 0) {
+          Chargement…
+        } @else {
+          {{ total() }} réparation{{ total() > 1 ? 's' : '' }}{{ q.trim() ? ' pour « ' + q.trim() + ' »' : '' }}
+        }
+      </p>
+    </div>
+    <a routerLink="/depot" class="btn btn-principal masquer-mobile">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+      Nouveau dépôt
+    </a>
   </div>
 
   <div class="onglets" role="tablist">
@@ -25,6 +37,7 @@
   <div class="filtres">
     <input
       type="search"
+      class="avec-loupe"
       [(ngModel)]="q"
       (input)="tape()"
       placeholder="Nom, téléphone, référence, marque, n° de série…"
@@ -45,19 +58,11 @@
     </select>
   </div>
 
-  <p class="doux petit">
-    @if (chargement() && dossiers().length === 0) {
-      Chargement…
-    } @else {
-      {{ total() }} réparation{{ total() > 1 ? 's' : '' }}
-    }
-  </p>
-
-  <app-liste-dossiers [dossiers]="dossiers()" [vide]="chargement() ? '' : 'Aucune réparation ne correspond.'" />
+  <app-liste-dossiers [dossiers]="dossiers()" [chargement]="chargement()" vide="Aucune réparation ne correspond." />
 
   @if (dossiers().length < total()) {
     <div class="ligne" style="justify-content: center; margin-top: 1rem">
-      <button class="btn btn-blanc" (click)="plus()" [disabled]="chargement()">Afficher plus</button>
+      <button class="btn" (click)="plus()" [disabled]="chargement()">Afficher plus</button>
     </div>
   }
 </div>

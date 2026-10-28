@@ -4,6 +4,7 @@ import { ApiService } from '../../core/api.service';
 import { EurosPipe } from '../../core/formats';
 import { ACTION_PIECE, ETAT_PIECE } from '../../core/libelles';
 import { DossierDetail, EtatPiece, Piece } from '../../core/models';
+import { ConfirmationService } from '../../core/confirmation.service';
 import { NotificationService } from '../../core/notification.service';
 import { Dialogue } from '../../shared/dialogue';
 
@@ -108,6 +109,7 @@ import { Dialogue } from '../../shared/dialogue';
 export class PiecesCarte {
   private readonly api = inject(ApiService);
   private readonly notifications = inject(NotificationService);
+  private readonly confirmation = inject(ConfirmationService);
 
   readonly dossier = input.required<DossierDetail>();
   readonly modifie = output<void>();
@@ -164,8 +166,11 @@ export class PiecesCarte {
     });
   }
 
-  protected changerEtat(p: Piece, e: EtatPiece): void {
-    if (e === 'ANNULEE' && !confirm(`Annuler la pièce « ${p.reference} » ?`)) {
+  protected async changerEtat(p: Piece, e: EtatPiece): Promise<void> {
+    if (
+      e === 'ANNULEE' &&
+      !(await this.confirmation.demander({ titre: 'Annuler cette pièce ?', message: p.reference, bouton: 'Annuler la pièce', danger: true }))
+    ) {
       return;
     }
     this.envoi.set(true);

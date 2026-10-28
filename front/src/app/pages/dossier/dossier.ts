@@ -6,7 +6,17 @@ import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { ouvrirPdf } from '../../core/fichiers';
 import { DatePipe, DepuisPipe, EurosPipe, aujourdhui } from '../../core/formats';
-import { ETAPE_SUIVANTE, MOYEN_PAIEMENT, PRIORITE, STATUT_DEVIS, TYPE_APPAREIL, actionStatut } from '../../core/libelles';
+import {
+  ETAPE_SUIVANTE,
+  MOYEN_PAIEMENT,
+  PRIORITE,
+  STATUT_DEVIS,
+  TYPE_APPAREIL,
+  actionStatut,
+  appareil,
+  initiales,
+  teinte,
+} from '../../core/libelles';
 import {
   DossierDetail,
   Employe,
@@ -16,6 +26,7 @@ import {
   TypeAppareil,
 } from '../../core/models';
 import { NotificationService } from '../../core/notification.service';
+import { RecentsService } from '../../core/recents.service';
 import { Dialogue } from '../../shared/dialogue';
 import { DevisCarte } from './devis-carte';
 import { Historique } from './historique';
@@ -52,6 +63,9 @@ export class DossierPage {
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
   protected readonly auth = inject(AuthService);
+  private readonly recents = inject(RecentsService);
+  protected readonly initiales = initiales;
+  protected readonly teinte = teinte;
 
   readonly id = input.required<string>();
   readonly nouveau = input<string>();
@@ -153,7 +167,14 @@ export class DossierPage {
 
   protected charger(id = this.id()): void {
     this.api.dossier(Number(id)).subscribe({
-      next: (d) => this.dossier.set(d),
+      next: (d) => {
+        this.dossier.set(d);
+        this.recents.ajouter({
+          id: d.id,
+          titre: d.client.nom,
+          detail: `${appareil({ typeAppareil: d.appareil.type, marque: d.appareil.marque, modele: d.appareil.modele })} · ${d.reference}`,
+        });
+      },
       error: (err) => {
         this.notifications.erreur(err);
         if (err.status === 404) {
@@ -261,6 +282,16 @@ export class DossierPage {
       },
       error: (err) => this.notifications.erreur(err),
     });
+  }
+
+  protected copierReference(): void {
+    const ref = this.dossier()?.reference;
+    if (ref) {
+      navigator.clipboard?.writeText(ref).then(
+        () => this.notifications.ok(`Référence ${ref} copiée`),
+        () => undefined,
+      );
+    }
   }
 
   protected copierLien(): void {

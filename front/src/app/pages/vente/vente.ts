@@ -33,11 +33,14 @@ const nouvelleLigne = (article = ''): Ligne => ({ article, quantite: 1, prix: nu
   selector: 'app-vente',
   imports: [FormsModule, RouterLink, EurosPipe],
   template: `
-    <div class="page page-etroite">
+    <div class="page">
       <div class="entete-page">
-        <h1>Vente au comptoir</h1>
+        <div>
+          <h1>Vente au comptoir</h1>
+          <p class="sous-titre-page">Accessoires, PC reconditionnés... encaissé en deux clics.</p>
+        </div>
         @if (auth.estAdmin()) {
-          <a routerLink="/caisse" class="btn btn-petit btn-blanc">Voir la caisse</a>
+          <a routerLink="/caisse" class="btn">Voir la caisse</a>
         }
       </div>
 
@@ -48,74 +51,110 @@ const nouvelleLigne = (article = ''): Ligne => ({ article, quantite: 1, prix: nu
         </div>
       }
 
-      <section class="carte">
-        <h2>Articles</h2>
-        <div class="rapides">
-          @for (a of articlesCourants; track a) {
-            <button type="button" class="btn btn-petit" (click)="ajouter(a)">+ {{ a }}</button>
-          }
-        </div>
+      <div class="caisse">
+        <section class="carte">
+          <h2>Articles</h2>
+          <p class="surtitre">Ajout rapide</p>
+          <div class="rapides">
+            @for (a of articlesCourants; track a) {
+              <button type="button" class="btn btn-petit" (click)="ajouter(a)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12" /></svg>
+                {{ a }}
+              </button>
+            }
+          </div>
 
-        <div class="articles">
-          @for (l of lignes(); track $index; let i = $index) {
-            <div class="article">
-              <label class="champ nom">
-                <span>Article</span>
-                <input [(ngModel)]="l.article" [name]="'article' + i" placeholder="Ex : PC portable HP reconditionné" />
-              </label>
-              <label class="champ">
-                <span>Quantité</span>
-                <input type="number" inputmode="numeric" min="1" step="1" [(ngModel)]="l.quantite" [name]="'qte' + i" />
-              </label>
-              <label class="champ">
-                <span>Prix de vente</span>
-                <input type="number" inputmode="decimal" min="0" step="0.01" [(ngModel)]="l.prix" [name]="'prix' + i" placeholder="0,00" />
-              </label>
-              <label class="champ">
-                <span>Acheté à <small>(facultatif)</small></span>
-                <input type="number" inputmode="decimal" min="0" step="0.01" [(ngModel)]="l.cout" [name]="'cout' + i" placeholder="0,00" />
-              </label>
-              @if (lignes().length > 1) {
-                <button type="button" class="btn btn-petit btn-lien retirer" (click)="retirer(i)">Retirer</button>
+          <div class="articles">
+            @for (l of lignes(); track $index; let i = $index) {
+              <div class="article">
+                <label class="champ nom">
+                  <span>Article</span>
+                  <input [(ngModel)]="l.article" [name]="'article' + i" placeholder="Ex : PC portable HP reconditionné" />
+                </label>
+                <label class="champ">
+                  <span>Quantité</span>
+                  <input type="number" inputmode="numeric" min="1" step="1" [(ngModel)]="l.quantite" [name]="'qte' + i" />
+                </label>
+                <label class="champ">
+                  <span>Prix de vente</span>
+                  <input type="number" inputmode="decimal" min="0" step="0.01" [(ngModel)]="l.prix" [name]="'prix' + i" placeholder="0,00" />
+                </label>
+                <label class="champ">
+                  <span>Acheté à <small>(facultatif)</small></span>
+                  <input type="number" inputmode="decimal" min="0" step="0.01" [(ngModel)]="l.cout" [name]="'cout' + i" placeholder="0,00" />
+                </label>
+                @if (lignes().length > 1) {
+                  <button type="button" class="btn btn-icone btn-neutre retirer" (click)="retirer(i)" aria-label="Retirer l'article" title="Retirer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+          <button type="button" class="btn btn-petit" (click)="ajouter()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12" /></svg>
+            Autre article
+          </button>
+        </section>
+
+        <!-- Le ticket, comme sur une caisse : ce qui est vendu, le total, le paiement -->
+        <aside class="carte ticket">
+          <p class="surtitre">Ticket</p>
+          <ul class="lignes-ticket">
+            @for (l of lignes(); track $index) {
+              @if (l.article.trim() || l.prix) {
+                <li>
+                  <span>{{ (l.quantite || 1) > 1 ? l.quantite + ' × ' : '' }}{{ l.article.trim() || 'Article' }}</span>
+                  <span>{{ (Number(l.prix) || 0) * (Number(l.quantite) || 0) | euros }}</span>
+                </li>
               }
-            </div>
+            }
+          </ul>
+          @if (!aDesArticles()) {
+            <p class="doux petit">Ajoutez un article à gauche.</p>
           }
-        </div>
-        <button type="button" class="btn btn-petit" (click)="ajouter()">+ Autre article</button>
-      </section>
+          <div class="total">
+            <span>Total</span>
+            <span class="montant">{{ total() | euros }}</span>
+          </div>
 
-      <section class="carte">
-        <h2>Payé par</h2>
-        <div class="choix">
-          @for (m of moyens; track m) {
-            <label>
-              <input type="radio" name="moyen" [value]="m" [(ngModel)]="moyen" />
-              {{ libellesMoyen[m] }}
-            </label>
+          <p class="surtitre">Payé par</p>
+          <div class="choix moyens">
+            @for (m of moyens; track m) {
+              <label>
+                <input type="radio" name="moyen" [value]="m" [(ngModel)]="moyen" />
+                {{ libellesMoyen[m] }}
+              </label>
+            }
+          </div>
+
+          <button class="btn btn-ok btn-grand btn-bloc" [disabled]="envoi() || !valide()" (click)="encaisser()">
+            Encaisser {{ total() | euros }}
+          </button>
+          @if (!valide() && aEssaye()) {
+            <p class="erreur-champ">Chaque article doit avoir un nom, une quantité et un prix.</p>
           }
-        </div>
-      </section>
-
-      <section class="carte total">
-        <div>
-          <span class="doux">Total</span>
-          <div class="montant">{{ total() | euros }}</div>
-        </div>
-        <button class="btn btn-ok btn-grand" [disabled]="envoi() || !valide()" (click)="encaisser()">
-          Encaisser {{ total() | euros }}
-        </button>
-      </section>
-      @if (!valide() && aEssaye()) {
-        <p class="erreur-champ">Chaque article doit avoir un nom, une quantité et un prix.</p>
-      }
+        </aside>
+      </div>
     </div>
   `,
   styles: `
+    .caisse {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 1.25rem;
+      align-items: start;
+      max-width: 1180px;
+    }
     .rapides {
       display: flex;
       flex-wrap: wrap;
       gap: 0.4rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .rapides .btn svg {
+      width: 15px;
+      height: 15px;
     }
     .articles {
       display: flex;
@@ -125,22 +164,55 @@ const nouvelleLigne = (article = ''): Ligne => ({ article, quantite: 1, prix: nu
     }
     .article {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 6rem 8rem 8.5rem auto;
+      grid-template-columns: minmax(0, 1fr) 5.5rem 7.5rem 8.5rem auto;
       gap: 0.6rem;
       align-items: end;
     }
     .retirer {
-      min-height: 48px;
+      margin-bottom: 4px;
+    }
+    .ticket {
+      position: sticky;
+      top: 1.5rem;
+    }
+    .lignes-ticket {
+      list-style: none;
+      margin: 0 0 0.5rem;
+      padding: 0;
+    }
+    .lignes-ticket li {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.4rem 0;
+      border-bottom: 1px dashed var(--bordure-forte);
+      font-variant-numeric: tabular-nums;
     }
     .total {
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
+      align-items: baseline;
       justify-content: space-between;
-      gap: 1rem;
+      margin: 0.75rem 0 1.25rem;
+      font-weight: 600;
     }
-    .total .btn {
-      min-width: 240px;
+    .moyens {
+      margin-bottom: 1.25rem;
+    }
+    .moyens label {
+      flex: 1 1 40%;
+      justify-content: center;
+    }
+    .erreur-champ {
+      margin: 0.6rem 0 0;
+    }
+    @media (max-width: 1100px) {
+      .caisse {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 860px;
+      }
+      .ticket {
+        position: static;
+      }
     }
     @media (max-width: 720px) {
       .article {
@@ -151,8 +223,10 @@ const nouvelleLigne = (article = ''): Ligne => ({ article, quantite: 1, prix: nu
       .nom {
         grid-column: 1 / -1;
       }
-      .total .btn {
+      .retirer {
+        grid-column: 1 / -1;
         width: 100%;
+        border-radius: 999px;
       }
     }
   `,
@@ -171,6 +245,12 @@ export class VentePage {
   protected readonly envoi = signal(false);
   protected readonly aEssaye = signal(false);
   protected readonly derniere = signal<Vente | null>(null);
+
+  protected readonly Number = Number;
+
+  protected aDesArticles(): boolean {
+    return this.lignes().some((l) => l.article.trim() || l.prix);
+  }
 
   protected total(): number {
     return this.lignes().reduce((t, l) => t + (Number(l.prix) || 0) * (Number(l.quantite) || 0), 0);

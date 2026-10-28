@@ -154,3 +154,14 @@ export function initiales(nom: string | null | undefined): string {
   const mots = (nom ?? '').trim().split(/\s+/).filter((m) => m);
   return mots.slice(0, 2).map((m) => m.charAt(0)).join('') || '?';
 }
+
+const TEINTES = [214, 162, 24, 268, 338, 192, 42, 128];
+
+/** Teinte stable tirée du nom : chaque client garde la même couleur de pastille partout. */
+export function teinte(nom: string | null | undefined): number {
+  let h = 0;
+  for (const c of nom ?? '') {
+    h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  }
+  return TEINTES[h % TEINTES.length];
+}

@@ -5,6 +5,7 @@ import { ApiService } from '../../core/api.service';
 import { DatePipe, EurosPipe } from '../../core/formats';
 import { STATUT_DEVIS, TYPE_LIGNE } from '../../core/libelles';
 import { DossierDetail, LigneDevis, TypeLigneDevis } from '../../core/models';
+import { ConfirmationService } from '../../core/confirmation.service';
 import { NotificationService } from '../../core/notification.service';
 import { Dialogue } from '../../shared/dialogue';
 
@@ -24,6 +25,7 @@ interface LigneSaisie {
 export class DevisCarte {
   private readonly api = inject(ApiService);
   private readonly notifications = inject(NotificationService);
+  private readonly confirmation = inject(ConfirmationService);
 
   readonly dossier = input.required<DossierDetail>();
   readonly modifie = output<void>();
@@ -112,8 +114,8 @@ export class DevisCarte {
     this.executer(this.api.envoyerDevis(this.dossier().id), `Devis envoyé à ${this.dossier().client.email}`);
   }
 
-  protected supprimer(): void {
-    if (confirm('Supprimer ce devis ?')) {
+  protected async supprimer(): Promise<void> {
+    if (await this.confirmation.demander({ titre: 'Supprimer ce devis ?', bouton: 'Supprimer le devis', danger: true })) {
       this.executer(this.api.supprimerDevis(this.dossier().id), 'Devis supprimé');
     }
   }
