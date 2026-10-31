@@ -42,6 +42,9 @@ Il faut une machine allumée en permanence (serveur à l'atelier ou petit VPS) e
 (ex : `atelier.pcpro-services.be`). La check-list complète de mise en ligne est dans
 [docs/SECURITE.md](docs/SECURITE.md).
 
+Sur un serveur gratuit **Oracle Cloud**, pas à pas, avec un script qui installe tout :
+[docs/MISE-EN-LIGNE-ORACLE.md](docs/MISE-EN-LIGNE-ORACLE.md).
+
 Avec **Cloudflare Tunnel** (recommandé pour un serveur à l'atelier : aucun port à ouvrir sur la box) :
 
 ```bash
